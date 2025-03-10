@@ -5,7 +5,7 @@ import { useId } from "react";
 export default function EmailInput() {
   const id = useId();
   return (
-    <div className="transition-all duration-700 *:not-first:mt-2">
+    <div className="*:not-first:mt-2">
       <Label htmlFor={id} className="transition-all duration-700">
         Email
       </Label>

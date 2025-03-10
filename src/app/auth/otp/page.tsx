@@ -2,13 +2,14 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, MoveLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import PasswordInput from "@/components/ui/password-input";
 import EmailInput from "@/components/ui/email-input";
 import Image from "next/image";
+import OtpInput from "@/components/ui/otp-input";
 
 export default function SignUp() {
   const [selectedOption, setSelectedOption] = useState("");
@@ -55,18 +56,23 @@ export default function SignUp() {
           <section className="flex max-h-[500px] max-w-screen shrink grow-0 gap-[1.5px] md:flex-grow-[3]">
             <div className="flex flex-1 shrink items-center justify-center rounded bg-gradient-to-l from-gray-50 to-transparent dark:from-black/85 dark:to-black"></div>
             {/* SECTION - Center grid in the middle */}
-            <div className="flex w-full max-w-[600px] min-w-[400px] flex-col justify-center rounded bg-white p-8 sm:min-w-[300px] md:p-16 dark:bg-black">
+            <motion.div
+              initial={{ className: "bg-gray-50 dark:bg-black/80" }}
+              animate={{ className: "bg-white dark:bg-black" }}
+              className="flex w-full max-w-[600px] min-w-[400px] flex-col justify-center rounded bg-white p-8 sm:min-w-[300px] md:p-16 dark:bg-black"
+            >
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, ease: "easeInOut" }}
-                className="mb-10"
+                className="mb-16"
               >
                 <h1 className="text-2xl font-semibold text-black transition-all duration-700 dark:text-white">
                   Accedi al tuo account
                 </h1>
                 <p className="text-black/40 transition-all duration-700 dark:text-white/40">
-                  Per continuare, inserisci le tue credenziali
+                  Per finire, inserisci il codice OTP inviato al tuo indirizzo
+                  email
                 </p>
               </motion.div>
 
@@ -77,26 +83,23 @@ export default function SignUp() {
                 transition={{ duration: 1, ease: "easeInOut" }}
                 className="mb-10 space-y-6"
               >
-                <div>
-                  <EmailInput />
-                </div>
-                <div>
-                  <PasswordInput />
+                <div className="flex w-full">
+                  <OtpInput />
                 </div>
               </motion.div>
               {/* !SECTION - Options */}
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, ease: "easeInOut" }}
+                className="flex gap-4"
               >
-                <Link href="/auth/otp">
-                  <Button className="text-md w-full cursor-pointer rounded-lg bg-black py-6 text-white transition-all duration-700 hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80">
-                    Continua
-                  </Button>
-                </Link>
+                <Button className="text-md w-full grow-1 cursor-pointer rounded-lg bg-black py-6 text-white transition-all duration-700 hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80">
+                  Accedi
+                </Button>
               </motion.div>
-            </div>
+            </motion.div>
             <div className="flex-1 shrink rounded bg-gradient-to-r from-gray-50 to-transparent dark:from-black/85 dark:to-black"></div>
           </section>
 
@@ -107,20 +110,20 @@ export default function SignUp() {
               <div className="flex h-full w-full items-center justify-center opacity-20 transition-all duration-700 hover:opacity-100">
                 <div className="h-px w-8 bg-linear-to-r from-white to-black dark:from-black dark:to-white"></div>
                 <div className="flex items-center">
-                  <Badge
-                    variant="outline"
-                    className="cursor-pointer rounded-full border-black pr-4 dark:border-white"
+                  <Link
+                    href="/auth/sign-in"
+                    className="text-black dark:text-white"
                   >
-                    <Badge className="rounded-full bg-transparent text-black dark:text-white">
-                      ?
-                    </Badge>
-                    <Link
-                      href="/auth/sign-in"
-                      className="text-black dark:text-white"
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer rounded-full border-black pr-4 dark:border-white"
                     >
-                      Password dimenticata
-                    </Link>
-                  </Badge>
+                      <Badge className="rounded-full bg-transparent text-black dark:text-white">
+                        !
+                      </Badge>
+                      Ho sbagliato le credenziali
+                    </Badge>
+                  </Link>
                 </div>
                 <div className="h-px w-8 bg-linear-to-r from-black to-white dark:from-white dark:to-black"></div>
               </div>
