@@ -76,7 +76,7 @@ export default function SignUp() {
               </div>
               {/* !SECTION - Options */}
 
-              <Button className="text-md w-full cursor-pointer rounded-lg bg-black py-6 text-white transition-all duration-500 hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80">
+              <Button className="text-md w-full cursor-pointer rounded-lg bg-black py-6 text-white transition-all duration-700 hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80">
                 Accedi
               </Button>
             </div>
@@ -86,7 +86,7 @@ export default function SignUp() {
           {/* SECTION - Bottom grid */}
           <section className="flex w-full flex-grow gap-[1.5px]">
             <div className="flex-1 rounded bg-gradient-to-b from-gray-50 to-transparent dark:from-black/80 dark:to-transparent"></div>
-            <div className="mb-16 w-full max-w-[600px] min-w-[400px] rounded bg-gradient-to-b from-gray-50 to-transparent p-16 dark:from-black/80 dark:to-transparent">
+            <div className="mb-16 w-full max-w-[600px] min-w-[400px] rounded bg-gradient-to-b from-gray-50 to-transparent p-16 dark:from-black/80 dark:to-black">
               <div className="flex h-full w-full items-center justify-center opacity-20 transition-all duration-700 hover:opacity-100">
                 <div className="h-px w-8 bg-linear-to-r from-white to-black dark:from-black dark:to-white"></div>
                 <div className="flex items-center">
