@@ -21,8 +21,8 @@ const Inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Favorite",
-  description: "Your Favorite Place",
+  title: "Dataweb Group login",
+  description: "Dataweb Group login",
   icons: { icon: "/" },
 };
 
