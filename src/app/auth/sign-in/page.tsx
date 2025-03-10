@@ -55,7 +55,7 @@ export default function SignUp() {
           <section className="flex max-h-[500px] max-w-screen shrink grow-0 gap-[1.5px] md:flex-grow-[3]">
             <div className="flex flex-1 shrink items-center justify-center rounded bg-gradient-to-l from-gray-50 to-transparent dark:from-black/85 dark:to-black"></div>
             {/* SECTION - Center grid in the middle */}
-            <div className="flex w-full max-w-[600px] min-w-[400px] flex-col justify-center rounded bg-white p-8 md:p-16 dark:bg-black">
+            <div className="flex w-full max-w-[600px] min-w-[400px] flex-col justify-center rounded bg-white p-8 sm:min-w-[300px] md:p-16 dark:bg-black">
               <div className="mb-10">
                 <h1 className="text-2xl font-semibold text-black transition-all duration-700 dark:text-white">
                   Accedi al tuo account
@@ -88,7 +88,7 @@ export default function SignUp() {
             <div className="flex-1 rounded bg-gradient-to-b from-gray-50 to-transparent dark:from-black/80 dark:to-transparent"></div>
             <div className="w-full max-w-[600px] min-w-[400px] rounded bg-gradient-to-b from-gray-50 to-transparent p-8 md:p-16 dark:from-black/80 dark:to-transparent">
               {/* Progress Steps */}
-              <div className="flex w-full items-center justify-center opacity-20 transition-all duration-700 hover:opacity-100">
+              <div className="flex w-full items-center justify-center p-16 opacity-20 transition-all duration-700 hover:opacity-100">
                 <div className="h-px w-8 bg-linear-to-r from-white to-black dark:from-black dark:to-white"></div>
                 <div className="flex items-center">
                   <Badge

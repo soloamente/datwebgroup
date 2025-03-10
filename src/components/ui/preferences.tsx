@@ -16,6 +16,7 @@ import { CheckIcon, MinusIcon } from "lucide-react";
 import { useId } from "react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
+import { motion } from "motion/react";
 
 export function Preferences() {
   const { setTheme } = useTheme();
@@ -82,59 +83,41 @@ export function Preferences() {
 
   const id = useId();
   return (
-    <div
-      className="fixed right-5 bottom-5 z-10 cursor-pointer"
-      data-oid="q6m82d9"
-    >
-      <DropdownMenu data-oid="01-c4.x">
-        <DropdownMenuTrigger asChild data-oid="u1f:tf-">
-          <Button variant="outline" size="icon" data-oid=".qcm963">
-            <Sun
-              className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90"
-              data-oid="wa7t19-"
-            />
+    <motion.div className="fixed right-5 bottom-5 z-10 cursor-pointer">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="icon">
+            <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
 
-            <Moon
-              className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
-              data-oid="c4_f41s"
-            />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
 
             <span className="sr-only" data-oid="5lqtvst">
               Toggle theme
             </span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="flex flex-col gap-5 p-4"
-          data-oid="yc.x2vd"
-        >
+        <DropdownMenuContent align="end" className="flex flex-col gap-5 p-4">
           <div data-oid="l-29--8">
-            <h1 className="font-medium" data-oid="k9l1u:9">
-              Appearance
-            </h1>
-            <p className="text-[12px] opacity-40" data-oid="mfaby:1">
+            <h1 className="font-medium">Appearance</h1>
+            <p className="text-[12px] opacity-40">
               Set or customize your preferences for the website
             </p>
           </div>
-          <Separator data-oid="iuuhpb-" />
+          <Separator />
           <div data-oid="tb_:b-e">
-            <h1 className="text-sm" data-oid="03p2l3j">
-              Interface theme
-            </h1>
-            <p className="text-[12px] opacity-40" data-oid="2kuzy7m">
+            <h1 className="text-sm">Interface theme</h1>
+            <p className="text-[12px] opacity-40">
               Customize your interface theme
             </p>
           </div>
-          <RadioGroup className="flex gap-3" data-oid="35yh2g5">
+          <RadioGroup className="flex gap-3">
             {items.map((item) => (
-              <label key={`${id}-${item.value}`} data-oid="1s6fw1b">
+              <label key={`${id}-${item.value}`}>
                 <RadioGroupItem
                   id={`${id}-${item.value}`}
                   value={item.value}
                   className="peer sr-only after:absolute after:inset-0"
                   onClick={item.onclick}
-                  data-oid="gld.e-."
                 />
 
                 <Image
@@ -143,30 +126,22 @@ export function Preferences() {
                   width={88}
                   height={70}
                   className="border-input peer-focus-visible:ring-ring/50 peer-data-[state=checked]:border-ring peer-data-[state=checked]:bg-accent relative cursor-pointer overflow-hidden rounded-md border shadow-2xs outline-hidden transition-[color,box-shadow] peer-focus-visible:ring-[3px] peer-data-disabled:cursor-not-allowed peer-data-disabled:opacity-50"
-                  data-oid="9d.0rw2"
                 />
 
-                <span
-                  className="group mt-2 flex items-center gap-1"
-                  data-oid="t:vun8b"
-                >
+                <span className="group mt-2 flex items-center gap-1">
                   <CheckIcon
                     size={16}
                     className={`${item.selected ? "block" : "hidden"}`}
                     aria-hidden="true"
-                    data-oid="nl4kd.o"
                   />
 
                   <MinusIcon
                     size={16}
                     className={`${!item.selected ? "block" : "hidden"}`}
                     aria-hidden="true"
-                    data-oid="jgvruxp"
                   />
 
-                  <span className="text-xs font-medium" data-oid="cmrdx6b">
-                    {item.label}
-                  </span>
+                  <span className="text-xs font-medium">{item.label}</span>
                 </span>
               </label>
             ))}
@@ -197,6 +172,6 @@ export function Preferences() {
              */}
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </motion.div>
   );
 }
