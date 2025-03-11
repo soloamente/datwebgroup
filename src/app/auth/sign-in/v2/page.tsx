@@ -162,19 +162,19 @@ export default function SignInPageV2() {
             <div className="flex flex-col space-y-4 md:space-y-6">
               <div className="space-y-4">
                 <div
-                  className={`cursor-pointer rounded-lg border p-4 shadow-xs transition-all duration-700 ${
+                  className={`cursor-pointer rounded-lg border p-4 shadow-xs ${
                     selectedOption === "hobby"
                       ? "border-black dark:border-white"
                       : "border-gray-200 hover:border-black/40 dark:border-white/30 dark:hover:border-white/40"
                   }`}
                   onClick={() => setSelectedOption("hobby")}
                 >
-                  <div className="flex items-center justify-between transition-all duration-700">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-black transition-all duration-700 dark:text-white">
+                      <h3 className="font-medium transition-all duration-700">
                         Area Notai
                       </h3>
-                      <p className="text-sm text-black/40 transition-all duration-700 dark:text-white/40">
+                      <p className="text-sm opacity-40 transition-all duration-700">
                         Accedi come notaio
                       </p>
                     </div>
@@ -183,7 +183,7 @@ export default function SignInPageV2() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, ease: "easeInOut" }}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-black/4 transition-all duration-700 dark:bg-white/10"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-black/4 dark:bg-white/10"
                       >
                         <Check className="h-4 w-4 text-black transition-all duration-700 dark:text-white" />
                       </motion.div>
@@ -192,19 +192,19 @@ export default function SignInPageV2() {
                 </div>
 
                 <div
-                  className={`cursor-pointer rounded-lg border p-4 shadow-xs transition-all duration-700 ${
+                  className={`cursor-pointer rounded-lg border p-4 shadow-xs ${
                     selectedOption === "pro"
                       ? "border-black dark:border-white"
                       : "border-gray-200 hover:border-black/40 dark:border-white/30 dark:hover:border-white/40"
                   }`}
                   onClick={() => setSelectedOption("pro")}
                 >
-                  <div className="flex items-center justify-between transition-all duration-700">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-black transition-all duration-700 dark:text-white">
+                      <h3 className="font-medium transition-all duration-700">
                         Area Clienti
                       </h3>
-                      <p className="text-sm text-black/40 transition-all duration-700 dark:text-white/40">
+                      <p className="text-sm opacity-40 transition-all duration-700">
                         Accedi come cliente{" "}
                       </p>
                     </div>
@@ -213,7 +213,7 @@ export default function SignInPageV2() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.5, ease: "easeInOut" }}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-black/4 transition-all duration-700 dark:bg-white/10"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-black/4 dark:bg-white/10"
                       >
                         <Check className="h-4 w-4 text-black transition-all duration-700 dark:text-white" />
                       </motion.div>
