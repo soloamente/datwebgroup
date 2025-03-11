@@ -2,7 +2,6 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
@@ -14,24 +13,12 @@ export default function HomePage() {
   const [selectedOption, setSelectedOption] = useState("");
 
   // Handle smooth scrolling when clicking the Continue button
-  useEffect(() => {
-    // Check if URL has a hash and scroll to that element on initial load
-    if (window.location.hash) {
-      const id = window.location.hash.substring(1);
-      const element = document.getElementById(id);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }
-    }
-  }, []);
 
   return (
     <div className="flex min-h-screen min-w-screen flex-row overflow-hidden">
       <div className="fixed inset-0 flex h-screen w-screen flex-row">
         {/* Background gradient */}
-        <div className="absolute inset-0 min-w-screen bg-radial from-zinc-300 to-gray-50 to-60% dark:from-gray-50 dark:to-black"></div>
+        <div className="absolute inset-0 min-w-screen bg-radial from-zinc-300 to-gray-50 to-60% dark:from-gray-50 dark:to-black [data-theme='dataweb']:from-[hsl(212,30%,80%)] [data-theme='dataweb']:to-white dark:[data-theme='dataweb']:from-[hsl(212,30%,30%)] dark:[data-theme='dataweb']:to-[hsl(212,30%,15%)]"></div>
 
         {/* Grid */}
         <main className="relative z-10 flex h-full w-full flex-col gap-[1.5px] bg-transparent">
@@ -62,10 +49,10 @@ export default function HomePage() {
                 transition={{ duration: 1, ease: "easeInOut" }}
                 className="mb-10"
               >
-                <h1 className="text-2xl font-semibold text-black transition-all duration-700 dark:text-white">
+                <h1 className="text-2xl font-semibold text-black transition-all duration-700 dark:text-white [data-theme='dataweb']:text-[hsl(212,100%,20%)] dark:[data-theme='dataweb']:text-[hsl(212,100%,60%)]">
                   Accedi al tuo account
                 </h1>
-                <p className="text-black/40 transition-all duration-700 dark:text-white/40">
+                <p className="text-black/40 transition-all duration-700 dark:text-white/40 [data-theme='dataweb']:text-[hsl(212,100%,20%)]/40 dark:[data-theme='dataweb']:text-[hsl(212,100%,60%)]/40">
                   Per continuare, inserisci le tue credenziali
                 </p>
               </motion.div>
@@ -91,7 +78,7 @@ export default function HomePage() {
                 transition={{ duration: 1, ease: "easeInOut" }}
               >
                 <Link href="/auth/otp">
-                  <Button className="text-md w-full cursor-pointer rounded-lg bg-black py-6 text-white transition-all duration-700 hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80">
+                  <Button className="text-md w-full cursor-pointer rounded-lg bg-black py-6 text-white transition-all duration-700 hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80 [data-theme='dataweb']:bg-[hsl(212,100%,50%)] [data-theme='dataweb']:text-white [data-theme='dataweb']:hover:bg-[hsl(212,100%,40%)] dark:[data-theme='dataweb']:bg-[hsl(212,100%,50%)] dark:[data-theme='dataweb']:text-white dark:[data-theme='dataweb']:hover:bg-[hsl(212,100%,60%)]">
                     Continua
                   </Button>
                 </Link>
@@ -109,14 +96,14 @@ export default function HomePage() {
                 <div className="flex items-center">
                   <Badge
                     variant="outline"
-                    className="cursor-pointer rounded-full border-black pr-4 dark:border-white"
+                    className="cursor-pointer rounded-full border-black pr-4 dark:border-white [data-theme='dataweb']:border-[hsl(212,100%,50%)] dark:[data-theme='dataweb']:border-[hsl(212,100%,60%)]"
                   >
-                    <Badge className="rounded-full bg-transparent text-black dark:text-white">
+                    <Badge className="rounded-full bg-transparent text-black dark:text-white [data-theme='dataweb']:text-[hsl(212,100%,50%)] dark:[data-theme='dataweb']:text-[hsl(212,100%,60%)]">
                       ?
                     </Badge>
                     <Link
                       href="/auth/sign-in"
-                      className="text-black dark:text-white"
+                      className="text-black dark:text-white [data-theme='dataweb']:text-[hsl(212,100%,50%)] dark:[data-theme='dataweb']:text-[hsl(212,100%,60%)]"
                     >
                       Password dimenticata
                     </Link>

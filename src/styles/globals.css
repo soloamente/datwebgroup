@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@source "./node_modules/@daveyplate/better-auth-ui/dist/**/*.{js,ts,jsx,tsx,mdx}";
-
 @plugin 'tailwindcss-animate';
 
 @custom-variant dark (&:is(.dark *));
@@ -28,12 +26,14 @@
 
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-description: hsl(var(--description));
 
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
 
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-button-hover: hsl(var(--button-hover));
 
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
@@ -98,6 +98,7 @@
   }
   :root {
     --background: 0 0% 100%;
+    --description: 176 100% 0% / 0.4;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -121,10 +122,13 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --button-hover: 225 84% 0% / 0.85;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
+    --description: 0 0% 100%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -147,7 +151,73 @@
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
+    --button-hover: 225 84% 0% / 0.85;
     --chart-5: 340 75% 55%;
+  }
+
+  /* DataWeb Theme - Based on the logo colors */
+  [data-theme="dataweb"] {
+    /* Light mode DataWeb theme */
+    --background: 210 33% 98%; /* Light blue-tinted background */
+    --description: 176 100% 0% / 0.4;
+    --foreground: 212 100% 20%; /* Dark blue text for contrast */
+    --card: 0 0% 100%;
+    --card-foreground: 212 100% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 212 100% 20%;
+    --primary: 212 100% 40%; /* DataWeb blue */
+    --primary-foreground: 0 0% 100%; /* White text on blue */
+    --secondary: 0 0% 80%; /* DataWeb gray */
+    --secondary-foreground: 212 100% 20%;
+    --muted: 212 30% 96%;
+    --muted-foreground: 212 10% 40%;
+    --accent: 212 100% 40%; /* DataWeb blue as accent */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 212 30% 80%;
+    --input: 212 30% 80%;
+    --button-hover: 225 84% 49%;
+    --ring: 212 100% 40%;
+
+    /* DataWeb gradient shades for charts and visual elements */
+    --chart-1: 212 100% 40%; /* DataWeb blue */
+    --chart-2: 0 0% 60%; /* DataWeb gray */
+    --chart-3: 212 80% 60%; /* Lighter blue */
+    --chart-4: 212 60% 30%; /* Darker blue */
+    --chart-5: 0 0% 40%; /* Darker gray */
+  }
+
+  .dark[data-theme="dataweb"] {
+    /* Dark mode DataWeb theme */
+    --background: 212 30% 15%; /* Dark blue background */
+    --description: 176 100% 100% / 0.4;
+    --foreground: 0 0% 98%; /* Light text for contrast */
+    --card: 212 30% 15%;
+    --card-foreground: 0 0% 98%;
+    --popover: 212 30% 15%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 212 100% 50%; /* Brighter DataWeb blue for dark mode */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 70%; /* Lighter gray for dark mode */
+    --secondary-foreground: 212 100% 15%;
+    --muted: 212 40% 25%;
+    --muted-foreground: 212 20% 70%;
+    --accent: 212 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 212 30% 30%;
+    --button-hover: 225 84% 49%;
+    --input: 212 30% 30%;
+    --ring: 212 100% 60%;
+
+    /* DataWeb gradient shades for charts and visual elements (dark mode) */
+    --chart-1: 212 100% 60%; /* Brighter blue for dark mode */
+    --chart-2: 0 0% 70%; /* Lighter gray for dark mode */
+    --chart-3: 212 80% 70%; /* Even lighter blue */
+    --chart-4: 212 60% 40%; /* Mid-tone blue */
+    --chart-5: 0 0% 50%; /* Mid-tone gray */
   }
 }
 
