@@ -139,10 +139,10 @@ export default function SignInPageV2() {
           <div className="mb-8 flex justify-end">
             <div className="relative h-16 w-16 md:absolute md:top-10 md:right-10 md:h-20 md:w-20">
               <Image
-                src="/logo_mono.png"
+                src="/logo_positivo.png"
                 alt="DataWeb Group Logo"
-                width={80}
-                height={80}
+                width={100}
+                height={100}
                 className="object-contain"
               />
             </div>

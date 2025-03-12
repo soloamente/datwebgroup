@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useId, useState } from "react";
+import { Checkbox } from "./checkbox";
 
 export default function PasswordInput() {
   const id = useId();
@@ -13,10 +14,17 @@ export default function PasswordInput() {
 
   return (
     <div className="*:not-first:mt-2">
-      <Label htmlFor={id} className="transition-all duration-700">
-        Password
+      <Label
+        htmlFor={id}
+        className="flex items-center justify-between transition-all duration-700"
+      >
+        <div>Password</div>{" "}
+        <div className="flex items-center gap-2">
+          <p className="text-sm">Ricordami </p>
+          <Checkbox />
+        </div>
       </Label>
-      <div className="relative">
+      <div className="relative mb-4">
         <Input
           id={id}
           className="h-12 rounded-lg p-4 pe-9 placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
@@ -38,6 +46,7 @@ export default function PasswordInput() {
           )}
         </button>
       </div>
+      <div className="flex items-center gap-2 opacity-40"></div>
     </div>
   );
 }

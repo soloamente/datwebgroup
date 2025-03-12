@@ -92,25 +92,6 @@ export function Preferences() {
   const items = [
     {
       value: "1",
-      label: "Monochrome Light",
-      image: "/ui-light.png",
-      onclick: () => {
-        resetToDefaultTheme("light");
-      },
-      selected: mounted && theme === "light" && !isDataWebTheme(),
-    },
-    {
-      value: "2",
-      label: "Monochrome Dark",
-      image: "/ui-dark.png",
-      onclick: () => {
-        resetToDefaultTheme("dark");
-      },
-      selected: mounted && theme === "dark" && !isDataWebTheme(),
-    },
-
-    {
-      value: "3",
       label: "DataWeb Light",
       image: "/ui-light_dataweb.png",
       onclick: () => {
@@ -119,7 +100,7 @@ export function Preferences() {
       selected: mounted && isDataWebLightTheme(),
     },
     {
-      value: "4",
+      value: "2",
       label: "DataWeb Dark",
       image: "/ui-dark_dataweb.png",
       onclick: () => {
@@ -147,24 +128,24 @@ export function Preferences() {
           <Button variant="outline" size="icon">
             <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
             <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-            <span className="sr-only">Toggle theme</span>
+            <span className="sr-only">Cambia tema</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="flex flex-col gap-5 p-4">
           <div>
-            <h1 className="font-medium">Appearance</h1>
+            <h1 className="font-medium">Aspetto</h1>
             <p className="text-[12px] opacity-40">
-              Set or customize your preferences for the website
+              Personalizza le tue preferenze per il sito web
             </p>
           </div>
           <Separator />
           <div>
-            <h1 className="text-sm">Interface theme</h1>
+            <h1 className="text-sm">Interfaccia</h1>
             <p className="text-[12px] opacity-40">
-              Customize your interface theme
+              Personalizza il tema della tua interfaccia
             </p>
           </div>
-          <RadioGroup className="grid grid-cols-2 flex-wrap justify-center gap-3">
+          <RadioGroup className="flex flex-wrap justify-start gap-12">
             {items.map((item) => (
               <label key={`${id}-${item.value}`}>
                 <RadioGroupItem
