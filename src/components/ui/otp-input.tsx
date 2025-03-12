@@ -11,7 +11,7 @@ export default function OtpInput() {
       <OTPInput
         id={id}
         containerClassName="flex w-full items-center  has-disabled:opacity-50"
-        maxLength={6}
+        maxLength={5}
         render={({ slots }) => (
           <div className="flex w-full justify-between">
             {slots.map((slot, idx) => (
