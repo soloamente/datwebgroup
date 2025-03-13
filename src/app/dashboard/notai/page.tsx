@@ -25,62 +25,7 @@ import {
   Legend,
 } from "chart.js";
 
-export const data = {
-  user: {
-    name: "Alfredo",
-    email: "Notaio",
-    avatar: "/avatars/user-placeholder.png",
-  },
-  navGeneral: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: GridIcon,
-      isActive: true,
-    },
-    {
-      title: "Clienti",
-      url: "#",
-      icon: UserIcon,
-      items: [
-        {
-          title: "Gestisci",
-          url: "#",
-        },
-        {
-          title: "Richieste",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navDocumenti: [
-    {
-      title: "Tutti",
-      url: "#",
-      icon: FolderIcon,
-    },
-
-    {
-      title: "Condividi",
-      url: "#",
-      icon: PlusSquareIcon,
-    },
-    {
-      title: "Gestisci",
-      url: "#",
-      icon: PencilEditSwooshIcon,
-      isActive: false,
-    },
-
-    {
-      title: "Richieste",
-      url: "#",
-      icon: EnvelopeIcon,
-    },
-  ],
-};
-
+// Move the data declaration inside the component
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -94,6 +39,63 @@ export default function NotaiDashboardPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Move the data inside the component instead of exporting it
+  const data = {
+    user: {
+      name: "Alfredo",
+      email: "Notaio",
+      avatar: "/avatars/user-placeholder.png",
+    },
+    navGeneral: [
+      {
+        title: "Dashboard",
+        url: "#",
+        icon: GridIcon,
+        isActive: true,
+      },
+      {
+        title: "Clienti",
+        url: "#",
+        icon: UserIcon,
+        items: [
+          {
+            title: "Gestisci",
+            url: "#",
+          },
+          {
+            title: "Richieste",
+            url: "#",
+          },
+        ],
+      },
+    ],
+    navDocumenti: [
+      {
+        title: "Tutti",
+        url: "#",
+        icon: FolderIcon,
+      },
+
+      {
+        title: "Condividi",
+        url: "#",
+        icon: PlusSquareIcon,
+      },
+      {
+        title: "Gestisci",
+        url: "#",
+        icon: PencilEditSwooshIcon,
+        isActive: false,
+      },
+
+      {
+        title: "Richieste",
+        url: "#",
+        icon: EnvelopeIcon,
+      },
+    ],
+  };
 
   // Toggle dark mode
   const toggleDarkMode = () => {
