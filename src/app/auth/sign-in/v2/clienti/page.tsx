@@ -7,87 +7,20 @@ import EmailInput from "@/components/ui/email-input";
 import PasswordInput from "@/components/ui/password-input";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ChevronLeft } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 
 export default function SignInPageV2() {
-  const [showPassword, setShowPassword] = useState(false);
-
   return (
-    <div className="flex min-h-screen w-full flex-row items-center justify-center">
+    <div className="flex min-h-screen w-full flex-row items-center justify-center dark:bg-gray-800">
       {/* Left side - Document */}
-      <div className="relative hidden h-screen w-full bg-sky-100 md:block md:w-2/5 dark:bg-sky-950/30">
-        <div className="text-primary p-4 font-light md:p-8">
-          <div className="mb-8 text-sm font-medium tracking-wider uppercase md:mb-16">
-            Area Clienti
-          </div>
-
-          <div className="mt-8 mb-4 ml-4 overflow-x-hidden text-sm md:mt-32 md:ml-16 md:text-base">
-            <div className="text-primary mb-6 text-lg font-semibold">
-              Contratto di Compravendita
-            </div>
-
-            <div className="mt-4 text-sm leading-6 md:mt-8 md:text-base">
-              Repertorio n.{" "}
-              <span className="bg-primary text-primary px-2">XXXX</span>/
-              <span className="bg-primary text-primary px-2">XXXX</span>
-              <br />
-              <br />
-              COMPRAVENDITA
-              <br />
-              <br />
-              REPUBBLICA ITALIANA
-              <br />
-              <br />
-              L&apos;anno{" "}
-              <span className="bg-primary text-primary px-4">XXXX</span>, il
-              giorno
-              <span className="bg-primary text-primary px-2">XX</span> del mese
-              di
-              <span className="bg-primary text-primary px-4">XXXX</span> in
-              <span className="bg-primary text-primary px-6">XXXX</span>, nel
-              mio studio in
-              <span className="bg-primary text-primary px-8">XXXX</span>.
-              <br />
-              <br />
-              Innanzi a me Dott.{" "}
-              <span className="bg-primary text-primary px-8">XXXX</span>, Notaio
-              in <span className="bg-primary text-primary px-6">XXXX</span>,
-              iscritto presso il Collegio Notarile di
-              <span className="bg-primary text-primary px-6">XXXX</span>
-              <br />
-              <br />
-              SONO COMPARSI
-              <br />
-              <br />
-              Il signor{" "}
-              <span className="bg-primary text-primary px-8">XXXX</span>, nato a
-              <span className="bg-primary text-primary px-6">XXXX</span> il
-              <span className="bg-primary text-primary px-4">XXXX</span>
-              <br />
-              <br />
-              E
-              <br />
-              <br />
-              La signora{" "}
-              <span className="bg-primary text-primary px-8">XXXX</span>, nata a
-              <span className="bg-primary text-primary px-6">XXXX</span> il
-              <span className="bg-primary text-primary px-4">XXXX</span>
-            </div>
-
-            <div className="border-primary mx-4 my-6 border-t border-dashed md:my-8"></div>
-
-            <div className="text-primary text-xs italic md:text-sm">
-              <div>Registrato presso l&apos;Agenzia delle Entrate</div>
-              <div>
-                Ufficio di{" "}
-                <span className="bg-primary text-primary px-4">XXXX</span>
-              </div>
-              <div>
-                il <span className="bg-primary text-primary px-4">XXXX</span>
-              </div>
-            </div>
-          </div>
+      <div className="relative hidden h-screen w-full bg-[#eaeced] md:block md:w-2/5 dark:bg-gray-900">
+        <div className="flex h-full items-center justify-center">
+          <Image
+            src="/Documents-cuate.svg"
+            alt="Login Notai"
+            width={400}
+            height={400}
+            className="object-contain"
+          />
         </div>
       </div>
 
@@ -96,7 +29,7 @@ export default function SignInPageV2() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, ease: "easeInOut" }}
-        className="bg-background flex w-full flex-col justify-center px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
+        className="bg-background flex w-full flex-col justify-center px-6 py-8 md:w-3/5 md:px-16 lg:px-24 dark:bg-gray-800"
       >
         <div className="mx-auto w-full max-w-md">
           {/* Logo */}
@@ -114,7 +47,7 @@ export default function SignInPageV2() {
 
           {/* Login Form */}
           <div className="mb-8 md:mb-10">
-            <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl">
+            <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
               Area Clienti
             </h1>
             <p className="text-description text-sm transition-all duration-700">
@@ -151,7 +84,7 @@ export default function SignInPageV2() {
               </Link>
             </div>
             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-              <span className="bg-background text-muted-foreground relative z-10 px-2">
+              <span className="bg-background text-muted-foreground relative z-10 px-2 dark:bg-gray-800">
                 Oppure
               </span>
             </div>
