@@ -1,11 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 "use client";
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { EnvelopeIcon } from "public/pikaiconsv2.0/solid/envelope";
@@ -98,9 +102,6 @@ export default function NotaiDashboardPage() {
   };
 
   // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -175,6 +176,8 @@ export default function NotaiDashboardPage() {
       },
       tooltip: {
         callbacks: {
+          //eslint disable-next-line
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           label: (context: any) => `$${context.raw.toLocaleString()}`,
         },
         backgroundColor: darkMode ? "#1f2937" : "#fff",
@@ -193,6 +196,7 @@ export default function NotaiDashboardPage() {
           font: {
             size: 10,
           },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           callback: function (value: any, index: number) {
             return index % (isMobile ? 3 : 1) === 0 ? value : "";
           },
