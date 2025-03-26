@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import EmailInput from "@/components/ui/email-input";
 import PasswordInput from "@/components/ui/password-input";
