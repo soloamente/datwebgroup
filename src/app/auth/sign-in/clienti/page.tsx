@@ -5,14 +5,30 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { motion } from "motion/react";
-import UsernameInput from "@/components/ui/username-input";
 import EmailInput from "@/components/ui/email-input";
-import PasswordInput from "@/components/ui/password-input";
 import OtpInput from "@/components/ui/otp-input";
+import UsernameInput from "@/components/ui/username-input";
+import PasswordInput from "@/components/ui/password-input";
+
+// Define a type for the user object to ensure type safety
+interface User {
+  id: number;
+  username: string;
+  nominativo: string;
+  codice_fiscale: string | null;
+  partita_iva: string | null;
+  role: string;
+  active: number;
+  email: string;
+  sharer_id: number | null;
+  created_at: string;
+  updated_at: string;
+  must_change_password: number;
+}
 
 export default function LoginOtpPage() {
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState("login");
@@ -26,20 +42,8 @@ export default function LoginOtpPage() {
     setLoading(true);
     setError("");
 
-    if (!username) {
-      setError("L'username è obbligatorio");
-      setLoading(false);
-      return;
-    }
-
     if (!email) {
       setError("Email è obbligatoria");
-      setLoading(false);
-      return;
-    }
-
-    if (!password) {
-      setError("La password è obbligatoria");
       setLoading(false);
       return;
     }
@@ -92,16 +96,20 @@ export default function LoginOtpPage() {
       const response = await axios.post(
         "https://sviluppo.datasystemgroup.it/api/verify-otp",
         {
-          email,
           password,
           username,
+          email,
           otp,
         },
       );
 
       if (response.status === 200) {
+        // Store user information and token in localStorage
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
         // Check if password change is required
-        if (response.data.must_change_password) {
+        if (response.data.user.must_change_password) {
           window.location.href = "/change-password";
         } else {
           window.location.href = "/dashboard/clienti";
@@ -150,8 +158,8 @@ export default function LoginOtpPage() {
 
     try {
       await axios.post("https://sviluppo.datasystemgroup.it/api/prelogin", {
-        username,
         email,
+        username,
         password,
       });
 
