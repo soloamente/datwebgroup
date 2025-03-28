@@ -58,10 +58,7 @@ export default function NotaryLoginPage() {
           </div>
 
           <form className="space-y-6 md:space-y-8">
-            <div className="flex flex-col space-y-4 md:space-y-6">
-              <EmailInput />
-              <PasswordInput />
-            </div>
+            <div className="flex flex-col space-y-4 md:space-y-6"></div>
             <Link
               href="/auth/sign-in/v2/notai/otp"
               className="mb-8 flex cursor-pointer"

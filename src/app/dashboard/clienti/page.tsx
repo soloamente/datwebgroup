@@ -29,8 +29,8 @@ import {
   Legend,
 } from "chart.js";
 import { useRouter } from "next/navigation";
+import useAuthStore from "@/app/auth/sign-in/auth";
 
-// Move the data declaration inside the component
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -40,99 +40,91 @@ ChartJS.register(
   Legend,
 );
 
+// Navigation data
+const navigationData = {
+  navGeneral: [
+    {
+      title: "Dashboard",
+      url: "/dashboard/clienti",
+      icon: GridIcon,
+      isActive: true,
+    },
+    {
+      title: "Clienti",
+      url: "#",
+      icon: UserIcon,
+      items: [
+        {
+          title: "Gestisci",
+          url: "#",
+        },
+        {
+          title: "Richieste",
+          url: "#",
+        },
+      ],
+    },
+  ],
+  navDocumenti: [
+    {
+      title: "Tutti",
+      url: "#",
+      icon: FolderIcon,
+    },
+    {
+      title: "Condividi",
+      url: "#",
+      icon: PlusSquareIcon,
+    },
+    {
+      title: "Gestisci",
+      url: "#",
+      icon: PencilEditSwooshIcon,
+      isActive: false,
+    },
+    {
+      title: "Richieste",
+      url: "#",
+      icon: EnvelopeIcon,
+    },
+  ],
+};
+
 export default function NotaiDashboardPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(
-    null,
-  );
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const authStore = useAuthStore();
 
+  // Add authentication check
   useEffect(() => {
-    async function fetchUserData() {
-      const userData = await getSessionData();
-      if (userData) {
-        setUser(userData);
-      } else {
-        // Redirect to login if no user data
-        router.push("/login");
-      }
+    if (!authStore.isAuthenticated()) {
+      router.push("/auth/sign-in/clienti");
+      return;
     }
-    fetchUserData();
-  }, [router]);
+  }, [authStore, router]);
 
-  // Handle logout
+  // Update user data handling
+  const userData = {
+    name: authStore.user?.nominativo || authStore.user?.username || "Utente",
+    email: authStore.user?.email || "",
+    avatar: authStore.user?.avatar || "/avatars/user-placeholder.png",
+  };
+
+  // Update logout handler to use async/await
   const handleLogout = async () => {
-    await logout();
-  };
-
-  const data = {
-    user: {
-      name: user?.name ?? "Loading...",
-      email: user?.email ?? "",
-      avatar: "/avatars/user-placeholder.png",
-    },
-    navGeneral: [
-      {
-        title: "Dashboard",
-        url: "#",
-        icon: GridIcon,
-        isActive: true,
-      },
-      {
-        title: "Clienti",
-        url: "#",
-        icon: UserIcon,
-        items: [
-          {
-            title: "Gestisci",
-            url: "#",
-          },
-          {
-            title: "Richieste",
-            url: "#",
-          },
-        ],
-      },
-    ],
-    navDocumenti: [
-      {
-        title: "Tutti",
-        url: "#",
-        icon: FolderIcon,
-      },
-
-      {
-        title: "Condividi",
-        url: "#",
-        icon: PlusSquareIcon,
-      },
-      {
-        title: "Gestisci",
-        url: "#",
-        icon: PencilEditSwooshIcon,
-        isActive: false,
-      },
-
-      {
-        title: "Richieste",
-        url: "#",
-        icon: EnvelopeIcon,
-      },
-    ],
-  };
-
-  // Toggle dark mode
-
-  // Apply dark mode class to document
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    try {
+      setLoading(true);
+      await authStore.logout();
+      router.push("/auth/sign-in/clienti");
+    } catch (error) {
+      console.error("Errore durante il logout:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [darkMode]);
+  };
 
   // Handle responsive sidebar and detect mobile devices
   useEffect(() => {
@@ -142,13 +134,8 @@ export default function NotaiDashboardPage() {
       setSidebarOpen(!mobile);
     };
 
-    // Initial check
     handleResize();
-
-    // Add event listener
     window.addEventListener("resize", handleResize);
-
-    // Cleanup
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -198,8 +185,6 @@ export default function NotaiDashboardPage() {
       },
       tooltip: {
         callbacks: {
-          //eslint disable-next-line
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           label: (context: any) => `$${context.raw.toLocaleString()}`,
         },
         backgroundColor: darkMode ? "#1f2937" : "#fff",
@@ -218,7 +203,6 @@ export default function NotaiDashboardPage() {
           font: {
             size: 10,
           },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           callback: function (value: any, index: number) {
             return index % (isMobile ? 3 : 1) === 0 ? value : "";
           },
@@ -243,9 +227,12 @@ export default function NotaiDashboardPage() {
     },
   };
 
+  if (!authStore.isAuthenticated()) {
+    return null;
+  }
+
   return (
     <main className="flex min-h-screen overflow-hidden bg-[#eaeced] transition-all duration-700 dark:bg-gray-900">
-      {/* Sidebar - with improved mobile handling */}
       <section
         id="sidebar"
         className={`${
@@ -259,33 +246,37 @@ export default function NotaiDashboardPage() {
               className="flex h-[42px] w-full items-center justify-start gap-2"
             >
               <Image
-                src={data?.user?.avatar || "/placeholder.svg"}
-                alt="Logo"
+                src={userData.avatar}
+                alt="User Avatar"
                 width={42}
                 height={42}
                 className="rounded-lg"
               />
               <div className="flex-col">
                 <h2 id="user-name" className="font-semibold dark:text-white">
-                  {data?.user?.name}
+                  {userData.name}
                 </h2>
                 <p
                   id="user-email"
                   className="text-xs opacity-50 dark:text-gray-300"
                 >
-                  {data?.user?.email}
+                  {userData.email}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <Button
+              className="flex items-center gap-2"
+              onClick={handleLogout}
+              disabled={loading}
+            >
               <LogOut size={20} className="dark:text-gray-300" />
-            </div>
+            </Button>
           </div>
         </header>
         <nav id="sidebarContent" className="flex flex-col gap-6 md:gap-8">
           <div className="flex flex-col gap-2">
             <h3 className="text-sm opacity-40 dark:text-gray-400">Generale</h3>
-            {data.navGeneral.map((item) => (
+            {navigationData.navGeneral.map((item) => (
               <Link href={item.url} key={item.title}>
                 <Button
                   variant={`${item.isActive === true ? "outline" : "ghost"}`}
@@ -299,7 +290,7 @@ export default function NotaiDashboardPage() {
           </div>
           <div className="flex flex-col gap-2">
             <h3 className="text-sm opacity-40 dark:text-gray-400">Documenti</h3>
-            {data.navDocumenti.map((item) => (
+            {navigationData.navDocumenti.map((item) => (
               <Link href={item.url} key={item.title}>
                 <Button
                   variant={`${item.isActive === true ? "outline" : "ghost"}`}
@@ -324,7 +315,6 @@ export default function NotaiDashboardPage() {
             id="page-title"
             className="flex items-center justify-between py-2 md:py-4"
           >
-            {/* Sidebar toggle button - improved visibility */}
             <Button
               variant="outline"
               size="icon"
@@ -373,7 +363,6 @@ export default function NotaiDashboardPage() {
             id="page-content"
             className="flex w-full flex-col justify-between gap-6 md:gap-8"
           >
-            {/* Cards with consistent badge styling matching the design */}
             <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-1 md:mb-8 md:grid-cols-2 md:gap-4 lg:grid-cols-4">
               <Card className="flex h-full flex-col justify-between p-6 dark:border-gray-700 dark:bg-gray-800">
                 <div className="mb-2">
@@ -440,7 +429,6 @@ export default function NotaiDashboardPage() {
               </Card>
             </div>
 
-            {/* More responsive tabs */}
             <Tabs
               defaultValue="all"
               className="h-fit w-full max-w-full md:max-w-[210px]"
@@ -467,7 +455,6 @@ export default function NotaiDashboardPage() {
               </TabsList>
             </Tabs>
 
-            {/* Chart area with responsive heights */}
             <div className="relative h-60 md:h-80">
               <Line
                 data={chartData}
@@ -475,9 +462,10 @@ export default function NotaiDashboardPage() {
                 className="text-gray-500 dark:text-gray-400"
               />
 
-              {/* Tooltips - conditionally show based on screen size */}
               <div
-                className={`absolute top-1/3 right-4 md:right-16 ${isMobile ? "hidden sm:block" : "block"} rounded-lg border border-gray-100 bg-white p-2 shadow-lg md:p-3 dark:border-gray-700 dark:bg-gray-800 dark:text-white`}
+                className={`absolute top-1/3 right-4 md:right-16 ${
+                  isMobile ? "hidden sm:block" : "block"
+                } rounded-lg border border-gray-100 bg-white p-2 shadow-lg md:p-3 dark:border-gray-700 dark:bg-gray-800 dark:text-white`}
               >
                 <div className="text-lg font-bold md:text-xl">
                   1516 Documenti
@@ -488,7 +476,9 @@ export default function NotaiDashboardPage() {
               </div>
 
               <div
-                className={`absolute right-4 bottom-8 md:right-16 md:bottom-16 ${isMobile ? "hidden sm:block" : "block"} rounded-lg border border-gray-100 bg-white p-2 shadow-lg md:p-3 dark:border-gray-700 dark:bg-gray-800 dark:text-white`}
+                className={`absolute right-4 bottom-8 md:right-16 md:bottom-16 ${
+                  isMobile ? "hidden sm:block" : "block"
+                } rounded-lg border border-gray-100 bg-white p-2 shadow-lg md:p-3 dark:border-gray-700 dark:bg-gray-800 dark:text-white`}
               >
                 <div className="text-lg font-bold md:text-xl">
                   1506 Documenti
@@ -502,7 +492,6 @@ export default function NotaiDashboardPage() {
         </div>
       </section>
 
-      {/* Improved mobile overlay with higher z-index */}
       {isMobile && sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm"

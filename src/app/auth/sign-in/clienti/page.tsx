@@ -9,22 +9,9 @@ import EmailInput from "@/components/ui/email-input";
 import OtpInput from "@/components/ui/otp-input";
 import UsernameInput from "@/components/ui/username-input";
 import PasswordInput from "@/components/ui/password-input";
-
-// Define a type for the user object to ensure type safety
-interface User {
-  id: number;
-  username: string;
-  nominativo: string;
-  codice_fiscale: string | null;
-  partita_iva: string | null;
-  role: string;
-  active: number;
-  email: string;
-  sharer_id: number | null;
-  created_at: string;
-  updated_at: string;
-  must_change_password: number;
-}
+import { create } from "zustand";
+import useAuthStore from "../auth";
+import { useRouter } from "next/navigation";
 
 export default function LoginOtpPage() {
   const [email, setEmail] = useState("");
@@ -37,45 +24,39 @@ export default function LoginOtpPage() {
   const [otpCountdown, setOtpCountdown] = useState(600); // 10 minutes in seconds
   const [otpResendAvailable, setOtpResendAvailable] = useState(false);
 
+  const router = useRouter();
+  const authStore = useAuthStore();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    if (!email) {
-      setError("Email è obbligatoria");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await axios.post(
-        "https://sviluppo.datasystemgroup.it/api/prelogin",
-        { username, email, password },
+      const result = await authStore.login(
+        username.trim(),
+        email.trim(),
+        password,
       );
 
-      if (response.status === 200) {
-        // Start OTP countdown
-        startOtpCountdown();
+      if (result?.requiresOtp) {
+        console.log("OTP required, switching to OTP step");
         setStep("otp");
-      } else {
-        setError("Credenziali non valide. Riprova.");
+        startOtpCountdown();
+        return;
+      }
+
+      if (authStore.isAuthenticated()) {
+        if (authStore.user?.must_change_password) {
+          router.push("/change-password");
+        } else {
+          router.push("/dashboard/clienti");
+        }
       }
     } catch (error) {
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            setError("Credenziali errate");
-            break;
-          case 403:
-            setError("Account disattivato");
-            break;
-          default:
-            setError("Errore durante l'accesso");
-        }
-      } else {
-        setError("Errore di connessione");
-      }
+      setError(
+        error instanceof Error ? error.message : "Errore durante il login",
+      );
     } finally {
       setLoading(false);
     }
@@ -93,52 +74,42 @@ export default function LoginOtpPage() {
     }
 
     try {
-      const response = await axios.post(
-        "https://sviluppo.datasystemgroup.it/api/verify-otp",
-        {
-          password,
-          username,
-          email,
-          otp,
-        },
-      );
+      await authStore.verifyOtp(username, email, password, otp);
 
-      if (response.status === 200) {
-        // Store user information and token in localStorage
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-
-        // Check if password change is required
-        if (response.data.user.must_change_password) {
-          window.location.href = "/change-password";
+      if (authStore.isAuthenticated()) {
+        if (authStore.user?.must_change_password) {
+          router.push("/change-password");
         } else {
-          window.location.href = "/dashboard/clienti";
+          router.push("/dashboard/clienti");
         }
       } else {
-        setError("OTP non valido. Riprova.");
+        setError("Login fallito. Controlla le credenziali e riprova.");
       }
     } catch (error) {
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            setError("OTP non valido o scaduto");
-            break;
-          case 403:
-            setError("Accesso non autorizzato");
-            break;
-          default:
-            setError("Verifica OTP fallita");
-        }
-      } else {
-        setError("Errore di connessione");
-      }
+      setError("Errore durante il login. Riprova.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      setLoading(true);
+      await authStore.login(username.trim(), email.trim(), password);
+      startOtpCountdown();
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Errore durante l'invio dell'OTP",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const startOtpCountdown = () => {
-    setOtpCountdown(600);
+    setOtpCountdown(60);
     setOtpResendAvailable(false);
 
     const countdownInterval = setInterval(() => {
@@ -151,23 +122,6 @@ export default function LoginOtpPage() {
         return prevCountdown - 1;
       });
     }, 1000);
-  };
-
-  const handleResendOtp = async () => {
-    if (!otpResendAvailable) return;
-
-    try {
-      await axios.post("https://sviluppo.datasystemgroup.it/api/prelogin", {
-        email,
-        username,
-        password,
-      });
-
-      startOtpCountdown();
-      setError("");
-    } catch (error) {
-      setError("Impossibile inviare nuovamente l'OTP");
-    }
   };
 
   return (
@@ -262,7 +216,8 @@ export default function LoginOtpPage() {
                     <button
                       type="button"
                       onClick={handleResendOtp}
-                      className="text-blue-600 hover:underline"
+                      disabled={loading}
+                      className="text-blue-600 hover:underline disabled:opacity-50"
                     >
                       Invia nuovo OTP
                     </button>
