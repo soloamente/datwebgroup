@@ -6,7 +6,13 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useId, useState } from "react";
 import { Checkbox } from "./checkbox";
 
-export default function PasswordInput() {
+export default function PasswordInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
   const id = useId();
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
@@ -27,6 +33,8 @@ export default function PasswordInput() {
       <div className="relative mb-4">
         <Input
           id={id}
+          value={value}
+          onChange={onChange}
           className="h-12 rounded-lg p-4 pe-9 placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
           placeholder="Pa12£$56789!%"
           type={isVisible ? "text" : "password"}

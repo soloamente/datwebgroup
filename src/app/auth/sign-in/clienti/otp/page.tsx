@@ -2,21 +2,72 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import EmailInput from "@/components/ui/email-input";
-import PasswordInput from "@/components/ui/password-input";
-import Link from "next/link";
 import { motion } from "motion/react";
-import { ChevronLeft } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import OtpInput from "@/components/ui/otp-input";
+import axios from "axios";
 
-export default function SignInPageV2() {
-  const [showPassword, setShowPassword] = useState(false);
+export default function OtpVerificationPage() {
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    // Validate OTP
+    if (otp.length !== 5) {
+      setError("Inserisci un codice OTP valido");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "https://sviluppo.datasystemgroup.it/api/verify-otp",
+        {
+          email,
+          otp,
+        },
+      );
+
+      if (response.status === 200) {
+        // Store token securely (consider using more secure storage methods)
+        localStorage.setItem("token", response.data.token);
+
+        // Redirect to dashboard
+        router.push("/dashboard/clienti");
+      } else {
+        setError("OTP non valido. Riprova.");
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || "Verifica OTP fallita");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await axios.post("https://sviluppo.datasystemgroup.it/api/verify-otp", {
+        email,
+      });
+      // Show success message
+      alert("Nuovo OTP inviato!");
+    } catch (error) {
+      alert("Impossibile inviare un nuovo OTP. Riprova più tardi.");
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-row items-center justify-center dark:bg-gray-800">
-      {/* Left side - Document */}
+      {/* Left side - Image */}
       <div className="relative hidden h-screen w-full bg-[#eaeced] md:block md:w-2/5 dark:bg-gray-900">
         <div className="flex h-full items-center justify-center">
           <Image
@@ -29,7 +80,7 @@ export default function SignInPageV2() {
         </div>
       </div>
 
-      {/* Right side - Login form */}
+      {/* Right side - OTP Form */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -50,55 +101,45 @@ export default function SignInPageV2() {
             </div>
           </div>
 
-          {/* Login Form */}
+          {/* OTP Form */}
           <div className="mb-8 md:mb-10">
             <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
-              Area Clienti
+              Verifica OTP
             </h1>
             <p className="text-description text-sm transition-all duration-700">
-              Inserisci le tue credenziali per accedere
+              Inserisci il codice OTP inviato a <strong>{email}</strong>
             </p>
           </div>
 
-          <form className="space-y-6 md:space-y-8">
+          <form className="space-y-6 md:space-y-8" onSubmit={handleVerifyOtp}>
             <div className="flex flex-col space-y-4 md:space-y-6">
-              <OtpInput />
+              <OtpInput value={otp} onChange={(value) => setOtp(value)} />
             </div>
-            <Link
-              href="/auth/sign-in/v2/otp"
-              className="mb-8 flex cursor-pointer"
+
+            {error && (
+              <div className="text-center text-sm text-red-500">{error}</div>
+            )}
+
+            <Button
+              type="submit"
+              className="bg-primary text-primary-foreground hover:bg-button-hover h-10 w-full cursor-pointer rounded-full text-base transition-all duration-700 md:h-12 md:text-lg"
+              disabled={loading}
             >
-              <Button
-                type="submit"
-                className="bg-primary text-primary-foreground hover:bg-button-hover h-10 w-full cursor-pointer rounded-full text-base transition-all duration-700 md:h-12 md:text-lg"
-              >
-                Continua
-              </Button>
-            </Link>
+              {loading ? "Verificando..." : "Continua"}
+            </Button>
 
             <div className="text-primary flex items-center justify-center gap-2 text-sm">
               <p className="transition-all duration-700">
-                Password dimenticata?{" "}
+                Non hai ricevuto il codice?{" "}
               </p>
-              <Link
-                href=""
+              <button
+                type="button"
+                onClick={handleResendOtp}
                 className="p-0 font-medium text-inherit transition-all duration-700 hover:font-bold hover:underline"
               >
-                Recuperala
-              </Link>
+                Reinvia OTP
+              </button>
             </div>
-            <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-              <span className="bg-background text-muted-foreground relative z-10 px-2 dark:bg-gray-800">
-                Oppure
-              </span>
-            </div>
-            <Button
-              type="submit"
-              variant="outline"
-              className="h-10 w-full cursor-pointer rounded-full text-base transition-all duration-700 md:h-12 md:text-lg"
-            >
-              Accedi con codice QR
-            </Button>
           </form>
         </div>
       </motion.div>

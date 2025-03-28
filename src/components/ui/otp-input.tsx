@@ -4,13 +4,21 @@ import { cn } from "@/lib/utils";
 import { OTPInput, SlotProps } from "input-otp";
 import { useId } from "react";
 
-export default function OtpInput() {
+export default function OtpInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   const id = useId();
   return (
     <div className="w-full">
       <OTPInput
         id={id}
-        containerClassName="flex w-full items-center  has-disabled:opacity-50"
+        value={value}
+        onChange={onChange}
+        containerClassName="flex w-full items-center has-disabled:opacity-50"
         maxLength={5}
         render={({ slots }) => (
           <div className="flex w-full justify-between">
@@ -33,6 +41,7 @@ function Slot(props: SlotProps) {
       )}
     >
       {props.char !== null && <div>{props.char}</div>}
+      {props.char === null && <div className="text-gray-400">_</div>}
     </div>
   );
 }
