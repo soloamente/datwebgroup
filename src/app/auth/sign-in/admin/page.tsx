@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { motion } from "motion/react";
@@ -13,7 +13,7 @@ import { create } from "zustand";
 import useAuthStore from "../auth";
 import { useRouter } from "next/navigation";
 
-export default function LoginOtpPage() {
+export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +26,21 @@ export default function LoginOtpPage() {
 
   const router = useRouter();
   const authStore = useAuthStore();
+
+  useEffect(() => {
+    if (authStore.isAuthenticated()) {
+      if (!authStore.isAdmin()) {
+        router.push("/auth/sign-in/clienti");
+        return;
+      }
+
+      if (authStore.user?.must_change_password) {
+        router.push("/change-password");
+      } else {
+        router.push("/dashboard/clienti");
+      }
+    }
+  }, [authStore, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +144,7 @@ export default function LoginOtpPage() {
       <div className="relative hidden h-screen w-full bg-[#eaeced] md:block md:w-2/5 dark:bg-gray-900">
         <div className="flex h-full items-center justify-center">
           <Image
-            src="/Documents-cuate.svg"
+            src="/Admin-cuate.svg"
             alt="Login Notai"
             width={400}
             height={400}
@@ -157,7 +172,7 @@ export default function LoginOtpPage() {
 
           <div className="mb-8 md:mb-10">
             <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
-              Area Clienti
+              Area Amministratori
             </h1>
 
             <p className="text-description text-sm transition-all duration-700">

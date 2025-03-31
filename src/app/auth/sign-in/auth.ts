@@ -48,6 +48,8 @@ interface AuthStore {
     otp: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
+  isAdmin: () => boolean;
+  hasRole: (role: string) => boolean;
 }
 
 const useAuthStore = create<AuthStore>()(
@@ -121,6 +123,8 @@ const useAuthStore = create<AuthStore>()(
           throw new Error(errorMessage);
         }
       },
+      isAdmin: () => get().user?.role === "admin",
+      hasRole: (role: string) => get().user?.role === role,
     }),
     {
       name: "auth-storage",
