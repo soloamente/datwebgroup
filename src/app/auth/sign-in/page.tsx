@@ -162,8 +162,8 @@ export default function LoginOtpPage() {
 
             <p className="text-description text-sm transition-all duration-700">
               {step === "login"
-                ? "Inserisci la tua email per accedere"
-                : `Inserisci il codice OTP inviato a ${email}`}
+                ? "Inserisci le tue credenziali per accedere"
+                : `Inserisci il codice OTP inviata alla tua mail`}
             </p>
           </div>
 
@@ -173,10 +173,6 @@ export default function LoginOtpPage() {
                 <UsernameInput
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                />
-                <EmailInput
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
                 <PasswordInput
                   value={password}
