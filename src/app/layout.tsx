@@ -5,7 +5,7 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Preferences } from "@/components/ui/preferences";
 import { ReactLenis } from "lenis/react";
-import Navbar from "@/components/navbar";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { Toaster } from "@/components/ui/sonner";
 
@@ -21,8 +21,8 @@ const Inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Dataweb Group login",
-  description: "Dataweb Group login",
+  title: "Dataweb Group",
+  description: "Dataweb Group",
   icons: { icon: "/" },
 };
 
@@ -31,7 +31,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="en"
+      lang="en antialiased"
       suppressHydrationWarning
       className={`${Inter.variable} ${ingramMono.variable} font-inter`}
     >
@@ -43,7 +43,7 @@ export default function RootLayout({
           >
             <Preferences />
 
-            {children}
+            <NuqsAdapter>{children}</NuqsAdapter>
             <Toaster />
           </ReactLenis>
         </ThemeProvider>

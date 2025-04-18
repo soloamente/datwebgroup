@@ -10,7 +10,7 @@ import OtpInput from "@/components/ui/otp-input";
 import UsernameInput from "@/components/ui/username-input";
 import PasswordInput from "@/components/ui/password-input";
 import { create } from "zustand";
-import useAuthStore from "../auth";
+import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
       if (authStore.user?.must_change_password) {
         router.push("/change-password");
       } else {
-        router.push("/dashboard/clienti");
+        router.push("/dashboard/admin");
       }
     }
   }, [authStore, router]);
@@ -48,13 +48,13 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const result = await authStore.login(
-        username.trim(),
+      const result = await authStore.prelogin(
         email.trim(),
+        username.trim(),
         password,
       );
 
-      if (result?.requiresOtp) {
+      if (result?.success) {
         console.log("OTP required, switching to OTP step");
         setStep("otp");
         startOtpCountdown();
@@ -89,16 +89,24 @@ export default function AdminLoginPage() {
     }
 
     try {
-      await authStore.verifyOtp(username, email, password, otp);
+      const result = await authStore.verifyOtp(
+        email.trim(),
+        otp.trim(),
+        username.trim(),
+        password,
+      );
 
-      if (authStore.isAuthenticated()) {
+      if (result.success) {
         if (authStore.user?.must_change_password) {
           router.push("/change-password");
         } else {
           router.push("/dashboard/clienti");
         }
       } else {
-        setError("Login fallito. Controlla le credenziali e riprova.");
+        setError(
+          result.message ||
+            "Login fallito. Controlla le credenziali e riprova.",
+        );
       }
     } catch (error) {
       setError("Errore durante il login. Riprova.");
@@ -110,7 +118,7 @@ export default function AdminLoginPage() {
   const handleResendOtp = async () => {
     try {
       setLoading(true);
-      await authStore.login(username.trim(), email.trim(), password);
+      await authStore.prelogin(email.trim(), username.trim(), password);
       startOtpCountdown();
     } catch (error) {
       setError(
@@ -188,10 +196,6 @@ export default function AdminLoginPage() {
                 <UsernameInput
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                />
-                <EmailInput
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
                 <PasswordInput
                   value={password}

@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { motion } from "motion/react";
 
 export function Preferences() {
-  const { setTheme, theme, resolvedTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // Wait for component to mount to avoid hydration mismatch
@@ -25,88 +25,24 @@ export function Preferences() {
     setMounted(true);
   }, []);
 
-  const accentColors = [
-    {
-      value: "blue",
-      color: "#3B82F6",
-      label: "Blue",
-    },
-    {
-      value: "purple",
-      color: "#8B5CF6",
-      label: "Purple",
-    },
-    {
-      value: "pink",
-      color: "#EC4899",
-      label: "Pink",
-    },
-    {
-      value: "orange",
-      color: "#F97316",
-      label: "Orange",
-    },
-  ];
-
-  const [selectedColor, setSelectedColor] = useState(accentColors[0]?.value);
-
-  const handleColorSelect = (value: string) => {
-    setSelectedColor(value);
-    // You can add additional logic here to persist the selection
-  };
-
-  // Apply DataWeb theme
-  const applyDataWebTheme = (isDark: boolean) => {
-    // Set a custom data attribute to track DataWeb theme
-    document.documentElement.setAttribute("data-theme", "dataweb");
-
-    // Set the base theme (light or dark)
-    if (isDark) {
-      setTheme("dark");
-    } else {
-      setTheme("light");
-    }
-  };
-
-  // Reset to default theme (light or dark)
-  const resetToDefaultTheme = (themeType: string) => {
-    document.documentElement.removeAttribute("data-theme");
-    setTheme(themeType);
-  };
-
-  // Check if DataWeb theme is active
-  const isDataWebTheme = () => {
-    return document.documentElement.getAttribute("data-theme") === "dataweb";
-  };
-
-  // Check if DataWeb light theme is active
-  const isDataWebLightTheme = () => {
-    return isDataWebTheme() && (resolvedTheme === "light" || theme === "light");
-  };
-
-  // Check if DataWeb dark theme is active
-  const isDataWebDarkTheme = () => {
-    return isDataWebTheme() && (resolvedTheme === "dark" || theme === "dark");
-  };
-
   const items = [
     {
       value: "1",
       label: "DataWeb Light",
       image: "/ui-light_dataweb.png",
       onclick: () => {
-        applyDataWebTheme(false);
+        setTheme("light");
       },
-      selected: mounted && isDataWebLightTheme(),
+      selected: mounted && theme === "light",
     },
     {
       value: "2",
       label: "DataWeb Dark",
       image: "/ui-dark_dataweb.png",
       onclick: () => {
-        applyDataWebTheme(true);
+        setTheme("dark");
       },
-      selected: mounted && isDataWebDarkTheme(),
+      selected: mounted && theme === "dark",
     },
   ];
 

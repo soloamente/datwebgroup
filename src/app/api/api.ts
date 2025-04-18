@@ -1,0 +1,141 @@
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "https://sviluppo.datasystemgroup.it/api",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+});
+
+export interface CreateViewerData {
+  nominativo: string;
+  email: string;
+  codice_fiscale?: string;
+  partita_iva?: string;
+}
+
+export interface CreateSharerData {
+  username: string;
+  nominativo: string;
+  email: string;
+  codice_fiscale?: string;
+  partita_iva?: string;
+}
+
+export interface ChangePasswordData {
+  password: string;
+  password_confirmation: string;
+}
+
+export interface Sharer {
+  id: number;
+  username: string;
+  nominativo: string;
+  email: string;
+  role: string;
+  active: boolean;
+  codice_fiscale?: string;
+  partita_iva?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Viewer {
+  id: number;
+  username: string;
+  nominativo: string;
+  email: string;
+  role: string;
+  active: boolean;
+  sharer_id: number;
+  codice_fiscale?: string;
+  partita_iva?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateSharerData {
+  nominativo: string;
+  email: string;
+  codice_fiscale?: string;
+  partita_iva?: string;
+}
+
+export interface UpdateViewerData {
+  nominativo: string;
+  email: string;
+  codice_fiscale?: string;
+  partita_iva?: string;
+}
+
+export interface UpdateViewerResponse {
+  success: boolean;
+  message: string;
+  viewer: Viewer;
+}
+
+export interface SendUsernameByIdData {
+  sharer_id: number;
+}
+
+const getSharers = async (): Promise<Sharer[]> => {
+  const response = await api.get<Sharer[]>("/sharers");
+  return response.data;
+};
+
+const toggleSharerStatus = async (id: number): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>(
+    `/sharers/${id}/toggle-status`,
+  );
+  return response.data;
+};
+
+const updateSharer = async (
+  id: number,
+  data: UpdateSharerData,
+): Promise<{ message: string; sharer: Sharer }> => {
+  const response = await api.put<{ message: string; sharer: Sharer }>(
+    `/sharers/${id}`,
+    data,
+  );
+  return response.data;
+};
+
+const getViewers = async (): Promise<Viewer[]> => {
+  const response = await api.get<Viewer[]>("/viewers");
+  return response.data;
+};
+
+const updateViewer = async (
+  id: number,
+  data: UpdateViewerData,
+): Promise<UpdateViewerResponse> => {
+  // TODO: Add authentication header if needed
+  const response = await api.put<UpdateViewerResponse>(`/viewers/${id}`, data);
+  return response.data;
+};
+
+const sendUsernameToSharerById = async (
+  data: SendUsernameByIdData,
+): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>(
+    "/send-username-to-sharer-by-id",
+    data,
+  );
+  return response.data;
+};
+
+export const userService = {
+  createViewer: (data: CreateViewerData) => api.post("/create-viewer", data),
+  createSharer: (data: CreateSharerData) => api.post("/create-sharer", data),
+  changePassword: (data: ChangePasswordData) =>
+    api.post("/change-password", data),
+  getSharers,
+  toggleSharerStatus,
+  updateSharer,
+  getViewers,
+  updateViewer,
+  sendUsernameToSharerById,
+};

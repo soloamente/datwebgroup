@@ -6,60 +6,49 @@ import { LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import useAuthStore from "@/app/auth/sign-in/auth";
+import useAuthStore from "@/app/api/auth";
 import { GridIcon } from "public/pikaiconsv2.0/solid/grid";
 import { UserIcon } from "public/pikaiconsv2.0/solid/user";
 import { FolderIcon } from "public/pikaiconsv2.0/solid/folder";
 import { PlusSquareIcon } from "public/pikaiconsv2.0/solid/plus-square";
 import { PencilEditSwooshIcon } from "public/pikaiconsv2.0/solid/pencil-edit-swoosh";
 import { EnvelopeIcon } from "public/pikaiconsv2.0/solid/envelope";
+import { ListChecksIcon } from "lucide-react";
 
-{
-  /** da rimuovere per gli admin */
-}
 const navigationData = {
   navGeneral: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/dashboard/admin",
       icon: GridIcon,
-    },
-    {
-      title: "Clienti",
-      url: "#",
-      icon: UserIcon,
-      items: [
-        {
-          title: "Gestisci",
-          url: "#",
-        },
-        {
-          title: "Richieste",
-          url: "#",
-        },
-      ],
+      description: "Vai alla dashboard principale",
     },
   ],
-  navDocumenti: [
+
+  navAdmin: [
     {
-      title: "Tutti",
-      url: "#",
+      title: "Gestione Utenti",
+      url: "/dashboard/admin/utenti",
+      icon: UserIcon,
+      description: "Gestisci gli utenti del sistema",
+    },
+    {
+      title: "Lista Sharer",
+      url: "/dashboard/admin/utenti/lista-sharer",
       icon: FolderIcon,
+      description: "Visualizza e gestisci gli sharer",
     },
     {
-      title: "Condividi",
-      url: "#",
-      icon: PlusSquareIcon,
+      title: "Lista Viewer",
+      url: "/dashboard/admin/utenti/lista-viewer",
+      icon: UserIcon,
+      description: "Visualizza e gestisci i viewer",
     },
     {
-      title: "Gestisci",
-      url: "#",
-      icon: PencilEditSwooshIcon,
-    },
-    {
-      title: "Richieste",
-      url: "#",
-      icon: EnvelopeIcon,
+      title: "Impostazioni",
+      url: "/dashboard/admin/settings",
+      icon: GridIcon,
+      description: "Configura le impostazioni del sistema",
     },
   ],
 };
@@ -72,24 +61,14 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const authStore = useAuthStore();
 
-  useEffect(() => {
-    if (!authStore.isAuthenticated()) {
-      router.push("/auth/sign-in");
-      return;
-    }
-
-    if (!authStore.isAdmin() && window.location.pathname.includes("/admin")) {
-      router.push("/dashboard");
-    }
-  }, [authStore, router]);
-
   const userData = {
     name: authStore.user?.nominativo ?? authStore.user?.username ?? "Utente",
-    role: authStore.user?.role ?? "",
+    role: authStore.user?.role,
     avatar: authStore.user?.avatar ?? "/avatars/user-placeholder.png",
   };
 
@@ -117,111 +96,91 @@ export default function DashboardLayout({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const adminNavItems = authStore.isAdmin()
-    ? [
-        {
-          title: "Gestione Utenti",
-          url: "/dashboard/admin/utenti",
-          icon: UserIcon,
-        },
-        {
-          title: "Impostazioni",
-          url: "/dashboard/admin/settings",
-          icon: GridIcon,
-        },
-      ]
-    : [];
-
   const isActiveRoute = (url: string) => {
     if (url === "#") return false;
     return pathname === url;
   };
 
-  if (!authStore.isAuthenticated()) {
-    return null;
-  }
+  const handleSidebarToggle = () => {
+    setIsTransitioning(true);
+    setSidebarOpen(!sidebarOpen);
+    setTimeout(() => setIsTransitioning(false), 200);
+  };
 
   return (
-    <main className="flex min-h-screen overflow-hidden bg-[#eaeced] transition-all duration-700 dark:bg-gray-900">
-      <section
+    <main className="flex min-h-screen overflow-hidden transition-all duration-700">
+      <aside
         id="sidebar"
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed z-30 m-2 w-[300px] flex-col gap-4 rounded-2xl bg-[#e1e4e6] p-3 transition-all duration-200 md:relative md:m-4 md:w-[300px] md:translate-x-0 md:p-4 dark:bg-gray-800`}
+        } fixed z-30 m-2 w-[300px] flex-col gap-4 rounded-2xl bg-[#e1e4e6] p-3 transition-all duration-200 md:relative md:m-4 md:w-[300px] md:translate-x-0 md:p-4`}
+        aria-label="Sidebar"
       >
         <header id="sidebarHeader" className="mb-6 md:mb-8">
           <div className="flex items-center justify-between">
             <div className="flex h-[42px] w-full items-center justify-start gap-2">
               <Image
                 src={userData.avatar}
-                alt="User Avatar"
+                alt={`Avatar di ${userData.name}`}
                 width={42}
                 height={42}
                 className="rounded-lg"
+                priority
               />
               <div className="flex-col">
-                <h2 className="font-semibold dark:text-white">
-                  {userData.name}
-                </h2>
-                <p className="text-xs opacity-50 dark:text-gray-300">
-                  {userData.role}
-                </p>
+                <h2 className="font-semibold">{userData.name}</h2>
+                <p className="text-xs opacity-50">{userData.role}</p>
               </div>
             </div>
             <Button
               className="flex items-center gap-2"
               onClick={handleLogout}
               disabled={loading}
+              aria-label="Logout"
             >
-              <LogOut size={20} className="dark:text-gray-300" />
+              <LogOut size={20} className="" />
             </Button>
           </div>
         </header>
 
-        <nav id="sidebarContent" className="flex flex-col gap-6 md:gap-8">
-          {/* Navigation sections */}
+        <nav
+          id="sidebarContent"
+          className="flex flex-col gap-6 md:gap-8"
+          aria-label="Main navigation"
+        >
+          {/* General Navigation */}
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm opacity-40 dark:text-gray-400">Generale</h3>
+            <h3 className="text-sm opacity-40">Generale</h3>
             {navigationData.navGeneral.map((item) => (
-              <Link href={item.url} key={item.title}>
-                <Button
-                  variant={isActiveRoute(item.url) ? "outline" : "ghost"}
-                  className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none dark:text-white dark:hover:bg-gray-700 dark:focus:bg-gray-700"
-                >
-                  <item.icon size={20} className="mr-2" />
-                  <span className="text-sm">{item.title}</span>
-                </Button>
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h3 className="text-sm opacity-40 dark:text-gray-400">Documenti</h3>
-            {navigationData.navDocumenti.map((item) => (
-              <Link href={item.url} key={item.title}>
-                <Button
-                  variant={isActiveRoute(item.url) ? "outline" : "ghost"}
-                  className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none dark:text-white dark:hover:bg-gray-700 dark:focus:bg-gray-700"
-                >
-                  <item.icon size={20} className="mr-2" />
-                  <span className="text-sm">{item.title}</span>
-                </Button>
-              </Link>
-            ))}
-          </div>
-
-          {authStore.isAdmin() && (
-            <div className="flex flex-col gap-2">
-              <h3 className="text-sm opacity-40 dark:text-gray-400">
-                Amministrazione
-              </h3>
-              {adminNavItems.map((item) => (
-                <Link href={item.url} key={item.title}>
+              <div key={item.title}>
+                <Link href={item.url} aria-label={item.description}>
                   <Button
                     variant={isActiveRoute(item.url) ? "outline" : "ghost"}
-                    className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none dark:text-white dark:hover:bg-gray-700 dark:focus:bg-gray-700"
+                    className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
                   >
-                    <item.icon size={20} className="mr-2" />
+                    <item.icon size={20} className="mr-2" aria-hidden="true" />
+                    <span className="text-sm">{item.title}</span>
+                  </Button>
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          {/* Admin Navigation */}
+          {authStore.isAdmin() && (
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm opacity-40">Amministrazione</h3>
+              {navigationData.navAdmin.map((item) => (
+                <Link
+                  href={item.url}
+                  key={item.title}
+                  aria-label={item.description}
+                >
+                  <Button
+                    variant={isActiveRoute(item.url) ? "outline" : "ghost"}
+                    className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
+                  >
+                    <item.icon size={20} className="mr-2" aria-hidden="true" />
                     <span className="text-sm">{item.title}</span>
                   </Button>
                 </Link>
@@ -229,7 +188,7 @@ export default function DashboardLayout({
             </div>
           )}
         </nav>
-      </section>
+      </aside>
 
       <section
         id="content"
@@ -240,7 +199,9 @@ export default function DashboardLayout({
             variant="outline"
             size="icon"
             className="mb-2 md:hidden"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={handleSidebarToggle}
+            aria-label={sidebarOpen ? "Chiudi menu" : "Apri menu"}
+            aria-expanded={sidebarOpen}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -252,21 +213,26 @@ export default function DashboardLayout({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="6" x2="21" y2="6" />
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
-            <span className="sr-only">Toggle Menu</span>
           </Button>
         )}
-        {children}
+        <div
+          className={`transition-opacity duration-200 ${isTransitioning ? "opacity-50" : "opacity-100"}`}
+        >
+          {children}
+        </div>
       </section>
 
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm transition-opacity duration-200"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
     </main>
