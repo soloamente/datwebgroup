@@ -19,24 +19,18 @@ const navigationData = {
   navGeneral: [
     {
       title: "Dashboard",
-      url: "/dashboard/admin",
+      url: "/dashboard/sharer",
       icon: GridIcon,
       description: "Vai alla dashboard principale",
     },
   ],
 
-  navAdmin: [
+  navSharer: [
     {
       title: "Gestione Utenti",
-      url: "/dashboard/admin/utenti",
+      url: "/dashboard/sharer/utenti",
       icon: UserIcon,
       description: "Gestisci gli utenti del sistema",
-    },
-    {
-      title: "Lista Sharer",
-      url: "/dashboard/admin/utenti/lista-sharer",
-      icon: FolderIcon,
-      description: "Visualizza e gestisci gli sharer",
     },
   ],
 };
@@ -101,7 +95,7 @@ export default function DashboardLayout({
         id="sidebar"
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } bg-sidebar fixed z-30 m-2 w-[300px] flex-col gap-4 rounded-2xl p-3 transition-all duration-200 md:relative md:m-4 md:w-[300px] md:translate-x-0 md:p-4`}
+        } fixed z-30 m-2 w-[300px] flex-col gap-4 rounded-2xl bg-[#e1e4e6] p-3 transition-all duration-200 md:relative md:m-4 md:w-[300px] md:translate-x-0 md:p-4`}
         aria-label="Sidebar"
       >
         <header id="sidebarHeader" className="mb-6 md:mb-8">
@@ -155,10 +149,10 @@ export default function DashboardLayout({
           </div>
 
           {/* Admin Navigation */}
-          {authStore.isAdmin() && (
+          {authStore.user?.role === "sharer" && (
             <div className="flex flex-col gap-2">
               <h3 className="text-sm opacity-40">Amministrazione</h3>
-              {navigationData.navAdmin.map((item) => (
+              {navigationData.navSharer.map((item) => (
                 <Link
                   href={item.url}
                   key={item.title}

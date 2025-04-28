@@ -3,13 +3,10 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
 import { motion } from "motion/react";
-import EmailInput from "@/components/ui/email-input";
 import OtpInput from "@/components/ui/otp-input";
 import UsernameInput from "@/components/ui/username-input";
 import PasswordInput from "@/components/ui/password-input";
-import { create } from "zustand";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 
@@ -100,7 +97,7 @@ export default function AdminLoginPage() {
         if (authStore.user?.must_change_password) {
           router.push("/change-password");
         } else {
-          router.push("/dashboard/clienti");
+          router.push("/dashboard/admin");
         }
       } else {
         setError(

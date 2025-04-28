@@ -185,11 +185,13 @@ export default function DashboardPage() {
       <div className="container mx-auto p-4">
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <div className="flex items-center justify-between py-2 md:py-4">
-            <h1 className="text-2xl font-medium md:text-4xl">Dashboard</h1>
+            <h1 className="text-2xl font-medium md:text-4xl dark:text-white">
+              Dashboard
+            </h1>
           </div>
         </div>
 
-        <div className="bg-card min-h-[calc(100vh-6rem)] flex-1 rounded-xl p-3 transition-colors duration-200 md:min-h-min md:p-8">
+        <div className="bg-muted/50 min-h-[calc(100vh-6rem)] flex-1 rounded-xl p-3 transition-colors duration-200 md:min-h-min md:p-8 dark:bg-gray-800">
           <header className="mb-6 md:mb-16">
             <h2 className="mb-3 text-base md:mb-4 md:text-lg dark:text-gray-200">
               Totale documenti condivisi

@@ -2,6 +2,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*=============================================
+=            CSS Variable Definitions         =
+=============================================*/
+
+/* Light Theme Variables */
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(240 10% 3.9%);
@@ -38,14 +43,15 @@
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
+/* Dark Theme Variables */
 .dark {
-  --background: hsl(240 10% 3.9%);
+  --background: oklch(0.11 0.0282 246.23);
   --foreground: hsl(0 0% 98%);
   --card: hsl(240 10% 3.9%);
   --card-foreground: hsl(0 0% 98%);
   --popover: hsl(240 10% 3.9%);
   --popover-foreground: hsl(0 0% 98%);
-  --primary: hsl(0 0% 98%);
+  --primary: oklch(0.51 0.1733 256.59);
   --primary-foreground: hsl(240 5.9% 10%);
   --secondary: hsl(240 3.7% 15.9%);
   --secondary-foreground: hsl(0 0% 98%);
@@ -53,7 +59,8 @@
   --muted-foreground: hsl(240 5% 64.9%);
   --accent: hsl(240 3.7% 15.9%);
   --accent-foreground: hsl(0 0% 98%);
-  --destructive: hsl(0 62.8% 30.6%);
+  --warning: oklch(0.79 0.171176 70.1526);
+  --destructive: oklch(0.57 0.209 22.65);
   --destructive-foreground: hsl(0 0% 98%);
   --border: hsl(240 3.7% 15.9%);
   --input: hsl(240 3.7% 15.9%);
@@ -73,6 +80,7 @@
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
+/* Inline Theme Variables (Tailwind Plugin?) */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -88,6 +96,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-warning: var(--warning);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -115,60 +124,82 @@
   --animate-fade-down: fade-down 0.5s;
   --animate-fade-up: fade-up 0.5s;
   --animate-stroke-dashoffset: stroke-dashoffset 0.2s linear forwards;
+}
 
-  @keyframes fade-down {
-    0% {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    80% {
-      opacity: 0.6;
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0px);
-    }
+/*=============================================
+=            Keyframe Animations             =
+=============================================*/
+
+@keyframes fade-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-  @keyframes fade-up {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    80% {
-      opacity: 0.6;
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0px);
-    }
+  80% {
+    opacity: 0.6;
   }
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-    to {
-      height: var(--radix-accordion-content-height);
-    }
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
   }
-  @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
-    to {
-      height: 0;
-    }
+}
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  @keyframes stroke-dashoffset {
-    0% {
-      stroke-dashoffset: 100%;
-    }
-    100% {
-      stroke-dashoffset: 0;
-    }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+@keyframes stroke-dashoffset {
+  0% {
+    stroke-dashoffset: 100%;
+  }
+  100% {
+    stroke-dashoffset: 0;
   }
 }
 
+/*=============================================
+=            Base Layer Styles                =
+=============================================*/
+
 @layer base {
+  /* Global Styles */
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Link Styles */
+  a:has(code) {
+    @apply !no-underline;
+  }
+
+  /* Font Styles */
   .font-inter {
     font-feature-settings:
       "cv01" 1,
@@ -186,17 +217,8 @@
       "ss02" 1,
       "ss03" 1;
   }
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
 
-  a:has(code) {
-    @apply !no-underline;
-  }
-
+  /* Custom Scrollbar Styles */
   /**
    * @see https://github.com/shadcn-ui/ui/blob/main/apps/www/styles/globals.css#L98
    */
@@ -216,7 +238,12 @@
   }
 }
 
+/*=============================================
+=          Component Layer Styles             =
+=============================================*/
+
 @layer components {
+  /* Rehype Pretty Code */
   [data-rehype-pretty-code-figure] figure {
     @apply bg-secondary/50! border-none;
   }
@@ -225,6 +252,10 @@
     @apply text-[var(--shiki-light)] dark:text-[var(--shiki-dark)];
   }
 }
+
+/*=============================================
+=            Utility Classes                  =
+=============================================*/
 
 @utility component-block {
   & pre {

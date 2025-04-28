@@ -45,7 +45,6 @@ export default function UsersPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data: CreateViewerData = {
-      username: formData.get("username") as string,
       nominativo: formData.get("nominativo") as string,
       email: formData.get("email") as string,
     };
@@ -64,10 +63,8 @@ export default function UsersPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data: ChangePasswordData = {
-      username: formData.get("username") as string,
       password: formData.get("password") as string,
       password_confirmation: formData.get("password") as string,
-      updated_at: new Date().toISOString(),
     };
 
     try {
