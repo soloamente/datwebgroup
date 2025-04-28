@@ -7,8 +7,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import PasswordInput from "@/components/ui/password-input";
-import EmailInput from "@/components/ui/email-input";
 
 export default function NotaryLoginPage() {
   return (

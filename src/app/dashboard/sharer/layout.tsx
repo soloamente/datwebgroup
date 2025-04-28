@@ -58,7 +58,7 @@ export default function DashboardLayout({
     try {
       setLoading(true);
       await authStore.logout();
-      router.push("/auth/sign-in");
+      router.push("/sign-in");
     } catch (error) {
       console.error("Errore durante il logout:", error);
     } finally {

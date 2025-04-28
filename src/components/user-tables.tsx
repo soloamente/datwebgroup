@@ -201,7 +201,7 @@ export const columns = (
               Modifica Utente
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onChangePassword(sharer)}>
-              Cambia Password
+              Reset Password
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSendUsername(sharer)}>
               Invia Username
@@ -360,26 +360,22 @@ export function UserTables({
               id={`${id}-input`}
               ref={inputRef}
               className={cn(
-                "peer min-w-60 pl-9",
-                Boolean(table.getColumn("username")?.getFilterValue()) &&
-                  "pr-9",
+                "peer min-w-80 pl-9",
+                Boolean(table.getState().globalFilter) && "pr-9",
               )}
-              value={
-                (table.getColumn("username")?.getFilterValue() ?? "") as string
-              }
-              onChange={(e) =>
-                table.getColumn("username")?.setFilterValue(e.target.value)
-              }
-              placeholder="Filtra per username..."
+              // eslint-disable-next-line
+              value={table.getState().globalFilter ?? ""}
+              onChange={(e) => table.setGlobalFilter(e.target.value)}
+              placeholder="Cerca per username, nominativo o email..."
               type="text"
-              aria-label="Filtra per username"
+              aria-label="Cerca utenti"
             />
-            {Boolean(table.getColumn("username")?.getFilterValue()) && (
+            {Boolean(table.getState().globalFilter) && (
               <button
                 className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 right-0 flex h-full w-9 items-center justify-center rounded-r-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Clear filter"
+                aria-label="Pulisci filtro"
                 onClick={() => {
-                  table.getColumn("username")?.setFilterValue("");
+                  table.setGlobalFilter("");
                   if (inputRef.current) {
                     inputRef.current.focus();
                   }
@@ -389,43 +385,10 @@ export function UserTables({
               </button>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleOpenCreateDialog}
-          >
-            <Plus />
-          </Button>
         </div>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto flex items-center">
-              Colonne <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {typeof column.columnDef.header === "string"
-                      ? column.columnDef.header
-                      : column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button variant="outline" onClick={handleOpenCreateDialog}>
+          <Plus /> Crea Utente
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>
