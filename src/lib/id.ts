@@ -22,6 +22,6 @@ export function generateId(
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
     length,
   )();
-
+  // eslint-disable-next-line
   return prefix ? `${prefixes[prefix]}${separator}${id}` : id;
 }

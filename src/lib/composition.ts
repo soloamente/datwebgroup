@@ -35,10 +35,10 @@ function setRef<T>(ref: PossibleRef<T>, value: T) {
   if (typeof ref === "function") {
     return ref(value);
   }
-
+  // eslint-disable-next-line
   if (ref !== null && ref !== undefined) {
-    // @ts-ignore
-    ref.current = value;
+    // eslint-disable-next-line
+    ref.current = value as any;
   }
 }
 

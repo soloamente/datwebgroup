@@ -101,7 +101,7 @@ export default function AdminLoginPage() {
         }
       } else {
         setError(
-          result.message ||
+          result.message ??
             "Login fallito. Controlla le credenziali e riprova.",
         );
       }
