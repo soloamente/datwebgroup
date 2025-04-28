@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ViewerTables } from "@/components/viewer-tables"; // Adjust the import path
-import { userService, Viewer } from "@/app/api/api"; // Import userService and Viewer type
+import { userService, type Viewer } from "@/app/api/api"; // Import userService and Viewer type
 
 export default function ListaViewerPage() {
   const [viewers, setViewers] = useState<Viewer[]>([]);
@@ -24,6 +24,7 @@ export default function ListaViewerPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchViewers();
   }, []);
 

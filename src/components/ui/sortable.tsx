@@ -188,11 +188,14 @@ function Sortable<T>(props: SortableProps<T>) {
     () => ({
       onDragStart({ active }) {
         const activeValue = active.id.toString();
+        // eslint-disable-next-line
         return `Grabbed sortable item "${activeValue}". Current position is ${active.data.current?.sortable.index + 1} of ${value.length}. Use arrow keys to move, space to drop.`;
       },
       onDragOver({ active, over }) {
         if (over) {
+          // eslint-disable-next-line
           const overIndex = over.data.current?.sortable.index ?? 0;
+          // eslint-disable-next-line
           const activeIndex = active.data.current?.sortable.index ?? 0;
           const moveDirection = overIndex > activeIndex ? "down" : "up";
           const activeValue = active.id.toString();
@@ -203,19 +206,23 @@ function Sortable<T>(props: SortableProps<T>) {
       onDragEnd({ active, over }) {
         const activeValue = active.id.toString();
         if (over) {
+          // eslint-disable-next-line
           const overIndex = over.data.current?.sortable.index ?? 0;
           return `Sortable item "${activeValue}" dropped at position ${overIndex + 1} of ${value.length}.`;
         }
         return `Sortable item "${activeValue}" dropped. No changes were made.`;
       },
       onDragCancel({ active }) {
+        // eslint-disable-next-line
         const activeIndex = active.data.current?.sortable.index ?? 0;
         const activeValue = active.id.toString();
         return `Sorting cancelled. Sortable item "${activeValue}" returned to position ${activeIndex + 1} of ${value.length}.`;
       },
       onDragMove({ active, over }) {
         if (over) {
+          // eslint-disable-next-line
           const overIndex = over.data.current?.sortable.index ?? 0;
+          // eslint-disable-next-line
           const activeIndex = active.data.current?.sortable.index ?? 0;
           const moveDirection = overIndex > activeIndex ? "down" : "up";
           const activeValue = active.id.toString();
@@ -427,7 +434,7 @@ const SortableItem = React.forwardRef<HTMLDivElement, SortableItemProps>(
           ref={composedRef}
           style={composedStyle}
           className={cn(
-            "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1",
+            "focus-visible:ring-ring focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden",
             {
               "touch-none select-none": asHandle,
               "cursor-default": context.flatCursor,

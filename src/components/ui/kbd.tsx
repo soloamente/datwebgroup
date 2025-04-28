@@ -97,6 +97,7 @@ const KbdKey = React.forwardRef<HTMLSpanElement, KbdKeyProps>(
       ...keyProps
     } = props;
 
+    // eslint-disable-next-line
     const keyText = children?.toString() ?? "";
     const title = titleProp ?? KEY_DESCRIPTIONS[keyText] ?? keyText;
 

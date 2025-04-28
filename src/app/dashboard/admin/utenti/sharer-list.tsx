@@ -48,6 +48,7 @@ export default function SharerList() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line
     fetchSharers();
   }, []);
 
