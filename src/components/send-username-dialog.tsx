@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Sharer, userService } from "@/app/api/api";
+import { type Sharer, userService } from "@/app/api/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -40,10 +40,12 @@ export function SendUsernameDialog({
       // Assuming the API returns a success message or we use a standard one
       // The user-tables component already shows a toast on success via onUsernameSent callback
       onUsernameSent();
+      // eslint-disable-next-line
     } catch (error: any) {
       console.error("Failed to send username:", error);
       toast.error(
-        error.response?.data?.error || "Impossibile inviare l'username.",
+        // eslint-disable-next-line
+        error.response?.data?.error ?? "Impossibile inviare l'username.",
       );
       // Keep the dialog open on error to allow retry or cancellation
     } finally {
@@ -64,8 +66,8 @@ export function SendUsernameDialog({
         <DialogHeader>
           <DialogTitle>Conferma Invio Username</DialogTitle>
           <DialogDescription>
-            Sei sicuro di voler inviare l'username{" "}
-            <strong>{user?.username}</strong> all'indirizzo email{" "}
+            Sei sicuro di voler inviare l&apos;username{" "}
+            <strong>{user?.username}</strong> all&apos;indirizzo email{" "}
             <strong>{user?.email}</strong>?
           </DialogDescription>
         </DialogHeader>

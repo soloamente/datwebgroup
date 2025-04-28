@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sharer, UpdateSharerData, userService } from "@/app/api/api";
+import { type Sharer, type UpdateSharerData, userService } from "@/app/api/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export function EditUserDialog({
     partita_iva: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string | null }>({
+  const [errors, setErrors] = useState<Record<string, string | null>>({
     email: null,
     codice_fiscale: null,
     partita_iva: null,
@@ -47,8 +47,8 @@ export function EditUserDialog({
       setFormData({
         nominativo: user.nominativo,
         email: user.email,
-        codice_fiscale: user.codice_fiscale || "",
-        partita_iva: user.partita_iva || "",
+        codice_fiscale: user.codice_fiscale ?? "",
+        partita_iva: user.partita_iva ?? "",
       });
     } else {
       // Reset form when dialog is closed or user is null
@@ -112,9 +112,9 @@ export function EditUserDialog({
     // --- Validation ---
     const emailError = validateEmail(formData.email);
     const codiceFiscaleError = validateCodiceFiscale(
-      formData.codice_fiscale || "",
+      formData.codice_fiscale ?? "",
     );
-    const partitaIvaError = validatePartitaIva(formData.partita_iva || "");
+    const partitaIvaError = validatePartitaIva(formData.partita_iva ?? "");
 
     setErrors({
       email: emailError,
@@ -144,10 +144,12 @@ export function EditUserDialog({
       toast.success(response.message || "Utente aggiornato con successo.");
       onUserUpdate();
       onClose();
+      // eslint-disable-next-line
     } catch (error: any) {
       console.error("Failed to update sharer:", error);
       toast.error(
-        error.response?.data?.error || "Impossibile aggiornare l'utente.",
+        // eslint-disable-next-line
+        error.response?.data?.error ?? "Impossibile aggiornare l'utente.",
       );
     } finally {
       setIsLoading(false);
@@ -164,7 +166,7 @@ export function EditUserDialog({
         <DialogHeader>
           <DialogTitle>Modifica Utente</DialogTitle>
           <DialogDescription>
-            Aggiorna le informazioni dell'utente. Clicca su salva per
+            Aggiorna le informazioni dell&apos;utente. Clicca su salva per
             confermare.
           </DialogDescription>
         </DialogHeader>

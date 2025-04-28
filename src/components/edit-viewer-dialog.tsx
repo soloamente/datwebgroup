@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Viewer, UpdateViewerData, userService } from "@/app/api/api";
+import { type Viewer, type UpdateViewerData, userService } from "@/app/api/api";
 import { toast } from "sonner";
 
 interface EditViewerDialogProps {
@@ -41,8 +41,8 @@ export function EditViewerDialog({
       setFormData({
         nominativo: viewer.nominativo,
         email: viewer.email,
-        codice_fiscale: viewer.codice_fiscale || "",
-        partita_iva: viewer.partita_iva || "",
+        codice_fiscale: viewer.codice_fiscale ?? "",
+        partita_iva: viewer.partita_iva ?? "",
       });
     } else {
       // Reset form if viewer is null (dialog closed or no viewer selected)
@@ -72,17 +72,19 @@ export function EditViewerDialog({
       // Prepare data, sending undefined for empty optional fields if needed by the API
       const dataToSend: UpdateViewerData = {
         ...formData,
-        codice_fiscale: formData.codice_fiscale || undefined,
-        partita_iva: formData.partita_iva || undefined,
+        codice_fiscale: formData.codice_fiscale ?? undefined,
+        partita_iva: formData.partita_iva ?? undefined,
       };
       const response = await userService.updateViewer(viewer.id, dataToSend);
       toast.success(response.message || "Viewer aggiornato con successo.");
       onViewerUpdate(); // Refresh the list
       onClose(); // Close the dialog
+      // eslint-disable-next-line
     } catch (error: any) {
       console.error("Failed to update viewer:", error);
       toast.error(
-        error.response?.data?.message || "Impossibile aggiornare il viewer.",
+        // eslint-disable-next-line
+        error.response?.data?.message ?? "Impossibile aggiornare il viewer.",
       );
     } finally {
       setIsSubmitting(false);

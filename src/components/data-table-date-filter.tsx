@@ -110,7 +110,7 @@ export function DataTableDateFilter<TData>({
   const hasValue = React.useMemo(() => {
     if (multiple) {
       if (!getIsDateRange(selectedDates)) return false;
-      return selectedDates.from || selectedDates.to;
+      return selectedDates.from ?? selectedDates.to;
     }
     if (!Array.isArray(selectedDates)) return false;
     return selectedDates.length > 0;
@@ -128,7 +128,7 @@ export function DataTableDateFilter<TData>({
     if (multiple) {
       if (!getIsDateRange(selectedDates)) return null;
 
-      const hasSelectedDates = selectedDates.from || selectedDates.to;
+      const hasSelectedDates = selectedDates.from ?? selectedDates.to;
       const dateText = hasSelectedDates
         ? formatDateRange(selectedDates)
         : "Select date range";
@@ -182,7 +182,7 @@ export function DataTableDateFilter<TData>({
               aria-label={`Clear ${title} filter`}
               tabIndex={0}
               onClick={onReset}
-              className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="focus-visible:ring-ring rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-1 focus-visible:outline-none"
             >
               <XCircle />
             </div>

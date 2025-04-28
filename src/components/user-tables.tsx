@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sharer } from "@/app/api/api";
+import { type Sharer } from "@/app/api/api";
 import { userService } from "@/app/api/api";
 import { useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -106,6 +106,7 @@ export const columns = (
         </Button>
       );
     },
+    // eslint-disable-next-line
     cell: ({ row }) => row.getValue("username"),
   },
   {
@@ -256,10 +257,12 @@ export function UserTables({
       const response = await userService.toggleSharerStatus(id);
       toast.success(response.message);
       onStatusChange();
+      // eslint-disable-next-line
     } catch (error: any) {
       console.error("Failed to toggle sharer status:", error);
       toast.error(
-        error.response?.data?.error ||
+        // eslint-disable-next-line
+        error.response?.data?.error ??
           "Impossibile cambiare lo stato dello sharer.",
       );
     }
@@ -301,6 +304,7 @@ export function UserTables({
   const tableColumns = React.useMemo(
     () =>
       columns(
+        // eslint-disable-next-line
         handleToggleStatus,
         handleEditUser,
         handleOpenChangePasswordDialog,

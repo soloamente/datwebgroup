@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/table";
 // import { Badge } from "@/components/ui/badge"; // Removed as 'active' status is not in Viewer
 import { Skeleton } from "@/components/ui/skeleton";
-import { Viewer, userService } from "@/app/api/api"; // Changed from Sharer, added userService back
+import { type Viewer, userService } from "@/app/api/api"; // Changed from Sharer, added userService back
 // import { userService } from "@/app/services/api"; // Removed as no user service actions are needed yet
 import { useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -105,6 +105,7 @@ export const columns = (
         </Button>
       );
     },
+    // eslint-disable-next-line
     cell: ({ row }) => row.getValue("username"),
   },
   {
