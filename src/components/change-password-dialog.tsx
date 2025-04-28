@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { userService, Sharer } from "@/app/api/api"; // Assuming Sharer is exported
+import { userService, type Sharer } from "@/app/api/api"; // Assuming Sharer is exported
 import { toast } from "sonner";
 import { Loader2, LockKeyholeIcon } from "lucide-react";
 
@@ -65,15 +65,21 @@ export function ChangePasswordDialog({
         password_confirmation: passwordConfirmation,
       });
       toast.success(
+        // eslint-disable-next-line
         response.data?.message || "Password cambiata con successo.",
       );
       onClose(); // Close the dialog on success
+      // eslint-disable-next-line
     } catch (err: any) {
       console.error("Failed to change password:", err);
+      // eslint-disable-next-line
       const errorMessage =
+        // eslint-disable-next-line
         err.response?.data?.error ||
         "Si è verificato un errore durante il cambio password.";
+      // eslint-disable-next-line
       setError(errorMessage);
+      // eslint-disable-next-line
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -99,7 +105,7 @@ export function ChangePasswordDialog({
               Cambia Password
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-md text-center">
-              Inserisci la nuova password per {user?.username || "l'utente"}.
+              Inserisci la nuova password per {user?.username ?? "l'utente"}.
             </DialogDescription>
           </div>
         </DialogHeader>

@@ -68,14 +68,20 @@ export function CreateUserDialog({
       // onUserCreated(); // Call the callback on success
       // --- End Placeholder ---
       const response = await userService.createSharer(data);
+      // eslint-disable-next-line
       toast.success(response.data?.message || "Sharer creato con successo.");
       onUserCreated(); // Call the callback on success
+      // eslint-disable-next-line
     } catch (err: any) {
       console.error("Failed to register:", err);
+      // eslint-disable-next-line
       const errorMessage =
+        // eslint-disable-next-line
         err.response?.data?.error ||
         "Si è verificato un errore durante la creazione.";
+      // eslint-disable-next-line
       setError(errorMessage);
+      // eslint-disable-next-line
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);

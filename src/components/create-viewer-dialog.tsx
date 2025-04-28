@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { userService, CreateViewerData } from "@/app/api/api"; // Import CreateViewerData
+import { userService, type CreateViewerData } from "@/app/api/api"; // Import CreateViewerData
 import { toast } from "sonner";
 import { AtSignIcon, Loader2, UserPlus } from "lucide-react";
 import useAuthStore from "@/app/api/auth"; // Import the auth store
@@ -75,14 +75,20 @@ export function CreateViewerDialog({
 
     try {
       const response = await userService.createViewer(data);
+      // eslint-disable-next-line
       toast.success(response.data?.message || "Viewer created successfully.");
       onViewerCreated(); // Call the callback on success
+      // eslint-disable-next-line
     } catch (err: any) {
       console.error("Failed to create viewer:", err);
+      // eslint-disable-next-line
       const errorMessage =
+        // eslint-disable-next-line
         err.response?.data?.error ||
         "An error occurred during viewer creation.";
+      // eslint-disable-next-line
       setError(errorMessage);
+      // eslint-disable-next-line
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);

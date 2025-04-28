@@ -64,7 +64,7 @@ function DataTableActionBar<TData>({
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
           className={cn(
-            "fixed inset-x-0 bottom-6 z-50 mx-auto flex w-fit flex-wrap items-center justify-center gap-2 rounded-md border bg-background p-2 text-foreground shadow-sm",
+            "bg-background text-foreground fixed inset-x-0 bottom-6 z-50 mx-auto flex w-fit flex-wrap items-center justify-center gap-2 rounded-md border p-2 shadow-sm",
             className,
           )}
           {...props}
@@ -97,11 +97,11 @@ function DataTableActionBarAction({
       variant="secondary"
       size={size}
       className={cn(
-        "gap-1.5 border border-secondary bg-secondary/50 hover:bg-secondary/70 [&>svg]:size-3.5",
+        "border-secondary bg-secondary/50 hover:bg-secondary/70 gap-1.5 border [&>svg]:size-3.5",
         size === "icon" ? "size-7" : "h-7",
         className,
       )}
-      disabled={disabled || isPending}
+      disabled={disabled ?? isPending}
       {...props}
     >
       {isPending ? <Loader className="animate-spin" /> : children}
@@ -115,7 +115,7 @@ function DataTableActionBarAction({
       <TooltipTrigger asChild>{trigger}</TooltipTrigger>
       <TooltipContent
         sideOffset={6}
-        className="border bg-accent font-semibold text-foreground dark:bg-zinc-900 [&>span]:hidden"
+        className="bg-accent text-foreground border font-semibold dark:bg-zinc-900 [&>span]:hidden"
       >
         <p>{tooltip}</p>
       </TooltipContent>
