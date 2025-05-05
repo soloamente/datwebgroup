@@ -90,7 +90,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { type Sharer, userService } from "@/app/api/api";
+import { type Sharer, type Viewer, userService } from "@/app/api/api";
 import { toast } from "sonner";
 import { EditUserDialog } from "@/components/edit-user-dialog";
 import { ChangePasswordDialog } from "@/components/change-password-dialog";
@@ -100,7 +100,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
 // Filter function that correctly handles active status boolean
-const activeStatusFilterFn: FilterFn<Sharer> = (
+const activeStatusFilterFn: FilterFn<Sharer | Viewer> = (
   row,
   columnId,
   filterValue: boolean[],
@@ -1053,8 +1053,8 @@ function RowActions({
 declare module "@tanstack/react-table" {
   interface FilterFns {
     // eslint-disable-next-line
-    activeStatus: FilterFn<Sharer>;
+    activeStatus: FilterFn<Sharer | Viewer>;
     // eslint-disable-next-line
-    dateRange: FilterFn<Sharer>;
+    dateRange: FilterFn<Sharer | Viewer>;
   }
 }
