@@ -1052,7 +1052,9 @@ function RowActions({
 // Declare custom filter functions
 declare module "@tanstack/react-table" {
   interface FilterFns {
+    // eslint-disable-next-line
     activeStatus: FilterFn<Sharer>;
+    // eslint-disable-next-line
     dateRange: FilterFn<Sharer>;
   }
 }
