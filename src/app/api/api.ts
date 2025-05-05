@@ -127,6 +127,13 @@ const sendUsernameToSharerById = async (
   return response.data;
 };
 
+const toggleViewerStatus = async (id: number): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>(
+    `/viewers/${id}/toggle-status`,
+  );
+  return response.data;
+};
+
 export const userService = {
   createViewer: (data: CreateViewerData) => api.post("/create-viewer", data),
   createSharer: (data: CreateSharerData) => api.post("/create-sharer", data),
@@ -138,4 +145,5 @@ export const userService = {
   getViewers,
   updateViewer,
   sendUsernameToSharerById,
+  toggleViewerStatus,
 };
