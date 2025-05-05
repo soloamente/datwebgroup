@@ -12,16 +12,16 @@ export default function UsernameInput({
   const id = useId();
   return (
     <div className="*:not-first:mt-2">
-      <Label htmlFor={id} className="transition-all duration-700">
+      <Label htmlFor={id} className="text-sm transition-all duration-700">
         Username
       </Label>
       <Input
         id={id}
-        placeholder="Il tuo username"
+        placeholder="johndoe"
         type="username"
         value={value}
         onChange={onChange}
-        className="h-12 rounded-lg placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
+        className="h-12 rounded-2xl placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
       />
     </div>
   );

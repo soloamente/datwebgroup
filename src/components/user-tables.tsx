@@ -20,6 +20,8 @@ import {
   ListFilterIcon,
   MoreHorizontal,
   Plus,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -66,32 +68,32 @@ export const columns = (
   onChangePassword: (user: Sharer) => void,
   onSendUsername: (user: Sharer) => void,
 ): ColumnDef<Sharer>[] => [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: true,
-    enableHiding: true,
-  },
+  // {
+  //   id: "select",
+  //   header: ({ table }) => (
+  //     <div className="flex justify-center">
+  //       <Checkbox
+  //         checked={
+  //           table.getIsAllPageRowsSelected() ||
+  //           (table.getIsSomePageRowsSelected() && "indeterminate")
+  //         }
+  //         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //         aria-label="Select all"
+  //       />
+  //     </div>
+  //   ),
+  //   cell: ({ row }) => (
+  //     <div className="flex justify-center">
+  //       <Checkbox
+  //         checked={row.getIsSelected()}
+  //         onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //         aria-label="Select row"
+  //       />
+  //     </div>
+  //   ),
+  //   enableSorting: true,
+  //   enableHiding: true,
+  // },
   {
     accessorKey: "username",
     header: ({ column }) => {
@@ -140,7 +142,15 @@ export const columns = (
     accessorKey: "active",
     header: "Stato",
     cell: ({ row }) => (
-      <Badge variant={row.getValue("active") ? "default" : "destructive"}>
+      <Badge
+        variant={row.getValue("active") ? "secondary" : "secondary"}
+        className="flex items-center gap-1.5 rounded-full"
+      >
+        {row.getValue("active") ? (
+          <div className="h-2 w-2 rounded-full bg-green-500" />
+        ) : (
+          <div className="h-2 w-2 rounded-full bg-red-500" />
+        )}
         {row.getValue("active") ? "Attivo" : "Inattivo"}
       </Badge>
     ),

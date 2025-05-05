@@ -5,7 +5,6 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Preferences } from "@/components/ui/preferences";
 import { ReactLenis } from "lenis/react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { Toaster } from "@/components/ui/sonner";
 
@@ -33,7 +32,7 @@ export default function RootLayout({
     <html
       lang="en antialiased"
       suppressHydrationWarning
-      className={`${Inter.variable} ${ingramMono.variable} font-inter`}
+      className={`${Inter.variable} ${ingramMono.variable} font-inter antialiased`}
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -42,8 +41,7 @@ export default function RootLayout({
             options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}
           >
             <Preferences />
-
-            <NuqsAdapter>{children}</NuqsAdapter>
+            {children}
             <Toaster />
           </ReactLenis>
         </ThemeProvider>

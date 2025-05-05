@@ -42,7 +42,7 @@ interface AuthStore {
     email: string,
     username: string,
     password: string,
-  ) => Promise<{ success: boolean; message?: string }>;
+  ) => Promise<{ success: boolean; message?: string; userEmail?: string }>;
   verifyOtp: (
     email: string,
     otp: string,
@@ -80,14 +80,41 @@ const useAuthStore = create<AuthStore>()(
             password: password.trim(),
           });
           console.log("Prelogin response:", response.data);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          console.log("Prelogin email from response:", response.data?.email);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          console.log("Prelogin user from response:", response.data?.user);
+
           set({ isLoading: false });
-          // Assuming the API returns a success status or message
-          // eslint-disable-next-line
-          return { success: true, message: response.data?.message };
+          // Check if the API response indicates success
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          if (response.data?.success === false) {
+            set({
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+              error: response.data?.message || "Login failed",
+              isLoading: false,
+            });
+
+            return {
+              success: false,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+              message: response.data?.message || "Login failed",
+              userEmail: email.trim(), // Provide email in error case too
+            };
+          }
+          // Otherwise consider it successful
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+          return {
+            success: true,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+            message: response.data?.message,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+            userEmail: response.data?.email || email.trim(), // Return email from response or fallback to input
+          };
         } catch (error) {
           let message = "Errore durante la pre-autenticazione.";
           if (axios.isAxiosError(error)) {
-            // eslint-disable-next-line
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
             message = error.response?.data?.message || message;
           }
           console.error("Prelogin error:", error);

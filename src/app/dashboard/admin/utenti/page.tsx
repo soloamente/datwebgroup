@@ -1,261 +1,125 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import SharerTable from "@/components/tables/admin/sharer-table";
+import { userService, type Sharer } from "@/app/api/api";
+import { toast } from "sonner";
+import { StatsGrid } from "@/components/admin/stats-grid";
 import {
-  userService,
-  CreateSharerData,
-  CreateViewerData,
-  ChangePasswordData,
-} from "@/app/api/api";
-import useAuthStore from "@/app/api/auth";
+  Users,
+  UserCheck,
+  UserX,
+  FileSpreadsheet,
+  UserPlus,
+  Plus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
+import { CreateUserDialog } from "@/components/create-user-dialog";
 
-export default function UsersPage() {
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"sharer" | "viewer" | "edit">(
-    "sharer",
-  );
-  const isAdmin = useAuthStore((state) => state.isAdmin);
+export default function ListaSharerPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [sharers, setSharers] = useState<Sharer[]>([]);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const handleCreateSharer = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data: CreateSharerData = {
-      username: formData.get("username") as string,
-      nominativo: formData.get("nominativo") as string,
-      email: formData.get("email") as string,
-      codice_fiscale: (formData.get("codice_fiscale") as string) || undefined,
-      partita_iva: (formData.get("partita_iva") as string) || undefined,
-    };
-
+  const fetchSharers = async () => {
     try {
-      await userService.createSharer(data);
-      setSuccess("Sharer creato con successo");
-      setError(null);
-    } catch (err) {
-      setError("Errore durante la creazione dello sharer");
-      setSuccess(null);
+      setIsLoading(true);
+      const data = await userService.getSharers();
+      setSharers(data);
+    } catch (error) {
+      console.error("Failed to fetch sharers:", error);
+      toast.error("Impossibile caricare i dati degli sharer");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleCreateViewer = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data: CreateViewerData = {
-      nominativo: formData.get("nominativo") as string,
-      email: formData.get("email") as string,
-    };
+  useEffect(() => {
+    void fetchSharers();
+  }, []);
 
-    try {
-      await userService.createViewer(data);
-      setSuccess("Viewer creato con successo");
-      setError(null);
-    } catch (err) {
-      setError("Errore durante la creazione del viewer");
-      setSuccess(null);
-    }
+  const handleStatusChange = () => {
+    void fetchSharers();
   };
 
-  const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const data: ChangePasswordData = {
-      password: formData.get("password") as string,
-      password_confirmation: formData.get("password") as string,
-    };
-
-    try {
-      await userService.changePassword(data);
-      setSuccess("Password modificata con successo");
-      setError(null);
-    } catch (err) {
-      setError("Errore durante la modifica della password");
-      setSuccess(null);
-    }
-  };
+  const handleOpenCreateDialog = () => setIsCreateDialogOpen(true);
+  const handleCloseCreateDialog = () => setIsCreateDialogOpen(false);
 
   return (
-    <main>
-      <div className="flex items-center justify-between py-2 md:py-4">
-        <h1 className="text-2xl font-medium md:text-4xl dark:text-white">
-          Gestione Utenti
-        </h1>
+    <main className="flex flex-col gap-4">
+      <div className="flex w-full items-center justify-between py-2 md:py-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-medium md:text-4xl dark:text-white">
+            Lista Sharer
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Gestisci gli sharer registrati. Visualizza, modifica,
+            attiva/disattiva o creane di nuovi.
+          </p>
+        </div>
+        <Button
+          className="bg-primary text-white"
+          onClick={handleOpenCreateDialog}
+        >
+          <Plus size={20} />
+          Crea Sharer
+        </Button>
       </div>
-
-      {isAdmin() && (
-        <>
-          <div className="mb-6 flex w-full space-x-4">
-            <Tabs defaultValue="sharer" className="h-full w-full">
-              <TabsList className="bg-background mb-2 h-10 justify-start rounded-full p-1">
-                <TabsTrigger
-                  value="sharer"
-                  className="dark:data-[state=active]:bg-primary rounded-full border-none p-4 hover:cursor-pointer dark:text-white"
-                >
-                  Crea Sharer
-                </TabsTrigger>
-                <TabsTrigger
-                  value="viewer"
-                  className="dark:data-[state=active]:bg-primary rounded-full border-none p-4 hover:cursor-pointer dark:text-white"
-                >
-                  Crea Viewer
-                </TabsTrigger>
-                <TabsTrigger
-                  value="edit"
-                  className="dark:data-[state=active]:bg-primary rounded-full border-none p-4 hover:cursor-pointer dark:text-white"
-                >
-                  Modifica Utente
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="sharer">
-                <div className="bg-muted/50 min-h-[calc(100vh-6rem)] flex-1 rounded-xl p-3 transition-all duration-200 md:min-h-min md:p-8 dark:bg-gray-800">
-                  <h2 className="mb-4 text-xl font-medium">
-                    Crea nuovo Sharer
-                  </h2>
-                  <form
-                    onSubmit={handleCreateSharer}
-                    className="max-w-md space-y-4"
-                  >
-                    <div>
-                      <label className="block">Username</label>
-                      <Input
-                        type="text"
-                        name="username"
-                        required
-                        className="h-10 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block">Nominativo</label>
-                      <Input
-                        type="text"
-                        name="nominativo"
-                        required
-                        className="h-10 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block">Email</label>
-                      <Input
-                        type="email"
-                        name="email"
-                        required
-                        className="h-10 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block">Codice Fiscale</label>
-                      <Input
-                        type="text"
-                        name="codice_fiscale"
-                        className="h-10 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block">Partita IVA</label>
-                      <Input
-                        type="text"
-                        name="partita_iva"
-                        className="h-10 rounded-lg"
-                      />
-                    </div>
-                    <Button type="submit" className="bg-primary rounded-full">
-                      Crea Sharer
-                    </Button>
-                  </form>
-                </div>
-              </TabsContent>
-              <TabsContent value="viewer">
-                {" "}
-                <div className="bg-muted/50 min-h-[calc(100vh-6rem)] flex-1 rounded-xl p-3 transition-colors duration-200 md:min-h-min md:p-8 dark:bg-gray-800">
-                  <h2 className="mb-4 text-xl font-medium">
-                    Crea nuovo Viewer
-                  </h2>
-                  <form
-                    onSubmit={handleCreateViewer}
-                    className="max-w-md space-y-4"
-                  >
-                    <div>
-                      <label className="block">Username</label>
-                      <Input
-                        type="text"
-                        name="username"
-                        required
-                        className="w-full rounded-lg border p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block">Nominativo</label>
-                      <Input
-                        type="text"
-                        name="nominativo"
-                        required
-                        className="w-full rounded-lg border p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block">Email</label>
-                      <Input
-                        type="email"
-                        name="email"
-                        required
-                        className="w-full rounded-lg border p-2"
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="rounded-full bg-blue-500 px-4 py-2 text-white"
-                    >
-                      Crea Viewer
-                    </Button>
-                  </form>
-                </div>
-              </TabsContent>
-              <TabsContent value="edit">
-                <div className="bg-muted/50 min-h-[calc(100vh-6rem)] flex-1 rounded-xl p-3 transition-colors duration-200 md:min-h-min md:p-8 dark:bg-gray-800">
-                  <h2 className="mb-4 text-xl font-medium">
-                    Modifica Password Utente
-                  </h2>
-                  <form
-                    onSubmit={handleChangePassword}
-                    className="max-w-md space-y-4"
-                  >
-                    <div>
-                      <label className="block">Username</label>
-                      <Input
-                        type="text"
-                        name="username"
-                        required
-                        className="w-full rounded-lg border p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block">Nuova Password</label>
-                      <Input
-                        type="password"
-                        name="password"
-                        required
-                        className="w-full rounded-lg border p-2"
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="rounded-full bg-blue-500 px-4 py-2 text-white"
-                    >
-                      Modifica Password
-                    </Button>
-                  </form>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </>
-      )}
-
-      {error && <div className="mt-4 text-red-500">{error}</div>}
-      {success && <div className="mt-4 text-green-500">{success}</div>}
+      <div className="flex flex-col gap-6">
+        <StatsGrid
+          stats={[
+            {
+              title: "Totale Sharers",
+              value: "13",
+              change: {
+                value: "+13%",
+                trend: "up",
+              },
+              icon: <Users size={20} />,
+            },
+            {
+              title: "Attivi",
+              value: "12",
+              change: {
+                value: "+12%",
+                trend: "up",
+              },
+              icon: <UserCheck size={20} />,
+            },
+            {
+              title: "Disattivati",
+              value: "1",
+              change: {
+                value: "+100%",
+                trend: "up",
+              },
+              icon: <UserX size={20} />,
+            },
+            {
+              title: "Creati",
+              value: "1",
+              change: {
+                value: "+100%",
+                trend: "up",
+              },
+              icon: <UserPlus size={20} />,
+            },
+          ]}
+        />
+        <SharerTable
+          data={sharers}
+          isLoading={isLoading}
+          onStatusChange={handleStatusChange}
+        />
+      </div>
+      <CreateUserDialog
+        isOpen={isCreateDialogOpen}
+        onClose={handleCloseCreateDialog}
+        onUserCreated={() => {
+          handleCloseCreateDialog();
+          void fetchSharers();
+        }}
+      />
     </main>
   );
 }
