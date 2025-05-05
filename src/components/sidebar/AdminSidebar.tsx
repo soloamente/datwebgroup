@@ -32,7 +32,7 @@ export function AdminDashboardClient({
     try {
       setLoading(true);
       await authStore.logout();
-      router.push("/sign-in");
+      router.push("/login/admin");
     } catch (error) {
       console.error("Errore durante il logout:", error);
     } finally {

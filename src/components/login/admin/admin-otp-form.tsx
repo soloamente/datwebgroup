@@ -110,7 +110,7 @@ export default function AdminOtpForm({
         <Button
           type="submit"
           disabled={loading}
-          className="bg-primary text-primary-foreground hover:bg-button-hover h-10 w-2/3 cursor-pointer rounded-full text-base transition-all duration-700 md:h-12 md:text-lg"
+          className="bg-primary hover:bg-button-hover h-10 w-2/3 cursor-pointer rounded-full text-base text-white transition-all duration-700 md:h-12 md:text-lg"
         >
           {loading ? "Verificando..." : "Conferma"}
         </Button>

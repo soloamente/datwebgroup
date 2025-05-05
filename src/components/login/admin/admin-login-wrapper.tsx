@@ -5,14 +5,19 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import AdminLoginForm from "./admin-login-form";
 import AdminOtpForm from "./admin-otp-form";
+import AdminQrScanner from "./admin-qr-scanner";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginWrapper() {
   const [step, setStep] = useState("login");
+  const [loginMode, setLoginMode] = useState<"credentials" | "qr">(
+    "credentials",
+  );
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   const authStore = useAuthStore();
@@ -47,10 +52,38 @@ export default function AdminLoginWrapper() {
       setUsername(data.username);
       setPassword(data.password);
       setStep("otp");
-      console.log("Current step after change:", step); // This will still show "login" due to state update timing
+      console.log("Current step after change:", step);
     } else {
       console.log("Invalid login data, not changing step");
     }
+  };
+
+  const handleQrScan = async (data: string) => {
+    try {
+      // Here you would typically validate and process the QR code data
+      // For now, we'll just show an error if the data is invalid
+      if (!data) {
+        setError("Invalid QR code data");
+        return;
+      }
+
+      // Process the QR code data and attempt login
+      // This is a placeholder - you'll need to implement the actual login logic
+      const loginData = {
+        success: true,
+        email: "admin@example.com", // Replace with actual data from QR code
+        username: "admin", // Replace with actual data from QR code
+        password: "password", // Replace with actual data from QR code
+      };
+
+      handleLoginSuccess(loginData);
+    } catch (err) {
+      setError("Failed to process QR code login");
+    }
+  };
+
+  const handleQrError = (error: string) => {
+    setError(error);
   };
 
   return (
@@ -97,7 +130,42 @@ export default function AdminLoginWrapper() {
           </div>
 
           {step === "login" ? (
-            <AdminLoginForm onSuccess={handleLoginSuccess} />
+            <>
+              <div className="mb-4 flex justify-center space-x-4">
+                <button
+                  onClick={() => setLoginMode("credentials")}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    loginMode === "credentials"
+                      ? "bg-primary text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Credenziali
+                </button>
+                <button
+                  onClick={() => setLoginMode("qr")}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                    loginMode === "qr"
+                      ? "bg-primary text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  QR Code
+                </button>
+              </div>
+
+              {loginMode === "credentials" ? (
+                <AdminLoginForm onSuccess={handleLoginSuccess} />
+              ) : (
+                <AdminQrScanner onScan={handleQrScan} onError={handleQrError} />
+              )}
+
+              {error && (
+                <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
+            </>
           ) : (
             <AdminOtpForm
               email={email}
