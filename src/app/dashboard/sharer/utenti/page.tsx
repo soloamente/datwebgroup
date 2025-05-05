@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ViewerTables } from "@/components/viewer-tables"; // Adjust the import path
+import ViewerTable from "@/components/tables/sharer/viewer-table"; // Adjust the import path
 import { userService, type Viewer } from "@/app/api/api"; // Import userService and Viewer type
 
 export default function ListaViewerPage() {
@@ -37,10 +37,10 @@ export default function ListaViewerPage() {
           Lista Viewer
         </h1>
       </div>
-      <ViewerTables
-        viewers={viewers}
+      <ViewerTable
+        data={viewers}
         isLoading={loading}
-        onViewerUpdate={fetchViewers}
+        onStatusChange={fetchViewers}
       />
     </main>
   );
