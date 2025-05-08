@@ -9,6 +9,7 @@ import AdminQrScanner from "./admin-qr-scanner";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 export default function AdminLoginWrapper() {
   const [step, setStep] = useState("login");
@@ -107,7 +108,7 @@ export default function AdminLoginWrapper() {
         transition={{ duration: 1, ease: "easeInOut" }}
         className="bg-login-credentials flex h-full w-full flex-col justify-center rounded-2xl px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
       >
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md lg:max-w-xl">
           <div className="relative h-24 w-24 md:absolute md:top-10 md:right-10 md:h-24 md:w-24">
             <Image
               src="/logo_positivo.png"
@@ -120,12 +121,12 @@ export default function AdminLoginWrapper() {
 
           <div className="mb-8 md:mb-10">
             <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
-              Bentornato Amministratore
+              Bentornato Amministratore!
             </h1>
 
-            <p className="text-description text-sm transition-all duration-700">
+            <p className="text-description text-sm transition-all duration-700 lg:text-base">
               {step === "login"
-                ? "Inserisci le tue credenziali per accedere"
+                ? "Inserisci username e password per continuare"
                 : `Inserisci il codice OTP inviato a ${email.includes("@") ? email : `${username}@datasystemgroup.it`}`}
             </p>
           </div>
@@ -134,12 +135,23 @@ export default function AdminLoginWrapper() {
             <>
               <AdminLoginForm onSuccess={handleLoginSuccess} />
 
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-login-credentials text-muted-foreground px-2">
+                    o continua con
+                  </span>
+                </div>
+              </div>
+
               <div className="mt-4 flex justify-center">
                 <Button
                   onClick={() => setLoginMode("qr")}
-                  className="h-10 w-full cursor-pointer rounded-2xl border bg-transparent transition-all duration-700 md:h-12 md:text-lg"
+                  className="bg-secondary hover:bg-secondary/60 border-border h-10 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-12 md:text-lg lg:h-14"
                 >
-                  Accedi con QR Code
+                  Codice QR
                 </Button>
               </div>
 

@@ -100,7 +100,7 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
       <Button
         type="submit"
         disabled={loading}
-        className="bg-primary hover:bg-button-hover h-10 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-12 md:text-lg"
+        className="bg-primary hover:bg-button-hover h-14 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:text-lg"
       >
         {loading ? "Accedendo..." : "Continua"}
       </Button>

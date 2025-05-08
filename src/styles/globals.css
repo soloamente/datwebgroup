@@ -74,10 +74,13 @@
 .dark {
   /* General */
   --background: oklch(0.11 0 0);
-  --foreground: oklch(0.98 0 0);
+  --foreground: oklch(1 0 0);
+
+  /* Border */
+  --border: oklch(1 0 0 / 90%);
 
   /* Text */
-  --text-description: oklch(0.98 0 0);
+  --description: oklch(1 0 0 / 50%);
 
   /* Login */
   --login-credentials: oklch(0.19 0.0051 248.1);
@@ -95,7 +98,7 @@
   --primary-foreground: oklch(0.21 0.0059 285.88);
 
   /* Secondary */
-  --secondary: oklch(0.27 0.0055 286.03);
+  --secondary: oklch(0.24 0.0078 274.61);
   --secondary-foreground: oklch(0.98 0 0);
 
   /* Variables */
@@ -139,8 +142,10 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
+  --color-border: var(--border);
+
   /* Text */
-  --color-text-description: var(--text-description);
+  --color-description: var(--description);
 
   /* Login */
   --color-login-credentials: var(--login-credentials);
