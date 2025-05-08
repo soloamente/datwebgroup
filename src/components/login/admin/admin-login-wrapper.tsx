@@ -8,6 +8,7 @@ import AdminOtpForm from "./admin-otp-form";
 import AdminQrScanner from "./admin-qr-scanner";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export default function AdminLoginWrapper() {
   const [step, setStep] = useState("login");
@@ -88,7 +89,7 @@ export default function AdminLoginWrapper() {
 
   return (
     <div className="flex h-screen w-full items-center justify-center gap-2 overflow-hidden p-2">
-      <div className="relative hidden h-full w-full rounded-2xl bg-[#eaeced] md:block md:w-2/5 dark:bg-gray-900">
+      <div className="bg-login-credentials relative hidden h-full w-full rounded-2xl md:block md:w-2/5">
         <div className="flex h-full items-center justify-center">
           <Image
             src="/Admin-cuate.svg"
@@ -104,7 +105,7 @@ export default function AdminLoginWrapper() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, ease: "easeInOut" }}
-        className="flex h-full w-full flex-col justify-center rounded-2xl px-6 py-8 md:w-3/5 md:px-16 lg:px-24 dark:bg-gray-800"
+        className="bg-login-credentials flex h-full w-full flex-col justify-center rounded-2xl px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
       >
         <div className="mx-auto w-full max-w-md">
           <div className="relative h-24 w-24 md:absolute md:top-10 md:right-10 md:h-24 md:w-24">
@@ -131,32 +132,18 @@ export default function AdminLoginWrapper() {
 
           {step === "login" ? (
             <>
-              <div className="mb-4 flex justify-center space-x-4">
-                <button
-                  onClick={() => setLoginMode("credentials")}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                    loginMode === "credentials"
-                      ? "bg-primary text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  Credenziali
-                </button>
-                <button
+              <AdminLoginForm onSuccess={handleLoginSuccess} />
+
+              <div className="mt-4 flex justify-center">
+                <Button
                   onClick={() => setLoginMode("qr")}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                    loginMode === "qr"
-                      ? "bg-primary text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                  className="h-10 w-full cursor-pointer rounded-2xl border bg-transparent transition-all duration-700 md:h-12 md:text-lg"
                 >
-                  QR Code
-                </button>
+                  Accedi con QR Code
+                </Button>
               </div>
 
-              {loginMode === "credentials" ? (
-                <AdminLoginForm onSuccess={handleLoginSuccess} />
-              ) : (
+              {loginMode === "qr" && (
                 <AdminQrScanner onScan={handleQrScan} onError={handleQrError} />
               )}
 

@@ -48,17 +48,8 @@ export function Preferences() {
 
   const id = useId();
 
-  if (!mounted) {
-    return (
-      <Button variant="outline" size="icon">
-        <Sun className="h-[1.2rem] w-[1.2rem]" />
-        <span className="sr-only">Toggle theme</span>
-      </Button>
-    );
-  }
-
   return (
-    <motion.div className="fixed right-5 bottom-5 z-10 cursor-pointer">
+    <motion.div className="absolute right-5 bottom-5 z-10 cursor-pointer">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon">

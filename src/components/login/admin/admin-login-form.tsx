@@ -83,7 +83,7 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-6 md:space-y-8">
+    <form onSubmit={handleLogin} className="space-y-6 md:space-y-6">
       <div className="flex flex-col space-y-4 md:space-y-6">
         <UsernameInput
           value={username}
@@ -100,7 +100,7 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
       <Button
         type="submit"
         disabled={loading}
-        className="bg-primary hover:bg-button-hover h-10 w-full cursor-pointer rounded-full text-white transition-all duration-700 md:h-12 md:text-lg"
+        className="bg-primary hover:bg-button-hover h-10 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-12 md:text-lg"
       >
         {loading ? "Accedendo..." : "Continua"}
       </Button>

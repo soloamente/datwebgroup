@@ -8,24 +8,44 @@
 
 /* Light Theme Variables */
 :root {
+  /* General */
   --background: hsl(0 0% 100%);
   --foreground: hsl(240 10% 3.9%);
+
+  /* Login */
+  --login-credentials: hsl(0 0% 100%);
+
+  /* Card */
   --card: hsl(0 0% 100%);
   --card-foreground: hsl(240 10% 3.9%);
+
+  /* Popover */
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 10% 3.9%);
+
+  /* Primary */
   --primary: oklch(0.51 0.1733 256.59);
   --primary-foreground: hsl(0 0% 98%);
+
+  /* Secondary */
   --secondary: hsl(240 4.8% 95.9%);
   --secondary-foreground: hsl(240 5.9% 10%);
+
+  /* Variables */
   --muted: hsl(240 4.8% 95.9%);
   --muted-foreground: hsl(240 3.8% 46.1%);
   --accent: hsl(240 4.8% 95.9%);
   --accent-foreground: hsl(240 5.9% 10%);
   --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(0 0% 98%);
+
+  /* Border */
   --border: hsl(240 5.9% 90%);
+
+  /* Input */
   --input: hsl(240 5.9% 90%);
+
+  /* Ring */
   --ring: hsl(240 10% 3.9%);
   --chart-1: hsl(12 76% 61%);
   --chart-2: hsl(173 58% 39%);
@@ -52,32 +72,57 @@
 
 /* Dark Theme Variables */
 .dark {
-  --background: oklch(0.11 0.0282 246.23);
-  --foreground: hsl(0 0% 98%);
-  --card: hsl(240 10% 3.9%);
-  --card-foreground: hsl(0 0% 98%);
-  --popover: hsl(240 10% 3.9%);
-  --popover-foreground: hsl(0 0% 98%);
+  /* General */
+  --background: oklch(0.11 0 0);
+  --foreground: oklch(0.98 0 0);
+
+  /* Text */
+  --text-description: oklch(0.98 0 0);
+
+  /* Login */
+  --login-credentials: oklch(0.19 0.0051 248.1);
+
+  /* Card */
+  --card: oklch(0.19 0.0051 248.1);
+  --card-foreground: oklch(0.27 0.0061 214.4);
+
+  /* Popover */
+  --popover: oklch(0.14 0.0044 285.82);
+  --popover-foreground: oklch(0.98 0 0);
+
+  /* Primary */
   --primary: oklch(0.51 0.1733 256.59);
-  --primary-foreground: hsl(240 5.9% 10%);
-  --secondary: hsl(240 3.7% 15.9%);
-  --secondary-foreground: hsl(0 0% 98%);
-  --muted: hsl(240 3.7% 15.9%);
-  --muted-foreground: hsl(240 5% 64.9%);
-  --accent: hsl(240 3.7% 15.9%);
-  --accent-foreground: hsl(0 0% 98%);
+  --primary-foreground: oklch(0.21 0.0059 285.88);
+
+  /* Secondary */
+  --secondary: oklch(0.27 0.0055 286.03);
+  --secondary-foreground: oklch(0.98 0 0);
+
+  /* Variables */
+  --muted: oklch(0.27 0.0055 286.03);
+  --muted-foreground: oklch(0.98 0 0);
+  --accent: oklch(0.27 0.0055 286.03);
+  --accent-foreground: oklch(0.98 0 0);
   --warning: oklch(0.79 0.171176 70.1526);
   --destructive: oklch(0.57 0.209 22.65);
   --destructive-foreground: hsl(0 0% 98%);
   --border: hsl(240 3.7% 15.9%);
-  --input: hsl(240 3.7% 15.9%);
-  --ring: hsl(240 4.9% 83.9%);
+
+  /* Input */
+  --input: oklch(0.27 0.0055 286.03);
+
+  /* Ring */
+  --ring: oklch(0.27 0.0055 286.03);
+
+  /* Chart */
   --chart-1: hsl(220 70% 50%);
   --chart-2: hsl(160 60% 45%);
   --chart-3: hsl(30 80% 55%);
   --chart-4: hsl(280 65% 60%);
   --chart-5: hsl(340 75% 55%);
   --chart-6: hsl(240, 43%, 44%);
+
+  /* Sidebar */
   --sidebar-background: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -88,11 +133,23 @@
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
-/* Inline Theme Variables (Tailwind Plugin?) */
+/* Inline Theme Variables */
 @theme inline {
+  /* General */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Text */
+  --color-text-description: var(--text-description);
+
+  /* Login */
+  --color-login-credentials: var(--login-credentials);
+
+  /* Card */
+
   --color-card: var(--card);
+
+  /* Popover */
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
