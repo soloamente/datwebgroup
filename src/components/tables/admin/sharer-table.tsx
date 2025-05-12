@@ -231,8 +231,8 @@ const getColumns = ({
         <Badge
           variant={`${isActive ? "outline" : "outline"}`}
           className={cn(
-            "gap-1 rounded-full",
-            !isActive ? "text-muted-foreground" : "text-white",
+            "flex items-center gap-1 rounded-full",
+            !isActive ? "text-description" : "text-foreground",
           )}
         >
           {isActive ? (
@@ -823,7 +823,7 @@ export default function SharerTable({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                className="hover:bg-accent/50 h-px border-0 [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
+                className="hover:bg-accent/50 h-12 border-0 [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} className="h-[inherit] last:py-0">

@@ -79,7 +79,7 @@ export default function DashboardClient() {
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="container mx-auto p-4">
+      <div className="mx-auto p-4">
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
           <div className="flex items-center justify-between py-2 md:py-4">
             <h1 className="text-2xl font-medium md:text-4xl">Dashboard</h1>

@@ -40,6 +40,30 @@ export function CreateUserDialog({
 }: CreateUserDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    username: "",
+    nominativo: "",
+    email: "",
+  });
+
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const isFormValid =
+    formData.username.trim() !== "" &&
+    formData.nominativo.trim() !== "" &&
+    formData.email.trim() !== "" &&
+    isValidEmail(formData.email);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   // TODO: Update this function to call the correct API endpoint with RegisterWorkspaceData
   const handleRegisterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -122,7 +146,9 @@ export function CreateUserDialog({
                   placeholder="Username"
                   required
                   disabled={isLoading}
-                  className="rounded-xl"
+                  className="h-12 rounded-xl"
+                  value={formData.username}
+                  onChange={handleInputChange}
                 />
               </div>
               <div className="space-y-2">
@@ -132,10 +158,12 @@ export function CreateUserDialog({
                 <Input
                   id="nominativo"
                   name="nominativo"
-                  className="rounded-xl"
+                  className="h-12 rounded-xl"
                   placeholder="Nominativo"
                   required
                   disabled={isLoading}
+                  value={formData.nominativo}
+                  onChange={handleInputChange}
                 />
               </div>
             </div>
@@ -148,10 +176,12 @@ export function CreateUserDialog({
                   id="email"
                   name="email"
                   type="email"
-                  className="peer rounded-xl ps-9"
+                  className="peer h-12 rounded-xl ps-9"
                   placeholder="Email"
                   required
                   disabled={isLoading}
+                  value={formData.email}
+                  onChange={handleInputChange}
                 />
                 <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
                   <AtSignIcon size={16} aria-hidden="true" />
@@ -165,7 +195,7 @@ export function CreateUserDialog({
                 name="codice_fiscale"
                 placeholder="Codice fiscale"
                 disabled={isLoading}
-                className="rounded-xl"
+                className="h-12 rounded-xl"
               />
             </div>
 
@@ -176,7 +206,7 @@ export function CreateUserDialog({
                 name="partita_iva"
                 placeholder="Partita IVA"
                 disabled={isLoading}
-                className="rounded-xl"
+                className="h-12 rounded-xl"
               />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
@@ -184,8 +214,8 @@ export function CreateUserDialog({
           <DialogFooter>
             <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full rounded-xl"
+              disabled={isLoading || !isFormValid}
+              className="text-foreground h-12 w-full rounded-xl"
             >
               {isLoading ? (
                 <>

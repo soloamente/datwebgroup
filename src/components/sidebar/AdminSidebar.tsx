@@ -94,7 +94,7 @@ export function AdminDashboardClient({
               disabled={loading}
               aria-label="Logout"
             >
-              <LogOut size={20} className="" />
+              <LogOut size={20} className="text-foreground" />
             </Button>
           </div>
         </header>

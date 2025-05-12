@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import OtpInput from "@/components/ui/otp-input";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
 
 interface AdminOtpFormProps {
   email: string;
@@ -101,35 +102,50 @@ export default function AdminOtpForm({
   };
 
   return (
-    <form onSubmit={handleVerifyOtp} className="mt-4 space-y-4">
+    <form onSubmit={handleVerifyOtp} className="space-y-8">
       <OtpInput value={otp} onChange={setOtp} />
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-center gap-4">
         <Button
           type="submit"
           disabled={loading}
-          className="bg-primary hover:bg-button-hover h-10 w-2/3 cursor-pointer rounded-full text-base text-white transition-all duration-700 md:h-12 md:text-lg"
+          className="bg-primary hover:bg-button-hover h-12 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-14 md:text-lg"
         >
-          {loading ? "Verificando..." : "Conferma"}
+          {loading ? "Accedendo..." : "Accedi"}
         </Button>
 
-        <div className="text-sm">
+        <div className="relative my-8 w-full">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
+              oppure
+            </span>
+          </div>
+        </div>
+
+        <div className="w-full text-sm">
           {otpResendAvailable ? (
-            <button
+            <Button
               type="button"
               onClick={handleResendOtp}
               disabled={loading}
-              className="text-blue-600 hover:underline disabled:opacity-50"
+              className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
             >
-              Invia nuovo OTP
-            </button>
+              Invia nuovo codice OTP
+            </Button>
           ) : (
-            <span>
-              Riinvia tra {Math.floor(otpCountdown / 60)}:
+            <Button
+              type="button"
+              disabled
+              className="bg-secondary/50 hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+            >
+              Invia nuovo codice tra {Math.floor(otpCountdown / 60)}:
               {(otpCountdown % 60).toString().padStart(2, "0")}
-            </span>
+            </Button>
           )}
         </div>
       </div>

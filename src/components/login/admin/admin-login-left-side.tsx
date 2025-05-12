@@ -15,8 +15,8 @@ export default function AdminLoginLeftSide() {
         <Image
           src="/Admin-cuate.svg"
           alt="Login Notai"
-          width={400}
-          height={400}
+          width={500}
+          height={500}
           className="object-contain"
         />
       </div>
