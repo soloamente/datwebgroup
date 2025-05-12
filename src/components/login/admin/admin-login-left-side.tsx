@@ -9,7 +9,7 @@ export default function AdminLoginLeftSide() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, ease: "easeInOut" }}
-      className="bg-login-credentials relative hidden h-full w-full rounded-2xl md:block md:w-2/5"
+      className="bg-login-credentials relative hidden h-full w-full rounded-2xl p-4 md:block md:w-2/5 lg:w-1/2"
     >
       <div className="flex h-full items-center justify-center">
         <Image
@@ -17,7 +17,8 @@ export default function AdminLoginLeftSide() {
           alt="Login Notai"
           width={500}
           height={500}
-          className="object-contain"
+          className="h-auto w-full object-contain sm:w-[300px] md:w-[400px] lg:max-w-[500px]"
+          priority
         />
       </div>
     </motion.div>

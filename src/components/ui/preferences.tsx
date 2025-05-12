@@ -49,20 +49,23 @@ export function Preferences() {
   const id = useId();
 
   return (
-    <motion.div className="absolute right-5 bottom-5 z-10 cursor-pointer">
+    <motion.div className="fixed right-5 bottom-5 z-10 cursor-pointer">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
             size="icon"
-            className="rounded-xl lg:h-12 lg:w-12"
+            className="xs:h-8 xs:w-8 rounded-xl md:h-10 md:w-10 xl:h-12 xl:w-12"
           >
             <Sun className="absolute scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
             <Moon className="absolute scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
             <span className="sr-only">Cambia tema</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="flex flex-col gap-5 p-4">
+        <DropdownMenuContent
+          align="end"
+          className="flex flex-col gap-5 rounded-xl p-4"
+        >
           <div>
             <h1 className="font-medium">Aspetto</h1>
             <p className="text-[12px] opacity-40">

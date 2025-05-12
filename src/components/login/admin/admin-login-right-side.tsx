@@ -49,7 +49,7 @@ export default function AdminLoginRightSide({
       <div className="absolute bottom-2">
         <AdminGradientTracing />
       </div>
-      <div className="z-10 mx-auto w-full max-w-md lg:max-w-lg">
+      <div className="z-10 mx-auto w-full md:w-md lg:max-w-lg">
         <div className="relative h-24 w-24 md:absolute md:top-10 md:right-10 md:h-24 md:w-24">
           <Image
             src="/logo_positivo.png"
@@ -65,7 +65,7 @@ export default function AdminLoginRightSide({
             Bentornato Amministratore!
           </h1>
 
-          <p className="text-description transition-all duration-700 md:text-sm lg:text-base">
+          <p className="text-description transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
             {step === "login"
               ? "Inserisci username e password per continuare"
               : `Inserisci il codice OTP inviato a ${email.includes("@") ? email : `${username}@datasystemgroup.it`}`}
