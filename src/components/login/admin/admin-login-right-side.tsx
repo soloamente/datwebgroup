@@ -46,9 +46,7 @@ export default function AdminLoginRightSide({
       transition={{ duration: 1, ease: "easeInOut" }}
       className="from-primary/20 to-login-credentials flex h-full w-full flex-col justify-center rounded-2xl bg-gradient-to-t to-60% px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
     >
-      <div className="absolute bottom-2">
-        <AdminGradientTracing />
-      </div>
+      <div className="absolute bottom-2">{/* <AdminGradientTracing /> */}</div>
       <div className="z-10 mx-auto w-full md:w-md lg:max-w-lg">
         <div className="relative h-24 w-24 md:absolute md:top-10 md:right-10 md:h-24 md:w-24">
           <Image

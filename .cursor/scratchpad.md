@@ -304,3 +304,75 @@ The preferences component currently has some responsiveness issues that need to 
 ## Lessons
 
 (To be filled during implementation)
+
+# Session Handling Middleware Implementation
+
+## Background and Motivation
+
+We need to implement middleware to handle session validation and redirection for unauthenticated users. This will ensure that users are properly authenticated before accessing protected routes and are redirected to the login page when their session expires.
+
+## Key Challenges and Analysis
+
+1. Need to handle both API routes and page routes
+2. Need to check session validity using better-auth
+3. Need to handle different types of authentication (admin vs regular users)
+4. Need to exclude public routes from authentication checks
+
+## High-level Task Breakdown
+
+1. [x] Create middleware to check session status
+
+   - Success Criteria: Middleware can detect if a session exists and is valid
+   - Implementation: Use better-auth's session validation
+
+2. [x] Implement route protection logic
+
+   - Success Criteria: Protected routes redirect to login when no valid session
+   - Implementation: Check request path and session status
+
+3. [x] Add public route exclusions
+
+   - Success Criteria: Public routes (login, register, etc.) are accessible without session
+   - Implementation: Define list of public routes and exclude them from checks
+
+4. [x] Add role-based access control
+   - Success Criteria: Different user roles are redirected to appropriate login pages
+   - Implementation: Check user role from session and redirect accordingly
+
+## Project Status Board
+
+- [x] Task 1: Create middleware to check session status
+- [x] Task 2: Implement route protection logic
+- [x] Task 3: Add public route exclusions
+- [x] Task 4: Add role-based access control
+
+## Executor's Feedback or Assistance Requests
+
+The middleware has been implemented with the following features:
+
+1. Session validation using better-auth
+2. Public route exclusions
+3. Proper error handling and type safety
+4. Redirect to login with callback URL and error parameters
+5. Role-based access control for admin, sharer, and viewer roles
+6. Proper redirection based on user roles
+7. Specific redirection to admin login page for admin routes
+
+The implementation is now complete. The middleware will:
+
+1. Allow access to public routes without authentication
+2. Check session validity for protected routes
+3. Redirect to appropriate login pages based on user roles
+4. Handle session expiration and errors gracefully
+5. Redirect to admin login page when accessing admin routes without authentication
+
+## Lessons
+
+1. When working with better-auth, we need to use the `handler` method to get the session
+2. Always add proper type definitions for session data
+3. Include proper error handling and logging in middleware
+4. Use URL search parameters to provide context for redirects
+5. Define clear role-based route prefixes for better maintainability
+6. Handle role validation before checking specific route access
+7. Check route type (admin vs client) before session validation to ensure proper redirection
+8. Use consistent redirection paths for different user roles and authentication states
