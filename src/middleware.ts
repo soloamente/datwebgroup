@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 
 // Define public routes that don't require authentication
 const publicRoutes = [
-  "/",
   "/auth/sign-in",
   "/auth/sign-up",
   "/auth/change-password",
@@ -91,6 +90,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!_next/static|_next/image|favicon.ico|public/).*)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
