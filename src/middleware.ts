@@ -1,22 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Define public routes that don't require authentication
-const publicRoutes = [
-  "/auth/sign-in",
-  "/auth/sign-up",
-  "/auth/change-password",
-  "/api/auth",
-  "/api/prelogin",
-  "/api/verify-otp",
-  "/login/admin",
-  "/login/clienti",
-];
-
-// Define role-based route prefixes
-const adminRoutes = ["/dashboard/admin", "/api/admin"];
-const sharerRoutes = ["/dashboard/sharer", "/api/sharer"];
-const viewerRoutes = ["/dashboard/viewer", "/api/viewer"];
+// Define protected routes that require authentication
+const adminRoutes = ["/dashboard/admin"];
+const sharerRoutes = ["/dashboard/sharer"];
+const viewerRoutes = ["/dashboard/viewer"];
 
 interface User {
   id: number;
@@ -37,49 +25,48 @@ interface AuthState {
   };
 }
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export async function middleware(req: NextRequest) {
+  const { nextUrl } = req;
+  const sessionCookie = req.cookies.get("auth-storage");
 
-  // Check if the route is public
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
+  const res = NextResponse.next();
+
+  let userData: AuthState | null = null;
+  if (sessionCookie?.value) {
+    try {
+      userData = JSON.parse(sessionCookie.value) as AuthState;
+    } catch (e) {
+      console.error("Failed to parse session cookie:", e);
+    }
   }
 
-  // Check if it's an admin route before session check
-  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
+  const isLoggedIn = !!sessionCookie && userData?.state?.user !== null;
+  const isOnAuthRoute = nextUrl.pathname.startsWith("/login");
+  const isOnAdminRoute = adminRoutes.includes(nextUrl.pathname);
+  const isOnSharerRoute = sharerRoutes.includes(nextUrl.pathname);
+  const isOnViewerRoute = viewerRoutes.includes(nextUrl.pathname);
 
-  try {
-    // Get auth cookie
-    const authCookie = request.cookies.get("auth-storage");
+  const isOnOtpPhase = sessionCookie?.value;
+  console.log(isOnOtpPhase);
 
-    // If no auth cookie exists, redirect to appropriate login page
-    if (!authCookie) {
-      return NextResponse.redirect(
-        new URL(isAdminRoute ? "/login/admin" : "/login/clienti", request.url),
-      );
-    }
-
-    // Parse the auth cookie
-    const authData = JSON.parse(authCookie.value) as AuthState;
-    const user = authData?.state?.user;
-
-    // If no user data exists, redirect to appropriate login page
-    if (!user) {
-      return NextResponse.redirect(
-        new URL(isAdminRoute ? "/login/admin" : "/login/clienti", request.url),
-      );
-    }
-  } catch (error) {
-    console.error(
-      "Middleware error:",
-      error instanceof Error ? error.message : "Unknown error",
-    );
-    return NextResponse.redirect(
-      new URL(isAdminRoute ? "/login/admin" : "/login/clienti", request.url),
-    );
+  if (isOnAdminRoute && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/login/admin", nextUrl));
   }
+
+  if (isOnSharerRoute && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/login/sharer", nextUrl));
+  }
+
+  if (isOnViewerRoute && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/login/viewer", nextUrl));
+  }
+
+  if (isOnAuthRoute && isLoggedIn) {
+    return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
+  }
+
+  return res;
 }
-
 // Configure which routes the middleware should run on
 export const config = {
   matcher: [

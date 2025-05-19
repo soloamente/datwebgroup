@@ -120,7 +120,14 @@ export function CreateUserDialog({
   }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="space-y-4 rounded-4xl px-8 shadow-lg sm:max-w-[550px]">
         <DialogHeader className="flex flex-col items-center space-y-1.5 pt-6">
           <UserPlus className="h-12 w-12" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import SharerTable from "@/components/tables/admin/sharer-table";
+import SharerTable from "@/components/dashboard/tables/admin/sharer-table";
 import { userService, type Sharer } from "@/app/api/api";
 import { toast } from "sonner";
 import { StatsGrid } from "@/components/admin/stats-grid";

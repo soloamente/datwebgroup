@@ -161,7 +161,14 @@ export function EditUserDialog({
     !errors.email && !errors.codice_fiscale && !errors.partita_iva;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Modifica Utente</DialogTitle>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { userService, type Sharer } from "@/app/api/api";
-import SharerTable from "@/components/tables/admin/sharer-table";
+import SharerTable from "@/components/dashboard/tables/admin/sharer-table";
 import { toast } from "sonner";
 
 export default function SharerTableWrapper() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ViewerTable from "@/components/tables/sharer/viewer-table";
+import ViewerTable from "@/components/dashboard/tables/sharer/viewer-table";
 import { userService, type Viewer } from "@/app/api/api";
 import { toast } from "sonner";
 import { StatsGrid } from "@/components/admin/stats-grid";
