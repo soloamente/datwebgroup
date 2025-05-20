@@ -3,96 +3,26 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { userService } from "@/app/api/api";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import PasswordInput from "@/components/login/password-input";
+import { Separator } from "@/components/ui/separator";
 import { motion } from "motion/react";
+import useAuthStore from "@/app/api/auth";
+import { useRouter } from "next/navigation";
+import ChangePasswordForm from "./change-password-form";
 
 export default function ChangePasswordRightSide() {
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const authStore = useAuthStore();
+  const router = useRouter();
 
-  const passwordRules = [
-    "Essere lunga almeno 8 caratteri.",
-    "Contenere almeno una lettera maiuscola.",
-    "Contenere almeno un carattere speciale.",
-    "Contenere almeno un numero.",
-  ];
-
-  const validatePassword = (passwordToValidate: string) => {
-    if (passwordToValidate.length < 8) {
-      return "La password deve essere lunga almeno 8 caratteri.";
-    }
-    if (!/[A-Z]/.test(passwordToValidate)) {
-      return "La password deve contenere almeno una lettera maiuscola.";
-    }
-    // eslint-disable-next-line no-useless-escape
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(passwordToValidate)) {
-      return "La password deve contenere almeno un carattere speciale.";
-    }
-    if (!/\d/.test(passwordToValidate)) {
-      return "La password deve contenere almeno un numero.";
-    }
-    return null;
-  };
-
-  const handlePasswordChange = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log("handlePasswordChange function called");
-    e.preventDefault();
-    setError(null);
-
-    if (password !== passwordConfirmation) {
-      setError("Le password non coincidono.");
-      toast.error("Le password non coincidono.");
-      return;
-    }
-
-    const passwordValidationError = validatePassword(password);
-    if (passwordValidationError) {
-      setError(passwordValidationError);
-      toast.error(passwordValidationError);
-      return;
-    }
-
-    setIsLoading(true);
-
+  const handleLogout = async () => {
     try {
-      console.log(
-        "Attempting to change password. Sending the following data to the API:",
-      );
-      console.log("Password:", password);
-      console.log("Password Confirmation:", passwordConfirmation);
-
-      await userService.changePassword({
-        password,
-        password_confirmation: passwordConfirmation,
-      });
-
-      toast.success("Password cambiata con successo.");
-      // Middleware will handle redirection
-    } catch (err) {
-      console.error("Failed to change password:", err);
-
-      // Type assertion for better error handling
-      let errorMessage =
-        "Si è verificato un errore durante il cambio password.";
-      if (err && typeof err === "object" && "response" in err) {
-        const responseError = err.response as { data?: { error?: string } };
-        if (
-          responseError.data &&
-          typeof responseError.data.error === "string"
-        ) {
-          errorMessage = responseError.data.error;
-        }
-      }
-
-      toast.error(errorMessage);
+      setLoading(true);
+      await authStore.logout();
+      router.push("/login/admin");
+    } catch (error) {
+      console.error("Errore durante il logout:", error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -123,49 +53,27 @@ export default function ChangePasswordRightSide() {
           </p>
         </div>
 
-        <form onSubmit={handlePasswordChange} className="space-y-6">
-          <div className="space-y-2">
-            <PasswordInput
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              label="Nuova Password"
-              ruleset={passwordRules}
-            />
+        <ChangePasswordForm />
+
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
           </div>
-          <div className="space-y-2">
-            <PasswordInput
-              value={passwordConfirmation}
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
-              label="Conferma Password"
-            />
-            {password &&
-              passwordConfirmation &&
-              password !== passwordConfirmation && (
-                <p className="text-center text-xs text-red-600">
-                  Le password non coincidono.
-                </p>
-              )}
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
+              o continua con
+            </span>
           </div>
-          {error && <p className="text-center text-xs text-red-600">{error}</p>}
+        </div>
+
+        <div className="mt-4 flex justify-center">
           <Button
-            type="submit"
-            disabled={
-              isLoading ||
-              password !== passwordConfirmation ||
-              !!validatePassword(password) // Disable if there's any validation error
-            }
-            className="bg-primary hover:bg-button-hover h-12 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-14 md:text-lg"
+            onClick={handleLogout}
+            className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Aggiornando...
-              </>
-            ) : (
-              "Cambia Password"
-            )}
+            Cambia Account
           </Button>
-        </form>
+        </div>
       </div>
     </motion.div>
   );

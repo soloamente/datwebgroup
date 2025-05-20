@@ -50,6 +50,8 @@ export async function middleware(req: NextRequest) {
   const isOnAdminRoute = nextUrl.pathname.startsWith("/dashboard/admin");
   const isOnSharerRoute = nextUrl.pathname.startsWith("/dashboard/sharer");
   const isOnViewerRoute = nextUrl.pathname.startsWith("/dashboard/viewer");
+  const isOnChangePasswordRoute =
+    nextUrl.pathname.startsWith("/change-password");
   const mustChangePassword = userData?.state?.user?.must_change_password;
 
   const isOnOtpPhase = sessionCookie?.value;
@@ -64,6 +66,19 @@ export async function middleware(req: NextRequest) {
   console.log("Middleware mustChangePassword value:", mustChangePassword);
   console.log("Middleware mustChangePassword type:", typeof mustChangePassword);
   // --- Debugging Logs End ---
+
+  // if (isLoggedIn && mustChangePassword === 0) {
+  //   if (nextUrl.pathname === "/change-password") {
+  //     console.log(
+  //       "User must change password, redirecting to /login/change-password",
+  //     );
+  //     return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
+  //   }
+  // }
+
+  if (!isLoggedIn && isOnChangePasswordRoute) {
+    return NextResponse.redirect(new URL("/login/admin", nextUrl));
+  }
 
   // Handle must_change_password redirect first
   if (isLoggedIn && mustChangePassword === 1) {

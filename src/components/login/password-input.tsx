@@ -11,12 +11,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Info from "@/components/icons/info";
 
 interface PasswordInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   label: string;
   ruleset?: string[];
+  showInfo?: boolean;
+  infoVariant?: "bold" | "broken" | "linear" | "bulk" | "twotone" | "outline";
+  infoSize?: number;
+  infoColor?: string;
+  infoClassName?: string;
+  infoStrokeWidth?: number;
 }
 
 export default function PasswordInput({
@@ -24,6 +31,12 @@ export default function PasswordInput({
   onChange,
   label,
   ruleset,
+  showInfo = false,
+  infoVariant,
+  infoSize,
+  infoColor,
+  infoClassName,
+  infoStrokeWidth,
 }: PasswordInputProps) {
   const id = useId();
   const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -37,12 +50,16 @@ export default function PasswordInput({
         className="flex items-center justify-between transition-all duration-700"
       >
         <div className="text-sm">{label}</div>
-        {ruleset && ruleset.length > 0 && (
+        {showInfo && ruleset && ruleset.length > 0 && (
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <InfoIcon
-                  className="text-muted-foreground hover:text-foreground ml-2 h-4 w-4 cursor-pointer"
+                <Info
+                  variant={infoVariant}
+                  size={infoSize}
+                  color={infoColor}
+                  className={infoClassName}
+                  strokeWidth={infoStrokeWidth}
                   aria-label="Password rules"
                 />
               </TooltipTrigger>
