@@ -51,7 +51,7 @@ export default function AdminOtpForm({
       );
 
       if (result.success) {
-        if (authStore.user?.must_change_password) {
+        if (authStore.user?.must_change_password === 1) {
           router.push("/change-password");
         } else {
           router.push("/dashboard/admin");

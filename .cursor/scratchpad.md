@@ -345,6 +345,12 @@ We need to implement middleware to handle session validation and redirection for
 - [x] Task 2: Implement route protection logic
 - [x] Task 3: Add public route exclusions
 - [x] Task 4: Add role-based access control
+- [x] Investigate why redirect for `mustChangePassword` is not working
+  - [x] Add console.log statements to `src/middleware.ts` to check runtime values.
+  - [x] Identify that `must_change_password` is not in the cookie due to `partialize` function in `src/app/api/auth.ts`.
+  - [x] Update `partialize` function in `src/app/api/auth.ts` to include `must_change_password`.
+  - [x] Add a condition to `src/middleware.ts` to prevent redirect loop to `/login/change-password`.
+  - [x] Refactor middleware to correctly prioritize `mustChangePassword` and allow users to stay on the change password page if needed, fixing the redirect loop.
 
 ## Executor's Feedback or Assistance Requests
 
@@ -376,6 +382,8 @@ The implementation is now complete. The middleware will:
 6. Handle role validation before checking specific route access
 7. Check route type (admin vs client) before session validation to ensure proper redirection
 8. Use consistent redirection paths for different user roles and authentication states
+
+- Ensure type consistency for shared data structures (like User objects) across different parts of the application (e.g., API layer vs. middleware). Mismatched types (e.g., boolean vs. number for the same field) can lead to subtle bugs and incorrect comparisons. Specifically, `1 === true` is `false` in JavaScript, which can cause issues if a numeric flag is compared directly to a boolean.
 
 # Toaster Component Appearance Update
 
@@ -418,3 +426,100 @@ The Toaster component's appearance has been updated to match the provided screen
    - Ensure the new style is implemented correctly
    - Test the component with different scenarios
    - Use user feedback to refine the style
+
+# Middleware Linter Fix
+
+## Background and Motivation
+
+A linter error `'userData.state.user' is possibly 'null'` was present in `src/middleware.ts`.
+This error needed to be fixed to prevent potential runtime issues.
+
+## Key Challenges and Analysis
+
+The error occurred because `userData?.state?.user` could be `null`, and accessing `must_change_password` on `null` is not allowed.
+The fix involves using optional chaining (`?.`) to safely access the property.
+
+## High-level Task Breakdown
+
+1.  Apply optional chaining to `must_change_password` access.
+    - Success criteria: Linter error is resolved, and `mustChangePassword` is `undefined` if `user` is `null`.
+
+## Project Status Board
+
+- [x] Fix linter error in `src/middleware.ts`
+
+## Executor's Feedback or Assistance Requests
+
+The linter error in `src/middleware.ts` has been fixed by applying optional chaining to the `must_change_password` property access.
+
+## Lessons
+
+- When accessing nested properties that might be null or undefined in TypeScript, use optional chaining (`?.`) to prevent runtime errors and satisfy the linter.
+- Ensure type consistency for shared data structures (like User objects) across different parts of the application (e.g., API layer vs. middleware). Mismatched types (e.g., boolean vs. number for the same field) can lead to subtle bugs and incorrect comparisons. Specifically, `1 === true` is `false` in JavaScript, which can cause issues if a numeric flag is compared directly to a boolean.
+
+# **[REQUEST]** Need specific backend password complexity rules to implement accurate frontend validation for the change password feature. The current error is "The password field format is invalid." and the frontend only checks for a minimum length of 8 characters.
+
+## Executor's Feedback or Assistance Requests
+
+- **[WAITING FOR INFO]** Still need the specific backend password complexity rules (e.g., must contain uppercase, lowercase, numbers, special characters, specific length constraints beyond minimum 8) to implement accurate frontend validation for the change password feature. The current error is "The password field format is invalid." The provided API documentation only details the request body structure, not the password content validation rules.
+
+## Background and Motivation
+
+The user encountered a backend error "The password field format is invalid." when trying to change their password. The frontend validation was only checking for a minimum length of 8 characters, while the backend enforced more specific complexity rules.
+
+## Key Challenges and Analysis
+
+1.  Identifying the exact password complexity rules required by the backend.
+2.  Implementing these rules in the frontend `ChangePasswordRightSide` component.
+3.  Providing clear user feedback for each validation rule.
+4.  Ensuring the submit button is disabled until all rules are met.
+
+## High-level Task Breakdown
+
+1.  [x] Obtain specific password complexity rules from the user (min 8 chars, 1 uppercase, 1 special char).
+2.  [x] Implement a `validatePassword` function in `src/components/change-password/change-password-right-side.tsx` to check these rules.
+3.  [x] Update the `handlePasswordChange` function to use the new validation logic and display errors.
+4.  [x] Add dynamic UI hints below the password input to show the status of each validation rule.
+5.  [x] Update the submit button's `disabled` state to reflect the new validation status.
+6.  [ ] User to test the implemented validation changes and confirm the original issue is resolved.
+7.  [x] Add optional `ruleset` prop to `PasswordInput` component (`src/components/login/password-input.tsx`).
+8.  [x] Conditionally render an `InfoIcon` with a `Tooltip` in `PasswordInput` to display rules if `ruleset` is provided.
+9.  [x] Pass the defined password rules from `ChangePasswordRightSide` to the `PasswordInput` for "Nuova Password".
+10. [ ] User to test the new tooltip functionality for displaying password rules.
+11. [x] Attempt to make tooltip animation smoother by adding `transition-all duration-300 ease-in-out` to `TooltipContent` in `src/components/ui/tooltip.tsx`.
+12. [ ] User to test the updated tooltip animation smoothness.
+
+## Project Status Board
+
+- [x] Obtain password complexity rules from the user.
+- [x] Implement `validatePassword` function with new rules (min length, uppercase, special character).
+- [x] Integrate `validatePassword` into `handlePasswordChange` for error handling and toasts.
+- [x] Add UI hints for individual password rules.
+- [x] Update button `disabled` state based on all validation rules.
+- [ ] **USER ACTION REQUIRED**: Test password change functionality with new validation rules.
+- [x] Modify `PasswordInput` to accept and display `ruleset` via `InfoIcon` and `Tooltip`.
+- [x] Update `ChangePasswordRightSide` to provide `ruleset` to the relevant `PasswordInput`.
+- [ ] **USER ACTION REQUIRED**: Test the tooltip display for password rules on the "Nuova Password" field.
+- [x] Modify `TooltipContent` in `src/components/ui/tooltip.tsx` to attempt smoother animation with Tailwind utility classes.
+- [ ] **USER ACTION REQUIRED**: Test the updated tooltip animation for smoothness.
+- [ ] **USER ACTION REQUIRED**: Check browser console logs for `password` and `passwordConfirmation` values when attempting to change password, and report back. (Previous task, now superseded by checking for the initial function call log)
+- [ ] **USER ACTION REQUIRED**: After hard refresh, check if `"handlePasswordChange function called"` appears in console upon form submission, and report any other errors.
+
+## Executor's Feedback or Assistance Requests
+
+- The password validation logic in `src/components/change-password/change-password-right-side.tsx` has been updated to include checks for at least one uppercase letter and one special character, in addition to the minimum 8-character length.
+- UI hints have been added to guide the user, and the submit button will only be enabled when all criteria are met.
+- The `PasswordInput` component now features an optional information icon next to the label. If a `ruleset` prop is provided (as it is for the "Nuova Password" field in the change password form), hovering this icon will display the password complexity rules in a tooltip.
+- Added `transition-all duration-300 ease-in-out` to `TooltipContent` in `src/components/ui/tooltip.tsx` in an attempt to make the show/hide animation smoother. The effectiveness of this depends on how `tailwindcss-animate` interacts with these standard transition utilities.
+- **Please test the password validation changes thoroughly** to ensure the frontend validation works as expected and that valid passwords can now be set without the backend "invalid format" error.
+- **Also, please test the new tooltip feature** on the "Nuova Password" input to ensure the rules are displayed correctly upon hovering the info icon, and **specifically check if the animation feels smoother**.
+- User reported that the `console.log` statements for password values (added previously) are not appearing in the browser console.
+- Added an additional `console.log("handlePasswordChange function called");` at the very beginning of the `handlePasswordChange` function in `src/components/change-password/change-password-right-side.tsx`. This is to determine if the function is being invoked at all when the form is submitted.
+- Advised user to perform a hard refresh, open developer console, and then attempt password change, then report if the new log appears and if any other console errors are present.
+
+## Lessons
+
+- Frontend validation should ideally mirror backend validation rules to provide immediate feedback to the user and reduce unnecessary API calls.
+- Clear and specific error messages for validation failures improve user experience.
+- When dealing with string patterns (like special characters in passwords), ensure regex is correctly escaped for all intended characters.
+- When encountering a "password field format is invalid" error from the backend, ensure frontend validation also checks for common requirements like at least one digit, in addition to length, uppercase, and special characters.

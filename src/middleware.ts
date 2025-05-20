@@ -17,6 +17,7 @@ interface User {
   partita_iva?: string;
   created_at: string;
   updated_at: string;
+  must_change_password: number;
 }
 
 interface AuthState {
@@ -42,13 +43,44 @@ export async function middleware(req: NextRequest) {
 
   const isLoggedIn = !!sessionCookie && userData?.state?.user !== null;
   const userRole = userData?.state?.user?.role;
-  const isOnAuthRoute = nextUrl.pathname.startsWith("/login");
+  const isOnAuthRoute =
+    nextUrl.pathname.startsWith("/login") ||
+    (nextUrl.pathname === "/change-password" &&
+      userData?.state?.user?.must_change_password !== 1);
   const isOnAdminRoute = nextUrl.pathname.startsWith("/dashboard/admin");
   const isOnSharerRoute = nextUrl.pathname.startsWith("/dashboard/sharer");
   const isOnViewerRoute = nextUrl.pathname.startsWith("/dashboard/viewer");
+  const mustChangePassword = userData?.state?.user?.must_change_password;
 
   const isOnOtpPhase = sessionCookie?.value;
-  console.log(isOnOtpPhase);
+  console.log("Current session cookie value for isOnOtpPhase:", isOnOtpPhase);
+
+  // --- Debugging Logs Start ---
+  console.log(
+    "Middleware userData:",
+    JSON.stringify(userData?.state?.user, null, 2),
+  );
+  console.log("Middleware isLoggedIn:", isLoggedIn);
+  console.log("Middleware mustChangePassword value:", mustChangePassword);
+  console.log("Middleware mustChangePassword type:", typeof mustChangePassword);
+  // --- Debugging Logs End ---
+
+  // Handle must_change_password redirect first
+  if (isLoggedIn && mustChangePassword === 1) {
+    if (nextUrl.pathname !== "/change-password") {
+      console.log(
+        "User must change password, redirecting to /login/change-password",
+      );
+      return NextResponse.redirect(new URL("/change-password", nextUrl));
+    }
+    // If user must change password AND is already on the change password page, allow them to stay.
+    console.log(
+      "User must change password and is on /login/change-password page. Allowing to stay.",
+    );
+    return res; // Allow request to proceed to /login/change-password
+  }
+
+  // --- End of must_change_password specific logic ---
 
   if (isOnAdminRoute && (!isLoggedIn || userRole !== "admin")) {
     return NextResponse.redirect(new URL("/login/admin", nextUrl));
@@ -63,6 +95,12 @@ export async function middleware(req: NextRequest) {
   }
 
   if (isOnAuthRoute && isLoggedIn) {
+    // At this point, if mustChangePassword was 1, we've already handled it.
+    // So, if they are on an auth route and logged in (and don't need to change password),
+    // redirect to their dashboard.
+    console.log(
+      "User is logged in and on an auth route (and doesn't need to change password), redirecting to dashboard.",
+    );
     // Redirect to appropriate dashboard based on role
     if (userRole === "admin") {
       return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));

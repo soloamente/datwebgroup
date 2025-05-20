@@ -17,6 +17,7 @@ import { userService, CreateSharerData } from "@/app/api/api";
 import { toast } from "sonner";
 import { Separator } from "./ui/separator";
 import { AtSignIcon, Loader2, UserPlus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // TODO: Update this interface based on the actual data expected by the API
 interface RegisterWorkspaceData {
@@ -25,6 +26,12 @@ interface RegisterWorkspaceData {
   email: string;
   codice_fiscale?: string;
   partita_iva?: string;
+}
+
+interface ApiResponse {
+  data?: {
+    message?: string;
+  };
 }
 
 interface CreateUserDialogProps {
@@ -44,6 +51,14 @@ export function CreateUserDialog({
     username: "",
     nominativo: "",
     email: "",
+    codice_fiscale: "",
+    partita_iva: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string | null>>({
+    username: null,
+    email: null,
+    codice_fiscale: null,
+    partita_iva: null,
   });
 
   const isValidEmail = (email: string) => {
@@ -51,11 +66,62 @@ export function CreateUserDialog({
     return emailRegex.test(email);
   };
 
-  const isFormValid =
-    formData.username.trim() !== "" &&
-    formData.nominativo.trim() !== "" &&
-    formData.email.trim() !== "" &&
-    isValidEmail(formData.email);
+  const validateUsername = (username: string): string | null => {
+    if (!username) return "L'username è obbligatorio.";
+    if (username.length < 5)
+      return "L'username deve essere di almeno 5 caratteri.";
+    if (/\d/.test(username)) return "L'username non può contenere numeri.";
+    return null;
+  };
+
+  const validateCodiceFiscale = (cf: string): string | null => {
+    if (!cf) return null; // Optional field
+    // Basic check: 16 alphanumeric characters
+    const cfRegex = /^[A-Z0-9]{16}$/i;
+    if (!cfRegex.test(cf))
+      return "Il Codice Fiscale deve contenere 16 caratteri alfanumerici.";
+    return null;
+  };
+
+  const validatePartitaIva = (piva: string): string | null => {
+    if (!piva) return null; // Optional field
+    // Basic check: 11 digits
+    const pivaRegex = /^[0-9]{11}$/;
+    if (!pivaRegex.test(piva)) return "La Partita IVA deve contenere 11 cifre.";
+    return null;
+  };
+
+  const validateForm = () => {
+    const usernameError = validateUsername(formData.username);
+    const emailError = !isValidEmail(formData.email)
+      ? "Formato email non valido."
+      : null;
+    const codiceFiscaleError = validateCodiceFiscale(formData.codice_fiscale);
+    const partitaIvaError = validatePartitaIva(formData.partita_iva);
+
+    setErrors({
+      username: usernameError,
+      email: emailError,
+      codice_fiscale: codiceFiscaleError,
+      partita_iva: partitaIvaError,
+    });
+
+    return (
+      !usernameError && !emailError && !codiceFiscaleError && !partitaIvaError
+    );
+  };
+
+  const isFormValid = React.useMemo(() => {
+    return (
+      formData.username.trim() !== "" &&
+      formData.nominativo.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      validateUsername(formData.username) === null &&
+      isValidEmail(formData.email) &&
+      validateCodiceFiscale(formData.codice_fiscale) === null &&
+      validatePartitaIva(formData.partita_iva) === null
+    );
+  }, [formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -63,49 +129,70 @@ export function CreateUserDialog({
       ...prev,
       [name]: value,
     }));
+
+    // Validate on change
+    let errorMessage: string | null = null;
+    switch (name) {
+      case "username":
+        errorMessage = validateUsername(value);
+        break;
+      case "email":
+        errorMessage = !isValidEmail(value)
+          ? "Formato email non valido."
+          : null;
+        break;
+      case "codice_fiscale":
+        errorMessage = validateCodiceFiscale(value);
+        break;
+      case "partita_iva":
+        errorMessage = validatePartitaIva(value);
+        break;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: errorMessage,
+    }));
   };
 
-  // TODO: Update this function to call the correct API endpoint with RegisterWorkspaceData
   const handleRegisterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Validate all fields before submission
+    if (!validateForm()) {
+      toast.error(
+        "Per favore correggi gli errori nel form prima di procedere.",
+      );
+      return;
+    }
+
     setError(null);
     setIsLoading(true);
-    const formData = new FormData(e.currentTarget);
-    // Map form data to the expected structure
+
     const data: RegisterWorkspaceData = {
-      username: formData.get("username") as string,
-      nominativo: formData.get("nominativo") as string,
-      email: formData.get("email") as string,
-      codice_fiscale: (formData.get("codice_fiscale") as string) || undefined,
-      partita_iva: (formData.get("partita_iva") as string) || undefined,
+      username: formData.username,
+      nominativo: formData.nominativo,
+      email: formData.email,
+      codice_fiscale: formData.codice_fiscale || undefined,
+      partita_iva: formData.partita_iva || undefined,
     };
 
-    console.log("Form data:", data); // Log data for now
-
     try {
-      // --- Placeholder for API call ---
-      // const response = await yourApiService.registerToWorkspace(data);
-      // toast.success(response.data?.message || "Registration successful.");
-      // Simulating success for now
-      // await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
-      // toast.success("Registration submitted (simulated).");
-      // onUserCreated(); // Call the callback on success
-      // --- End Placeholder ---
-      const response = await userService.createSharer(data);
-      // eslint-disable-next-line
-      toast.success(response.data?.message || "Sharer creato con successo.");
-      onUserCreated(); // Call the callback on success
-      // eslint-disable-next-line
-    } catch (err: any) {
-      console.error("Failed to register:", err);
-      // eslint-disable-next-line
-      const errorMessage =
-        // eslint-disable-next-line
-        err.response?.data?.error ||
-        "Si è verificato un errore durante la creazione.";
-      // eslint-disable-next-line
+      const response = (await userService.createSharer(data)) as ApiResponse;
+      const successMessage =
+        response.data?.message ?? "Sharer creato con successo.";
+      toast.success(successMessage);
+      onUserCreated();
+    } catch (error: unknown) {
+      console.error("Failed to register:", error);
+      let errorMessage = "Si è verificato un errore durante la creazione.";
+
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as { response?: { data?: { error?: string } } };
+        errorMessage = apiError.response?.data?.error ?? errorMessage;
+      }
+
       setError(errorMessage);
-      // eslint-disable-next-line
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -116,6 +203,19 @@ export function CreateUserDialog({
   useEffect(() => {
     if (isOpen) {
       setError(null);
+      setErrors({
+        username: null,
+        email: null,
+        codice_fiscale: null,
+        partita_iva: null,
+      });
+      setFormData({
+        username: "",
+        nominativo: "",
+        email: "",
+        codice_fiscale: "",
+        partita_iva: "",
+      });
     }
   }, [isOpen]);
 
@@ -153,10 +253,16 @@ export function CreateUserDialog({
                   placeholder="Username"
                   required
                   disabled={isLoading}
-                  className="h-12 rounded-xl"
+                  className={cn(
+                    "h-12 rounded-xl",
+                    errors.username && "border-red-500",
+                  )}
                   value={formData.username}
                   onChange={handleInputChange}
                 />
+                {errors.username && (
+                  <p className="text-sm text-red-600">{errors.username}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="nominativo">
@@ -183,7 +289,10 @@ export function CreateUserDialog({
                   id="email"
                   name="email"
                   type="email"
-                  className="peer h-12 rounded-xl ps-9"
+                  className={cn(
+                    "peer h-12 rounded-xl ps-9",
+                    errors.email && "border-red-500",
+                  )}
                   placeholder="Email"
                   required
                   disabled={isLoading}
@@ -194,6 +303,9 @@ export function CreateUserDialog({
                   <AtSignIcon size={16} aria-hidden="true" />
                 </div>
               </div>
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="codice_fiscale">Codice fiscale</Label>
@@ -202,8 +314,16 @@ export function CreateUserDialog({
                 name="codice_fiscale"
                 placeholder="Codice fiscale"
                 disabled={isLoading}
-                className="h-12 rounded-xl"
+                className={cn(
+                  "h-12 rounded-xl",
+                  errors.codice_fiscale && "border-red-500",
+                )}
+                value={formData.codice_fiscale}
+                onChange={handleInputChange}
               />
+              {errors.codice_fiscale && (
+                <p className="text-sm text-red-600">{errors.codice_fiscale}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -213,8 +333,16 @@ export function CreateUserDialog({
                 name="partita_iva"
                 placeholder="Partita IVA"
                 disabled={isLoading}
-                className="h-12 rounded-xl"
+                className={cn(
+                  "h-12 rounded-xl",
+                  errors.partita_iva && "border-red-500",
+                )}
+                value={formData.partita_iva}
+                onChange={handleInputChange}
               />
+              {errors.partita_iva && (
+                <p className="text-sm text-red-600">{errors.partita_iva}</p>
+              )}
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
           </div>
@@ -222,7 +350,10 @@ export function CreateUserDialog({
             <Button
               type="submit"
               disabled={isLoading || !isFormValid}
-              className="text-foreground h-12 w-full rounded-xl"
+              className={cn(
+                "text-foreground h-12 w-full rounded-xl",
+                !isFormValid && "cursor-not-allowed opacity-50",
+              )}
             >
               {isLoading ? (
                 <>

@@ -363,6 +363,7 @@ const useAuthStore = create<AuthStore>()(
               email: state.user.email,
               role: state.user.role,
               avatar: state.user.avatar,
+              must_change_password: state.user.must_change_password,
             }
           : null,
       }),

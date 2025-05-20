@@ -92,6 +92,7 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
         <PasswordInput
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          label="Password"
         />
       </div>
 

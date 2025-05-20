@@ -2,17 +2,29 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EyeIcon, EyeOffIcon, LockIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, LockIcon, InfoIcon } from "lucide-react";
 import { useId, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+interface PasswordInputProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  label: string;
+  ruleset?: string[];
+}
 
 export default function PasswordInput({
   value,
   onChange,
-}: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) {
+  label,
+  ruleset,
+}: PasswordInputProps) {
   const id = useId();
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
@@ -24,11 +36,31 @@ export default function PasswordInput({
         htmlFor={id}
         className="flex items-center justify-between transition-all duration-700"
       >
-        <div className="text-sm">Password</div>{" "}
-        <div className="flex items-center gap-2">
-          <p className="text-sm">Ricordami </p>
-          <Checkbox />
-        </div>
+        <div className="text-sm">{label}</div>
+        {ruleset && ruleset.length > 0 && (
+          <TooltipProvider>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <InfoIcon
+                  className="text-muted-foreground hover:text-foreground ml-2 h-4 w-4 cursor-pointer"
+                  aria-label="Password rules"
+                />
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="end"
+                className="bg-popover text-popover-foreground rounded-md p-3 text-xs shadow-md"
+              >
+                <p className="mb-1 font-semibold">La password deve:</p>
+                <ul className="list-disc space-y-0.5 pl-4">
+                  {ruleset.map((rule, index) => (
+                    <li key={index}>{rule}</li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </Label>
       <div className="relative">
         <Input
