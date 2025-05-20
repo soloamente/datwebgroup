@@ -40,6 +40,7 @@ export function SendUsernameDialog({
       // Assuming the API returns a success message or we use a standard one
       // The user-tables component already shows a toast on success via onUsernameSent callback
       onUsernameSent();
+      toast.success("Username inviato con successo");
       // eslint-disable-next-line
     } catch (error: any) {
       console.error("Failed to send username:", error);

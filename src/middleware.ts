@@ -41,28 +41,36 @@ export async function middleware(req: NextRequest) {
   }
 
   const isLoggedIn = !!sessionCookie && userData?.state?.user !== null;
+  const userRole = userData?.state?.user?.role;
   const isOnAuthRoute = nextUrl.pathname.startsWith("/login");
-  const isOnAdminRoute = adminRoutes.includes(nextUrl.pathname);
-  const isOnSharerRoute = sharerRoutes.includes(nextUrl.pathname);
-  const isOnViewerRoute = viewerRoutes.includes(nextUrl.pathname);
+  const isOnAdminRoute = nextUrl.pathname.startsWith("/dashboard/admin");
+  const isOnSharerRoute = nextUrl.pathname.startsWith("/dashboard/sharer");
+  const isOnViewerRoute = nextUrl.pathname.startsWith("/dashboard/viewer");
 
   const isOnOtpPhase = sessionCookie?.value;
   console.log(isOnOtpPhase);
 
-  if (isOnAdminRoute && !isLoggedIn) {
+  if (isOnAdminRoute && (!isLoggedIn || userRole !== "admin")) {
     return NextResponse.redirect(new URL("/login/admin", nextUrl));
   }
 
-  if (isOnSharerRoute && !isLoggedIn) {
+  if (isOnSharerRoute && (!isLoggedIn || userRole !== "sharer")) {
     return NextResponse.redirect(new URL("/login/sharer", nextUrl));
   }
 
-  if (isOnViewerRoute && !isLoggedIn) {
+  if (isOnViewerRoute && (!isLoggedIn || userRole !== "viewer")) {
     return NextResponse.redirect(new URL("/login/viewer", nextUrl));
   }
 
   if (isOnAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
+    // Redirect to appropriate dashboard based on role
+    if (userRole === "admin") {
+      return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
+    } else if (userRole === "sharer") {
+      return NextResponse.redirect(new URL("/dashboard/sharer", nextUrl));
+    } else if (userRole === "viewer") {
+      return NextResponse.redirect(new URL("/dashboard/viewer", nextUrl));
+    }
   }
 
   return res;

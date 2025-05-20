@@ -42,7 +42,7 @@ export default function RootLayout({
           >
             <Preferences />
             {children}
-            <Toaster />
+            <Toaster position={"bottom-center"} />
           </ReactLenis>
         </ThemeProvider>
       </body>

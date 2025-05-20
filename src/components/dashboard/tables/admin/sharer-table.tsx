@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +15,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,12 +82,7 @@ import {
   useTransition,
   useCallback,
 } from "react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import { type Sharer, type Viewer, userService } from "@/app/api/api";
 import { toast } from "sonner";
 import { EditUserDialog } from "@/components/edit-user-dialog";
@@ -98,6 +91,12 @@ import { SendUsernameDialog } from "@/components/send-username-dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { CrossCircle } from "@/components/icons/cross-circle";
+import { CheckCircle } from "@/components/icons/check-circle";
+import { PencilEdit } from "@/components/icons/pencil-edit";
+import { CopyIcon } from "@/components/icons/copy";
+import { Stack } from "@/components/ui/stack";
+import { EmailIcon } from "@/components/icons/email";
 
 // Filter function that correctly handles active status boolean
 const activeStatusFilterFn: FilterFn<Sharer | Viewer> = (
@@ -229,22 +228,13 @@ const getColumns = ({
       const isActive = Boolean(row.getValue("active"));
       return (
         <Badge
-          variant={`${isActive ? "outline" : "outline"}`}
-          className={cn(
-            "flex items-center gap-1 rounded-full",
-            !isActive ? "text-description" : "text-foreground",
-          )}
+          variant={`${isActive ? "attivo" : "secondary"}`}
+          className={cn("flex items-center rounded-full", !isActive ? "" : "")}
         >
           {isActive ? (
-            <div
-              className="size-2 rounded-full bg-emerald-500"
-              aria-hidden="true"
-            />
+            <CheckCircle className="size-2 rounded-full" />
           ) : (
-            <div
-              className="size-2 rounded-full bg-red-500"
-              aria-hidden="true"
-            />
+            <CrossCircle className="size-2 rounded-full" />
           )}
           {isActive ? "Attivo" : "Inattivo"}
         </Badge>
@@ -539,7 +529,7 @@ export default function SharerTable({
                   </span>
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="z-[100]">
                 <div className="flex flex-col gap-2 max-sm:items-center sm:flex-row sm:gap-4">
                   <div
                     className="border-border flex size-9 shrink-0 items-center justify-center rounded-full border"
@@ -903,12 +893,33 @@ function RowActions({
   const [showChangePasswordDialog, setShowChangePasswordDialog] =
     useState(false);
   const [showSendUsernameDialog, setShowSendUsernameDialog] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Reset all dialog states when any dialog closes
+  const resetDialogStates = () => {
+    setShowDeleteDialog(false);
+    setShowEditDialog(false);
+    setShowChangePasswordDialog(false);
+    setShowSendUsernameDialog(false);
+    setDropdownOpen(false);
+    // Force cleanup of any lingering overlay
+    document.body.style.pointerEvents = "";
+    document.body.style.overflow = "";
+  };
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      resetDialogStates();
+    };
+  }, []);
 
   const handleStatusToggle = async () => {
     try {
       const response = await userService.toggleSharerStatus(sharer.id);
       toast.success(response.message);
       onStatusChange();
+      resetDialogStates();
     } catch (error) {
       console.error("Failed to toggle status:", error);
       toast.error("Impossibile cambiare lo stato");
@@ -919,39 +930,41 @@ function RowActions({
     startUpdateTransition(() => {
       const updatedData = data.filter((dataItem) => dataItem.id !== sharer.id);
       onStatusChange();
-      setShowDeleteDialog(false);
+      resetDialogStates();
     });
   };
 
   const handleEdit = () => {
+    resetDialogStates();
     setShowEditDialog(true);
   };
 
   const handleCloseEditDialog = () => {
-    setShowEditDialog(false);
+    resetDialogStates();
     onStatusChange();
   };
 
   const handleChangePassword = () => {
+    resetDialogStates();
     setShowChangePasswordDialog(true);
   };
 
   const handleCloseChangePasswordDialog = () => {
-    setShowChangePasswordDialog(false);
+    resetDialogStates();
   };
 
   const handleSendUsername = () => {
+    resetDialogStates();
     setShowSendUsernameDialog(true);
   };
 
   const handleCloseSendUsernameDialog = () => {
-    setShowSendUsernameDialog(false);
-    toast.success("Username inviato con successo.");
+    resetDialogStates();
   };
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
           <div className="flex justify-end">
             <Button
@@ -967,13 +980,25 @@ function RowActions({
         <DropdownMenuContent align="end" className="w-auto">
           <DropdownMenuGroup>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(sharer.email)}
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(sharer.email);
+                  resetDialogStates();
+                } catch (error) {
+                  console.error("Failed to copy email:", error);
+                  toast.error("Impossibile copiare l'email");
+                }
+              }}
               disabled={isUpdatePending}
             >
-              Copia Email
+              <Stack direction="row" align="center" gap={2} className="text-sm">
+                <CopyIcon /> Copia Email
+              </Stack>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleEdit} disabled={isUpdatePending}>
-              Modifica Utente
+              <Stack direction="row" align="center" gap={2} className="text-sm">
+                <PencilEdit /> Modifica Utente
+              </Stack>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleChangePassword}
@@ -985,7 +1010,9 @@ function RowActions({
               onClick={handleSendUsername}
               disabled={isUpdatePending}
             >
-              Invia Username
+              <Stack direction="row" align="center" gap={2} className="text-sm">
+                <EmailIcon /> Invia Username
+              </Stack>
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
@@ -1002,7 +1029,15 @@ function RowActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            resetDialogStates();
+          }
+          setShowDeleteDialog(open);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>

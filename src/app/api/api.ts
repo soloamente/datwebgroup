@@ -1,4 +1,5 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+import useAuthStore from "./auth";
 
 const api = axios.create({
   baseURL: "https://sviluppo.datasystemgroup.it/api",
@@ -8,6 +9,31 @@ const api = axios.create({
     Accept: "application/json",
   },
 });
+
+// Add request interceptor to include auth token
+api.interceptors.request.use((config) => {
+  const authStore = useAuthStore.getState();
+  if (authStore.isAuthenticated()) {
+    // The token is automatically included in cookies due to withCredentials: true
+    return config;
+  }
+  return config;
+});
+
+// Add response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error: unknown) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const authStore = useAuthStore.getState();
+      // Clear auth state and redirect to login
+      authStore.clearAuth();
+    }
+    return Promise.reject(
+      error instanceof Error ? error : new Error(String(error)),
+    );
+  },
+);
 
 export interface CreateViewerData {
   nominativo: string;

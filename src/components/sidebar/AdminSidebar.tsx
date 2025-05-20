@@ -8,39 +8,39 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import useAuthStore from "@/app/api/auth";
 import { navigationData } from "@/app/dashboard/admin/navigation";
+import Cookies from "js-cookie";
+
+interface CookieStorage {
+  state: {
+    user: {
+      id: number;
+      username: string;
+      nominativo: string;
+      email: string;
+      role: string;
+      active: boolean;
+      created_at: string;
+      updated_at: string;
+    } | null;
+  };
+}
 
 export function AdminDashboardClient({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const authStore = useAuthStore();
 
   useEffect(() => {
-    const checkAuth = () => {
-      if (!authStore.user && !pathname.startsWith("/login")) {
-        router.push("/login/admin");
-        return;
-      }
-
-      if (authStore.user?.role !== "admin" && !pathname.startsWith("/login")) {
-        router.push("/login/admin");
-        return;
-      }
-      setIsAuthChecking(false);
-    };
-
-    checkAuth();
-  }, [authStore.user, router, pathname]);
-
-  useEffect(() => {
+    setMounted(true);
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
@@ -51,6 +51,10 @@ export function AdminDashboardClient({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   const userData = {
     name: authStore.user?.nominativo ?? authStore.user?.username ?? "Utente",
@@ -90,90 +94,78 @@ export function AdminDashboardClient({
         } bg-sidebar fixed z-30 m-2 w-[300px] flex-col gap-4 rounded-2xl border p-3 transition-all duration-200 md:relative md:m-4 md:w-[300px] md:translate-x-0 md:p-4`}
         aria-label="Sidebar"
       >
-        {!isAuthChecking && (
-          <>
-            <header id="sidebarHeader" className="mb-6 md:mb-8">
-              <div className="flex items-center justify-between">
-                <div className="flex h-[42px] w-full items-center justify-start gap-2">
-                  <Image
-                    src={userData.avatar}
-                    alt={`Avatar di ${userData.name}`}
-                    width={42}
-                    height={42}
-                    className="rounded-lg"
-                    priority
-                  />
-                  <div className="flex-col">
-                    <h2 className="font-semibold">{userData.name}</h2>
-                    <p className="text-xs opacity-50">{userData.role}</p>
-                  </div>
-                </div>
-                <Button
-                  className="flex items-center gap-2"
-                  onClick={handleLogout}
-                  disabled={loading}
-                  aria-label="Logout"
-                >
-                  <LogOut size={20} className="text-foreground" />
-                </Button>
+        <header id="sidebarHeader" className="mb-6 md:mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex h-[42px] w-full items-center justify-start gap-2">
+              <Image
+                src={userData.avatar}
+                alt={`Avatar di ${userData.name}`}
+                width={42}
+                height={42}
+                className="rounded-lg"
+                priority
+              />
+              <div className="flex-col">
+                <h2 className="font-semibold">{userData.name}</h2>
+                <p className="text-xs opacity-50">{userData.role}</p>
               </div>
-            </header>
-
-            <nav
-              id="sidebarContent"
-              className="flex flex-col gap-6 md:gap-8"
-              aria-label="Main navigation"
+            </div>
+            <Button
+              className="flex items-center gap-2"
+              onClick={handleLogout}
+              disabled={loading}
+              aria-label="Logout"
             >
-              {/* General Navigation */}
-              <div className="flex flex-col gap-2">
-                <h3 className="text-sm opacity-40">Generale</h3>
-                {navigationData.navGeneral.map((item) => (
-                  <div key={item.title}>
-                    <Link href={item.url} aria-label={item.description}>
-                      <Button
-                        variant={isActiveRoute(item.url) ? "outline" : "ghost"}
-                        className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
-                      >
-                        <item.icon
-                          size={20}
-                          className="mr-2"
-                          aria-hidden="true"
-                        />
-                        <span className="text-sm">{item.title}</span>
-                      </Button>
-                    </Link>
-                  </div>
-                ))}
-              </div>
+              <LogOut size={20} className="text-white" />
+            </Button>
+          </div>
+        </header>
 
-              {/* Admin Navigation */}
-              {authStore.isAdmin() && (
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-sm opacity-40">Amministrazione</h3>
-                  {navigationData.navAdmin.map((item) => (
-                    <Link
-                      href={item.url}
-                      key={item.title}
-                      aria-label={item.description}
-                    >
-                      <Button
-                        variant={isActiveRoute(item.url) ? "outline" : "ghost"}
-                        className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
-                      >
-                        <item.icon
-                          size={20}
-                          className="mr-2"
-                          aria-hidden="true"
-                        />
-                        <span className="text-sm">{item.title}</span>
-                      </Button>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </nav>
-          </>
-        )}
+        <nav
+          id="sidebarContent"
+          className="flex flex-col gap-6 md:gap-8"
+          aria-label="Main navigation"
+        >
+          {/* General Navigation */}
+          <div className="flex flex-col gap-2">
+            <h3 className="text-sm opacity-40">Generale</h3>
+            {navigationData.navGeneral.map((item) => (
+              <div key={item.title}>
+                <Link href={item.url} aria-label={item.description}>
+                  <Button
+                    variant={isActiveRoute(item.url) ? "outline" : "ghost"}
+                    className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
+                  >
+                    <item.icon size={20} className="mr-2" aria-hidden="true" />
+                    <span className="text-sm">{item.title}</span>
+                  </Button>
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          {/* Admin Navigation */}
+          {authStore.isAdmin() && (
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm opacity-40">Amministrazione</h3>
+              {navigationData.navAdmin.map((item) => (
+                <Link
+                  href={item.url}
+                  key={item.title}
+                  aria-label={item.description}
+                >
+                  <Button
+                    variant={isActiveRoute(item.url) ? "outline" : "ghost"}
+                    className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
+                  >
+                    <item.icon size={20} className="mr-2" aria-hidden="true" />
+                    <span className="text-sm">{item.title}</span>
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          )}
+        </nav>
       </aside>
 
       <section

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import Cookies from "js-cookie";
 
 // Create axios instance with the specified base URL
@@ -12,6 +12,48 @@ const api = axios.create({
     Accept: "application/json",
   },
 });
+
+interface ApiResponse<T> {
+  data: T;
+  headers: {
+    "set-cookie"?: string[];
+  };
+}
+
+interface ApiErrorResponse {
+  message: string;
+}
+
+interface AuthState {
+  state: {
+    user: User | null;
+  };
+}
+
+interface CookieStorage {
+  state: {
+    user: User | null;
+  };
+}
+
+interface VerifyOtpResponse {
+  user: User;
+  success: boolean;
+  message?: string;
+}
+
+// Helper function to get max-age from Set-Cookie header
+const getMaxAgeFromResponse = (response: ApiResponse<unknown>): number => {
+  const setCookieHeader = response.headers?.["set-cookie"]?.[0];
+  if (!setCookieHeader) return 7; // Default to 7 days if no header found
+
+  const maxAgeMatch = /Max-Age=(\d+)/.exec(setCookieHeader);
+  if (maxAgeMatch?.[1]) {
+    // Convert seconds to days
+    return Math.floor(parseInt(maxAgeMatch[1], 10) / (24 * 60 * 60));
+  }
+  return 7; // Default to 7 days if no max-age found
+};
 
 interface User {
   id: number;
@@ -65,11 +107,34 @@ const useAuthStore = create<AuthStore>()(
       user: null,
       error: null,
       isLoading: false,
-      setAuth: (user) => set({ user, error: null, isLoading: false }),
-      clearAuth: () => set({ user: null, error: null, isLoading: false }),
+      setAuth: (user) => {
+        const cookieData: CookieStorage = {
+          state: {
+            user: user as User,
+          },
+        };
+        Cookies.set("auth-storage", JSON.stringify(cookieData), {
+          path: "/",
+          expires: 7,
+        });
+        set({ user, error: null, isLoading: false });
+      },
+      clearAuth: () => {
+        Cookies.remove("auth-storage", { path: "/" });
+        set({ user: null, error: null, isLoading: false });
+      },
       setError: (error) => set({ error, isLoading: false }),
       setLoading: (loading) => set({ isLoading: loading }),
-      isAuthenticated: () => get().user !== null,
+      isAuthenticated: () => {
+        const cookie = Cookies.get("auth-storage");
+        if (!cookie) return false;
+        try {
+          const data = JSON.parse(cookie) as CookieStorage;
+          return !!data.state?.user;
+        } catch {
+          return false;
+        }
+      },
 
       prelogin: async (email: string, username: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -126,7 +191,7 @@ const useAuthStore = create<AuthStore>()(
       verifyOtp: async (email, otp, username, password) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.post("/verify-otp", {
+          const response = await api.post<VerifyOtpResponse>("/verify-otp", {
             email: email.trim(),
             otp: otp.trim(),
             username: username.trim(),
@@ -135,17 +200,25 @@ const useAuthStore = create<AuthStore>()(
 
           console.log("Verify OTP response:", response.data);
 
-          // Assuming the user data is in response.data or response.data.user
-          // eslint-disable-next-line
-          const userData = response.data?.user || response.data;
+          // Get max-age from response headers
+          const maxAge = getMaxAgeFromResponse(response);
 
-          // eslint-disable-next-line
-          if (userData && typeof userData === "object" && userData.id) {
-            // eslint-disable-next-line
+          // Update cookie expiration based on API response
+          const userData = response.data.user;
+          if (userData && typeof userData === "object" && "id" in userData) {
+            // Set auth cookie with max-age from API
+            const cookieData: CookieStorage = {
+              state: {
+                user: userData,
+              },
+            };
+            Cookies.set("auth-storage", JSON.stringify(cookieData), {
+              path: "/",
+              expires: maxAge,
+            });
             set({ user: userData, error: null, isLoading: false });
             return { success: true };
           } else {
-            // If login is successful but no user data, treat as error for frontend
             console.error(
               "Verify OTP: User data missing in response",
               response.data,
@@ -156,9 +229,9 @@ const useAuthStore = create<AuthStore>()(
           }
         } catch (error) {
           let message = "Errore durante la verifica OTP.";
-          if (axios.isAxiosError(error)) {
-            // eslint-disable-next-line
-            message = error.response?.data?.message || message;
+          if (axios.isAxiosError(error) && error.response?.data) {
+            const errorData = error.response.data as ApiErrorResponse;
+            message = errorData.message || message;
           }
           console.error("Verify OTP error:", error);
           set({ user: null, error: message, isLoading: false });
@@ -256,19 +329,34 @@ const useAuthStore = create<AuthStore>()(
       hasRole: (role: string) => get().user?.role === role,
     }),
     {
-      name: "auth-storage", // name of the item in storage (must be unique)
+      name: "auth-storage",
       storage: createJSONStorage(() => ({
-        // Use js-cookie for storage
         getItem: (name) => Cookies.get(name) ?? null,
-        setItem: (name, value) =>
-          Cookies.set(name, value, { path: "/", expires: 7 }), // Example: cookie expires in 7 days
+        setItem: (name, value) => {
+          // Get the current cookie expiration from the API response if available
+          const currentCookie = Cookies.get(name);
+          if (currentCookie) {
+            try {
+              const parsed = JSON.parse(currentCookie) as CookieStorage;
+              if (parsed.state.user) {
+                Cookies.set(name, value, {
+                  path: "/",
+                  expires: 7,
+                });
+                return;
+              }
+            } catch (e) {
+              console.error("Error parsing cookie:", e);
+            }
+          }
+          // Default to 7 days if no expiration is set
+          Cookies.set(name, value, { path: "/", expires: 7 });
+        },
         removeItem: (name) => Cookies.remove(name, { path: "/" }),
       })),
-      // Only persist specific parts of the state
       partialize: (state) => ({
         user: state.user
           ? {
-              // Only store essential, non-sensitive user fields
               id: state.user.id,
               username: state.user.username,
               nominativo: state.user.nominativo,
@@ -277,7 +365,6 @@ const useAuthStore = create<AuthStore>()(
               avatar: state.user.avatar,
             }
           : null,
-        // Do not persist error or loading states
       }),
     },
   ),
