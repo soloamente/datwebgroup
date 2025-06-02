@@ -5,18 +5,17 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Preferences } from "@/components/ui/preferences";
 import { ReactLenis } from "lenis/react";
-
+import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 
-const ingramMono = localFont({
-  src: "../../public/fonts/IngramMono-Regular.ttf",
+const ingram = localFont({
+  src: "../../public/fonts/ingram/IngramMono-Regular.ttf",
   variable: "--font-ingram",
 });
 
-const Inter = localFont({
-  src: "../../public/fonts/InterVariable.ttf",
+const inter = localFont({
+  src: "../../public/fonts/inter/InterVariable.ttf",
   variable: "--font-inter",
-  fallback: ["sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -30,9 +29,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="en antialiased"
+      lang="en"
       suppressHydrationWarning
-      className={`${Inter.variable} ${ingramMono.variable} font-inter antialiased`}
+      className={`${inter.variable} ${ingram.variable} font-inter antialiased`}
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

@@ -106,6 +106,70 @@ export interface SendUsernameByIdData {
   sharer_id: number;
 }
 
+// Define response types for the new functions
+export interface CheckUsernameResponse {
+  exists: boolean;
+  role: string | null;
+  message?: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+// New interfaces for Document Classes
+export interface DocumentClassField {
+  id: number;
+  nome: string;
+  label: string;
+  tipo: string; // e.g., 'text', 'number', 'date'
+  obbligatorio: boolean;
+  is_primary_key: boolean;
+  sort_order: number;
+  options?: { value: string; label: string }[] | null;
+}
+
+export interface DocumentClass {
+  id: number;
+  nome: string;
+  descrizione: string;
+  campi: DocumentClassField[];
+  sharer: Sharer | null; // Changed to allow null
+  created_at: string;
+  updated_at: string;
+}
+
+// --- Copied & adapted types for single document class API response ---
+interface ApiDocumentClassField {
+  id: number;
+  name: string;
+  label: string;
+  data_type: string;
+  required: number;
+  is_primary_key: number;
+  sort_order: number;
+  options?: { value: string; label: string }[] | null;
+}
+
+interface ApiDocumentClass {
+  id: number;
+  name: string;
+  description: string;
+  created_by: string;
+  sharers_count: number;
+  sharers: Sharer[]; // Using existing Sharer type
+  fields: ApiDocumentClassField[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface ApiResponseSingle {
+  message: string;
+  data: ApiDocumentClass; // Single ApiDocumentClass object
+}
+// --- End of copied types ---
+
 const getSharers = async (): Promise<Sharer[]> => {
   const response = await api.get<Sharer[]>("/sharers");
   return response.data;
@@ -160,6 +224,40 @@ const toggleViewerStatus = async (id: number): Promise<{ message: string }> => {
   return response.data;
 };
 
+// New function to check username
+const checkUsername = async (
+  username: string,
+): Promise<CheckUsernameResponse> => {
+  const response = await api.post<CheckUsernameResponse>("/check-username", {
+    username,
+  });
+  return response.data;
+};
+
+// New function to reset password by username
+const resetPasswordByUsername = async (
+  username: string,
+): Promise<ResetPasswordResponse> => {
+  const response = await api.post<ResetPasswordResponse>(
+    "/reset-password-by-username",
+    { username },
+  );
+  return response.data;
+};
+
+// New function to get document classes
+const getDocumentClasses = async (): Promise<DocumentClass[]> => {
+  const response = await api.get<DocumentClass[]>("/document-classes");
+  return response.data;
+};
+
+// New function to get a single document class by ID
+const getDocumentClassById = async (id: number): Promise<ApiResponseSingle> => {
+  const response = await api.get<ApiResponseSingle>(`/document-classes/${id}`);
+  return response.data;
+};
+// End of new function
+
 export const userService = {
   createViewer: (data: CreateViewerData) => api.post("/create-viewer", data),
   createSharer: (data: CreateSharerData) => api.post("/create-sharer", data),
@@ -172,4 +270,8 @@ export const userService = {
   updateViewer,
   sendUsernameToSharerById,
   toggleViewerStatus,
+  checkUsername,
+  resetPasswordByUsername,
+  getDocumentClasses,
+  getDocumentClassById, // Add new function to exports
 };

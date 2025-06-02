@@ -5,34 +5,48 @@ import { useRouter } from "next/navigation";
 import useAuthStore from "@/app/api/auth";
 import AdminLoginLeftSide from "./admin-login-left-side";
 import AdminLoginRightSide from "./admin-login-right-side";
+import { userService } from "@/app/api/api";
+
+// Define a type for the expected API response from /api/reset-password-by-username
+interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
 
 export default function AdminLoginWrapper() {
-  const [step, setStep] = useState("login");
+  const [step, setStep] = useState<
+    "usernameInput" | "passwordInput" | "otpInput" | "login"
+  >("usernameInput");
   const [loginMode, setLoginMode] = useState<"credentials" | "qr">(
     "credentials",
   );
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
   const authStore = useAuthStore();
 
   useEffect(() => {
     if (authStore.isAuthenticated()) {
-      if (!authStore.isAdmin()) {
-        router.push("/auth/sign-in/clienti");
-        return;
-      }
-
       if (authStore.user?.must_change_password) {
         router.push("/change-password");
       } else {
-        router.push("/dashboard/admin");
+        if (authStore.isAdmin()) {
+          router.push("/dashboard/admin");
+        } else if (userRole === "sharer") {
+          router.push("/dashboard/sharer");
+        } else if (userRole === "viewer") {
+          router.push("/dashboard/viewer");
+        } else {
+          router.push("/dashboard/clienti");
+        }
       }
     }
-  }, [authStore, router]);
+  }, [authStore, router, userRole]);
 
   const handleLoginSuccess = (data: {
     success: boolean;
@@ -48,35 +62,62 @@ export default function AdminLoginWrapper() {
       setEmail(data.email);
       setUsername(data.username);
       setPassword(data.password);
-      setStep("otp");
-      console.log("Current step after change:", step);
+      setStep("otpInput");
+      setError(null);
     } else {
       console.log("Invalid login data, not changing step");
+      setError("Failed to prepare for OTP. Please try again.");
     }
   };
 
   const handleQrScan = async (data: string) => {
-    try {
-      if (!data) {
-        setError("Invalid QR code data");
-        return;
-      }
-
-      const loginData = {
-        success: true,
-        email: "admin@example.com",
-        username: "admin",
-        password: "password",
-      };
-
-      handleLoginSuccess(loginData);
-    } catch (err) {
-      setError("Failed to process QR code login");
-    }
+    setError("QR code login is currently not supported in this flow.");
   };
 
-  const handleQrError = (error: string) => {
-    setError(error);
+  const handleQrError = (errorMsg: string) => {
+    setError(errorMsg);
+  };
+
+  const handleUsernameChecked = (checkedUsername: string, role: string) => {
+    setUsername(checkedUsername);
+    setUserRole(role);
+    setStep("passwordInput");
+    setError(null);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!username) {
+      setError("Username is required to reset password.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await userService.resetPasswordByUsername(username);
+      if (result.success) {
+        setError(result.message);
+      } else {
+        setError(result.message ?? "Failed to reset password.");
+      }
+    } catch (e: unknown) {
+      let message = "An error occurred while trying to reset password.";
+      if (
+        typeof e === "object" &&
+        e !== null &&
+        "isAxiosError" in e &&
+        e.isAxiosError
+      ) {
+        const axiosError = e as { response?: { data?: { message?: string } } };
+        if (axiosError.response?.data?.message) {
+          message = axiosError.response.data.message;
+        }
+      } else if (e instanceof Error) {
+        message = e.message;
+      }
+      setError(message);
+      console.error("Forgot password error:", e);
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -84,15 +125,27 @@ export default function AdminLoginWrapper() {
       <AdminLoginLeftSide />
       <AdminLoginRightSide
         step={step}
+        setStep={setStep}
         loginMode={loginMode}
+        setLoginMode={setLoginMode}
         email={email}
+        setEmail={setEmail}
         username={username}
+        setUsername={setUsername}
+        userRole={userRole}
         password={password}
+        setPassword={setPassword}
         error={error}
+        setError={setError}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
         onLoginSuccess={handleLoginSuccess}
         onQrScan={handleQrScan}
         onQrError={handleQrError}
         onLoginModeChange={setLoginMode}
+        onUsernameChecked={handleUsernameChecked}
+        onForgotPassword={handleForgotPassword}
+        authStore={authStore}
       />
     </div>
   );

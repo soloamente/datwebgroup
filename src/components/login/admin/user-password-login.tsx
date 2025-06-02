@@ -85,15 +85,15 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
   return (
     <form onSubmit={handleLogin} className="space-y-6 md:space-y-6">
       <div className="flex flex-col space-y-4 md:space-y-6">
-        <UsernameInput
+        {/* <UsernameInput
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-        />
-        {/* <PasswordInput 
+        /> */}
+        <PasswordInput
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           label="Password"
-        /> */}
+        />
       </div>
 
       {error && <p className="text-center text-sm text-red-500">{error}</p>}

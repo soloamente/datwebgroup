@@ -523,3 +523,591 @@ The user encountered a backend error "The password field format is invalid." whe
 - Clear and specific error messages for validation failures improve user experience.
 - When dealing with string patterns (like special characters in passwords), ensure regex is correctly escaped for all intended characters.
 - When encountering a "password field format is invalid" error from the backend, ensure frontend validation also checks for common requirements like at least one digit, in addition to length, uppercase, and special characters.
+
+## Project Status Board
+
+- [x] **Identify specific backend password validation rule:**
+  - [x] Attempt to get specific error from API response.
+  - [x] Inspect backend Laravel validation rules (assumed Laravel defaults).
+- [x] **Update frontend validation to match backend (Laravel defaults):**
+  - [x] Add check for at least one lowercase letter in `change-password-form.tsx`.
+- [ ] **User Test**: Attempt password change with a password meeting all default Laravel criteria.
+
+## Executor's Feedback or Assistance Requests
+
+- Based on the information that the backend uses Laravel's default password validation, I have updated the frontend validation in `src/components/change-password/change-password-form.tsx` to include a check for at least one lowercase letter. The frontend now checks for: min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character.
+- **Please test changing the password** with a password that satisfies all these conditions and confirm if the "invalid format" error is resolved.
+
+# Multi-Step Login
+
+## Background and Motivation
+
+The goal is to implement a multi-step login process.
+
+1.  **Username Input**: User enters their username.
+2.  **Password Input**: If username is valid, user is prompted for password. Buttons displayed are conditional based on user role. A "reset password" option is available.
+3.  **OTP Verification**: After password entry, user verifies with OTP.
+
+This will guide the implementation of the login flow.
+
+## Key Challenges and Analysis
+
+1.  Managing state across multiple steps (username, password, OTP, user role).
+2.  Conditional rendering of UI elements based on user role and current step.
+3.  Securely handling API calls for username check, password reset, and OTP verification.
+4.  Providing clear user feedback at each step.
+
+## High-level Task Breakdown
+
+1.  **Implement Username Input Step**
+
+    - Create an input field for the username.
+    - Create a "Continue" button.
+    - On "Continue" click:
+      - Call the `/api/check-username` endpoint with the entered username.
+      - If the username exists:
+        - Store the user's role.
+        - Proceed to the password input step.
+      - If the username does not exist:
+        - Display an error message.
+    - **Success Criteria**:
+      - Username input field is visible.
+      - "Continue" button is visible.
+      - API call to `/api/check-username` is made correctly.
+      - UI transitions to password step or shows error based on API response.
+      - User role is stored if username is valid.
+
+2.  **Implement Password Input Step**
+
+    - Create an input field for the password.
+    - Display buttons conditionally based on the user's role (details to be specified).
+    - Create a "Login" button.
+    - Create a "Forgot Password?" button.
+    - On "Forgot Password?" click:
+      - Call the `/api/reset-password-by-username` endpoint.
+      - Display success/error message based on API response.
+    - On "Login" click:
+      - Proceed to OTP verification step (details to be specified).
+    - **Success Criteria**:
+      - Password input field is visible.
+      - Role-specific buttons are displayed correctly.
+      - "Login" button is visible.
+      - "Forgot Password?" button is visible.
+      - "Forgot Password?" functionality works as expected.
+      - UI transitions to OTP step on successful login attempt.
+
+3.  **Implement OTP Verification Step**
+    - Create an input field for the OTP.
+    - Create a "Verify" button.
+    - On "Verify" click:
+      - Call the OTP verification endpoint (details to be specified).
+      - If OTP is valid:
+        - Log the user in.
+      - If OTP is invalid:
+        - Display an error message.
+    - **Success Criteria**:
+      - OTP input field is visible.
+      - "Verify" button is visible.
+      - OTP verification API call is made correctly.
+      - User is logged in or an error message is shown based on API response.
+
+## Project Status Board
+
+- [ ] Implement Username Input Step
+  - [x] UI for username input and Continue button
+  - [x] Call /api/check-username on Continue (via userService)
+  - [ ] Store userRole and transition to password step on success
+  - [ ] Display error on failure
+- [ ] Implement Password Input Step
+  - [ ] UI for password input, Login button, Forgot Password button
+  - [ ] "Forgot Password?" calls /api/reset-password-by-username (via userService)
+  - [ ] "Login" button calls prelogin method from authStore
+  - [ ] Display role-specific buttons (details TBD)
+  - [ ] Transition to OTP step or show error based on prelogin response
+- [ ] Implement OTP Verification Step
+
+## Executor's Feedback or Assistance Requests
+
+Refactored API calls:
+
+- Moved `check-username` and `reset-password-by-username` calls from components to `userService` in `src/app/api/api.ts`.
+- Components now import and use `userService`.
+- Improved type safety for error handling in `catch` blocks within components.
+
+**Next Action for User:** Please test the Username Input Step as outlined in the success criteria above and in previous messages. Specifically, check:
+
+1. Initial display of username input and Continue button.
+2. Correct API call (now through `userService.checkUsername`).
+3. Transition to password step (showing username and role) OR error message display.
+
+QR code functionality is currently de-emphasized in this flow but the UI toggle remains.
+
+## Lessons
+
+- Ensure API endpoint details (URL, method, request/response format) are accurate before implementation.
+- Manage application state carefully, especially across multi-step processes.
+- Provide clear visual feedback to the user at each stage of the process.
+- When handling sensitive operations like password reset, confirm the backend behavior (e.g., email sending, `must_change_password` flag).
+
+## Executor's Feedback or Assistance Requests
+
+- **2024-07-26 (Afternoon):** Investigated why documents are not showing in `classi-documentali` table.
+
+  - Refactored data fetching logic in `src/app/dashboard/admin/classi-documentali/page.tsx`.
+  - Removed redundant `fetchDocuments` function and its `useEffect`.
+  - Renamed `fetchSharers` to `fetchDocumentClassesData` for clarity.
+  - Ensured `isLoading` state is correctly managed.
+  - Set documents to an empty array on fetch error.
+  - Added `console.log` statements to trace data fetching and state.
+  - Updated `onRefreshData` prop for the table.
+  - **Requesting user to check browser console logs** on the "Classi Documentali" page for debugging information and report findings.
+
+- **2024-07-26 (Morning):** Addressed linter errors in `src/components/dashboard/tables/admin/classi-documentali.tsx`.
+  - Fixed `Property 'length' does not exist on type '{}'` for `campi` by using `row.original.campi`.
+  - Resolved `FilterFns` conflicts by:
+    - Importing `Viewer` type.
+    - Renaming the local date range filter to `documentClassDateRangeFilterFn` and its key to `documentClassDateRange`.
+    - Updating column definitions and `useReactTable` options accordingly.
+    - Modifying the `FilterFns` module augmentation to correctly type global filters (`dateRange`, `activeStatus` for `Sharer | Viewer`) and the local `documentClassDateRange` for `DocumentClass`.
+    - Adding placeholder implementations for `dateRange` and `activeStatus` in `useReactTable` options to satisfy TypeScript's `Record<keyof FilterFns, FilterFn<any>>` typing.
+- The table component should now be free of these specific linter errors and render correctly.
+
+## Project Status Board
+
+- [ ] Investigate why documents are not appearing in the `classi-documentali` table.
+  - [x] Refactor data fetching logic in `src/app/dashboard/admin/classi-documentali/page.tsx`.
+  - [x] Transform API data to match frontend `DocumentClass` interface.
+  - [x] Align table `accessorKey`s and cell rendering with transformed data.
+  - [x] Fix "Invalid Date" display for `created_at`/`updated_at` columns.
+  - [ ] **USER ACTION REQUIRED**: Test "Classi Documentali" page, check console for transformed data, and report if documents are displayed correctly and date issue is resolved.
+- [x] Fix linter errors in `src/components/dashboard/tables/admin/classi-documentali.tsx`
+
+## Feature: Document Class Detail Page
+
+### Background and Motivation
+
+Users should be able to click on a document class in the table and navigate to a dedicated page displaying its detailed information, inspired by the provided reference image.
+
+### Key Challenges and Analysis
+
+Dynamic routing, API for single item, UI design adaptation, table row navigation.
+
+### High-level Task Breakdown
+
+1.  **Define Dynamic Route and Page Structure:**
+
+    - Create `/dashboard/admin/classi-documentali/[id]/page.tsx`.
+    - **Status:** Done. Placeholder page created.
+
+2.  **Implement API Service for Single Document Class:**
+
+    - Add `getDocumentClassById(id: number)` to `userService` in `src/app/api/api.ts`.
+    - Define `ApiDocumentClassField`, `ApiDocumentClass`, `ApiResponseSingle` types in `api.ts` for the response.
+    - **Status:** Done.
+
+3.  **Enable Click Navigation in Table:**
+
+    - Modify `src/components/dashboard/tables/admin/classi-documentali.tsx` to make rows clickable.
+    - Navigate to `/dashboard/admin/classi-documentali/{documentClass.id}`.
+    - **Status:** Done.
+
+4.  **Design and Implement Document Detail View Component (within `[id]/page.tsx`):**
+    - **Subtask 4.1: Initial Data Fetching, Transformation, and Basic Layout**
+      - Fetch data using `userService.getDocumentClassById`.
+      - Transform raw `ApiDocumentClass` to frontend `DocumentClass`.
+      - Handle loading/error states.
+      - Implement basic header (name, ID) and placeholder for tabs.
+      - Display raw transformed data for debugging.
+      - **Status:** Done.
+    - **Subtask 4.2: Implement Tabbed Interface ("Basic Info" Tab)**
+      - Use `shadcn/ui` Tabs.
+      - Display `Nome Classe`, `Descrizione`, `ID`.
+      - **Status:** Done.
+    - **Subtask 4.3: Implement "Fields" Tab**
+      - Display a sortable table of `documentClass.campi` using `dnd-kit` and `@tanstack/react-table`.
+      - Columns: Drag Handle, Label, Technical Name, Type, Enum Options, Required, Primary Key.
+      - Client-side reordering implemented. Persistence of order is a future step.
+      - **Status:** Done (Sortable table integrated).
+    - **Subtask 4.4: Implement "Sharers" Tab**
+      - Placeholder tab created. Content pending based on data model/API specifics for class-sharer relations.
+      - **Status:** Placeholder added.
+    - **Subtask 4.5: Implement "Audit Info" / "More Info" Tab**
+      - Placeholder tab created. Displays `created_at`, `updated_at` if available.
+      - **Status:** Placeholder added.
+    - **Subtask 4.6: Styling and Refinements**
+      - Basic tab and table styling applied. Further refinements pending.
+      - **Status:** Pending.
+
+### Project Status Board (Executor Tasks)
+
+- [x] Define Dynamic Route: `/dashboard/admin/classi-documentali/[id]/page.tsx`
+- [x] Implement API Service: `getDocumentClassById` in `api.ts` (Note: This service is currently unused due to lack of a confirmed backend endpoint for single item fetch).
+- [x] Enable Click Navigation in `DocumentClassiTable`.
+- [x] Implement Initial Data Fetching, Transformation, and Basic Layout in `[id]/page.tsx`.
+- [x] **Diagnose and Fix 404 Error on Detail Page Data Fetch**
+  - [x] User provided API documentation confirming no `GET /document-classes/{id}` endpoint.
+  - [x] Implemented frontend workaround: Fetch list via `userService.getDocumentClasses()`, transform, and find item by ID on the detail page.
+  - [ ] **USER ACTION REQUIRED**: Test if detail page now loads correctly and displays the right data using the list fetch workaround.
+- [x] Implement "Basic Info" tab content in `[id]/page.tsx`.
+- [x] Implement "Fields" tab content (table view, sorted) in `[id]/page.tsx`.
+- [x] Add placeholders for "Sharers" and "Audit Info" tabs.
+- [x] Update `DocumentClassField` interface and transformations to include `label`, `is_primary_key`, `sort_order`, `options`.
+- [ ] **USER ACTION REQUIRED**: Test detail page tabs ("Basic Info", "Fields"). Verify data accuracy, field sorting, and general layout. Report findings.
+- [ ] Implement content for "Sharers" tab.
+- [ ] Implement content for "Audit Info" tab (e.g., `created_by`).
+- [ ] Styling and refinements for the detail page tabs and content.
+- [x] Create `FieldsSortableTable` component with dnd-kit and TanStack Table for `DocumentClassField` items.
+- [x] Integrate `FieldsSortableTable` into the "Fields" tab of `[id]/page.tsx`.
+- [ ] **USER ACTION REQUIRED**: Test drag-and-drop reordering of fields in the "Fields" tab. Report findings.
+- [ ] Implement persistence for field sort order changes (requires backend endpoint).
+
+## Executor's Feedback or Assistance Requests
+
+- **2024-07-28:** Implemented sortable fields table on the Document Class Detail page.
+
+  - Created a new component `FieldsSortableTable` (in `src/components/dashboard/detail-page-components/`) using `@dnd-kit` and `@tanstack/react-table` to display and reorder `DocumentClassField` items.
+  - Integrated this sortable table into the "Fields" tab of the detail page (`classi-documentali/[id]/page.tsx`).
+  - The user-added form for creating new fields is preserved above the sortable table.
+  - Drag-and-drop reordering is currently visual (client-side only). The `FieldsSortableTable` component has an `onOrderChange` prop that can be used later to persist the new order via an API call.
+  - **Requesting user to test the drag-and-drop functionality for reordering fields in the "Fields" tab.** Please verify if the visual reordering works.
+
+- **2024-07-27 (Late Evening):** Added "Enum Options" column to the (previously simple) "Fields" table on the Document Class Detail page.
+
+# Field Editing Drawer Implementation
+
+## Background and Motivation
+
+Added field editing functionality to the fields sortable table component. Users can now click on field rows or use the edit button to open a drawer where they can view and edit all field information including label, technical name, type, enum options, required status, and primary key status.
+
+## Key Challenges and Analysis
+
+1. Integration of vaul drawer library with existing sortable table
+2. Proper state management for drawer and field editing
+3. Form handling for different field types (especially enum options)
+4. TypeScript type safety for table meta properties
+5. Maintaining drag & drop functionality while adding click interactions
+
+## High-level Task Breakdown
+
+1. Install vaul library for drawer functionality
+
+   - Success criteria: Library installed and ready to use
+
+2. Add drawer component with form fields
+
+   - Success criteria: Drawer opens with all field properties editable
+
+3. Integrate drawer with table interactions
+
+   - Success criteria: Clicking rows or edit buttons opens drawer correctly
+
+4. Implement field update logic
+   - Success criteria: Changes are saved and reflected in the table
+
+## Project Status Board
+
+- [x] Install vaul library
+- [x] Create FieldEditDrawer component
+- [x] Add edit action column to table
+- [x] Implement row click functionality
+- [x] Add form fields for all field properties
+- [x] Handle enum options parsing
+- [x] Implement save/cancel functionality
+- [x] Fix TypeScript linting errors
+- [ ] Test field editing functionality
+- [ ] Add validation for required fields
+
+## Executor's Feedback or Assistance Requests
+
+Implementation completed successfully. The field editing drawer now allows users to:
+
+1. Click on any field row or use the edit button to open the drawer
+2. Edit all field properties in a user-friendly form
+3. Handle enum options with comma-separated input
+4. Save changes that update the table immediately
+5. Cancel changes without affecting the original data
+
+Next steps:
+
+1. Test the functionality with real data
+2. Add field validation if needed
+3. Consider adding field creation functionality
+
+## Lessons
+
+1. When integrating vaul drawer:
+
+   - Use direction="right" for side drawers
+   - Properly style the overlay and content for good UX
+   - Handle drawer state with React state management
+
+2. For table interactions:
+
+   - Use table meta to pass functions to cell renderers
+   - Prevent event propagation when needed (e.g., edit button clicks)
+   - Maintain proper TypeScript typing for meta properties
+
+3. For form handling:
+   - Use controlled components for all form inputs
+   - Handle enum options as comma-separated strings for easier editing
+   - Provide clear visual feedback for different field types
+
+# Fields Sortable Table Layout Improvements
+
+## Background and Motivation
+
+The user requested layout improvements for the FieldsSortableTable component while maintaining a minimal style. The component needed better visual hierarchy, improved spacing, and better user experience while keeping the design clean and modern.
+
+## Key Challenges and Analysis
+
+1. The original layout had basic styling without proper visual hierarchy
+2. The table needed better spacing and typography for improved readability
+3. The drawer (edit form) needed better organization and sectioning
+4. All text labels needed to be in Italian
+5. The design should remain minimal while being more visually appealing
+
+## High-level Task Breakdown
+
+1. Improve table layout and styling
+
+   - [x] Enhanced column headers with better typography
+   - [x] Improved cell styling with badges and better visual indicators
+   - [x] Better hover states and transitions
+   - [x] Improved drag handle styling
+   - Success criteria: Table has better visual hierarchy and is more readable
+
+2. Enhance drawer layout and organization
+
+   - [x] Better header design with proper spacing
+   - [x] Organized content into logical sections (Basic Info, Field Type, Properties, Advanced)
+   - [x] Improved form field spacing and layout
+   - [x] Better footer design with action buttons
+   - Success criteria: Drawer is well-organized and easier to use
+
+3. Convert all text to Italian
+   - [x] Updated all table headers and cell content
+   - [x] Translated drawer form labels and placeholders
+   - [x] Updated help text and descriptions
+   - [x] Translated empty state message
+   - Success criteria: All text is properly translated to Italian
+
+## Project Status Board
+
+- [x] Improve table layout and styling
+- [x] Enhance drawer layout and organization
+- [x] Convert all text to Italian
+- [x] Test visual improvements
+
+## Executor's Feedback or Assistance Requests
+
+Task completed successfully. The FieldsSortableTable component now has:
+
+1. **Better Table Design:**
+
+   - Enhanced visual hierarchy with proper typography
+   - Badge-style indicators for field types and properties
+   - Improved hover states and smooth transitions
+   - Better drag handle styling with enhanced feedback
+
+2. **Improved Drawer Layout:**
+
+   - Well-organized sections with clear headings
+   - Better spacing and visual structure
+   - Enhanced form fields with proper labeling
+   - Improved footer with better button layout
+
+3. **Complete Italian Localization:**
+   - All text labels translated to Italian
+   - Proper Italian placeholders and help text
+   - Localized empty state message
+
+The component maintains a minimal design approach while providing a much better user experience through improved visual design and organization.
+
+## Lessons
+
+1. When improving layouts while maintaining minimal style:
+
+   - Use subtle visual indicators like badges and better typography
+   - Improve spacing and hierarchy without adding visual clutter
+   - Focus on better organization and logical grouping of elements
+
+2. For drawer/modal layouts:
+
+   - Organize content into clear sections with headings
+   - Use proper spacing between form elements
+   - Provide clear visual separation between header, content, and footer
+
+3. For table improvements:
+   - Use badges for status indicators instead of plain text
+   - Improve hover states for better interactivity feedback
+   - Ensure proper visual hierarchy in headers and content
+
+# Document Classes Table Page Improvements
+
+## Background and Motivation
+
+The user requested improvements to the Document Classes table page (`src/components/dashboard/tables/admin/classi-documentali.tsx`) while maintaining a minimal style. The existing component had linter errors, performance issues, and could benefit from enhanced UX and visual design.
+
+## Key Challenges and Analysis
+
+1. Linter errors with logical OR operators (`||`) vs nullish coalescing (`??`)
+2. Type safety issues with unknown types and React nodes
+3. Performance optimization opportunities with useCallback and useMemo
+4. UI/UX improvements needed for better user experience
+5. Visual design enhancements while maintaining minimal style
+
+## High-level Task Breakdown
+
+1. Fix linter errors and type safety issues
+
+   - [x] Replace `||` with `??` for safer operations
+   - [x] Fix TypeScript type issues
+   - [x] Improve component typing
+   - Success criteria: No linter errors, better type safety
+
+2. Enhance visual design and layout
+
+   - [x] Add clean page header with title and description
+   - [x] Improve table styling with cards and clean borders
+   - [x] Add meaningful icons to column headers
+   - [x] Enhance loading and empty states
+   - Success criteria: Modern, minimal design with better visual hierarchy
+
+3. Improve user experience
+
+   - [x] Better search and filtering interface
+   - [x] Add reset filters functionality
+   - [x] Enhance pagination with result counts
+   - [x] Improve action menus and dialogs
+   - Success criteria: Smoother, more intuitive user interactions
+
+4. Optimize performance
+   - [x] Add useCallback for event handlers
+   - [x] Optimize component re-renders
+   - [x] Improve memory usage
+   - Success criteria: Better performance with no functionality loss
+
+## Project Status Board
+
+- [x] Fix linter errors and type safety
+- [x] Enhance visual design and layout
+- [x] Improve user experience
+- [x] Optimize performance
+
+## Executor's Feedback or Assistance Requests
+
+✅ **COMPLETED**: Document Classes table improvements successfully implemented.
+
+### What was accomplished:
+
+1. **Code Quality**: Fixed all linter errors, improved TypeScript typing, and optimized performance with proper memoization
+2. **Visual Design**: Added clean header section, enhanced table styling with cards, integrated meaningful icons, and improved spacing
+3. **User Experience**: Enhanced search/filtering interface, added reset filters button, improved pagination, and better action menus
+4. **Accessibility**: Better keyboard navigation, screen reader support, and ARIA labels
+5. **State Management**: Optimized with useCallback and better state handling
+
+### Key improvements:
+
+- Clean minimal design with better visual hierarchy
+- Enhanced filtering with active filter indicators
+- Better loading states with spinners and informative messages
+- Improved empty states with helpful icons and text
+- Streamlined action menus with clear icons and labels
+- More informative pagination with result counts
+- Better confirmation dialogs with proper styling
+
+The page now provides a much better user experience while maintaining the requested minimal style approach.
+
+## Lessons
+
+1. When improving existing components:
+   - Always fix linter errors first to ensure code quality
+   - Use TypeScript properly to catch issues early
+   - Optimize performance with useCallback and useMemo where appropriate
+2. For minimal design improvements:
+   - Focus on clean typography and spacing
+   - Use subtle visual cues like icons and badges
+   - Maintain consistent styling patterns
+   - Prioritize usability over complex visual effects
+3. User experience enhancements:
+   - Provide clear feedback for all user actions
+   - Make filtering and search intuitive
+   - Ensure accessibility with proper ARIA labels
+   - Use loading states and empty state messages effectively
+
+# Document Class Detail Page Minimal Style Improvement
+
+## Background and Motivation
+
+The current document class detail page (`src/app/dashboard/admin/classi-documentali/[id]/page.tsx`) has a cluttered layout with excessive spacing, complex form structures, and inconsistent styling. The goal is to improve the page with a clean, minimal design while maintaining all functionality.
+
+## Key Challenges and Analysis
+
+1. Current layout has excessive padding and complex nested structures
+2. Form fields are inconsistently styled and spaced
+3. Tabs design could be cleaner and more minimal
+4. Typography hierarchy needs refinement
+5. Some redundant styling and components could be simplified
+6. Overall visual complexity should be reduced
+
+## High-level Task Breakdown
+
+1. Simplify the page layout and structure
+
+   - Remove excessive padding and complex nesting
+   - Streamline the header section
+   - Success criteria: Cleaner, more minimal page structure
+
+2. Improve form design and consistency
+
+   - Standardize input field styling and spacing
+   - Simplify form layouts
+   - Success criteria: All forms have consistent, minimal styling
+
+3. Refine tabs and navigation
+
+   - Clean up tabs design
+   - Improve tab content organization
+   - Success criteria: Tabs are minimal and easy to navigate
+
+4. Enhance typography and spacing
+   - Established consistent typography hierarchy
+   - Optimized spacing throughout the page
+   - Success criteria: Typography is clean and readable
+
+## Project Status Board
+
+- [x] Simplify page layout and structure
+  - Removed excessive padding and complex nested structures
+  - Streamlined the header section with cleaner typography
+  - Simplified loading, error, and not found states
+  - Added proper container max-width for better readability
+- [x] Improve form design and consistency
+  - Restructured add field form with grid layout
+  - Standardized input styling and spacing
+  - Improved form organization and readability
+- [x] Refine tabs and navigation
+  - Simplified tabs with clean grid layout
+  - Removed excessive styling from tab triggers
+  - Improved tab content organization
+- [x] Enhance typography and spacing
+  - Established consistent typography hierarchy
+  - Optimized spacing throughout the page
+  - Used semantic color classes consistently
+
+## Executor's Feedback or Assistance Requests
+
+**Task Complete**: Successfully implemented minimal style improvements for the document class detail page.
+
+**Key Improvements Made**:
+
+1. **Layout**: Removed visual clutter, simplified structure, added proper container sizing
+2. **Typography**: Light font weights, consistent hierarchy, better readability
+3. **Forms**: Clean grid layouts, better input styling, improved organization
+4. **Tabs**: Minimal design with grid layout, cleaner content organization
+5. **Spacing**: Consistent spacing system throughout the page
+6. **Colors**: Semantic color classes for better accessibility and consistency
+
+**Result**: The page now has a clean, minimal design that's easier to read and navigate while maintaining all original functionality.
+
+**Update**: Changed the page layout to use full width instead of max-width constraint as requested by the user. The page now spans the entire available width of the viewport.

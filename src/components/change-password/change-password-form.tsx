@@ -6,6 +6,7 @@ import { userService } from "@/app/api/api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import PasswordInput from "@/components/login/password-input";
+import { useRouter } from "next/navigation";
 
 interface ChangePasswordFormProps {
   onSuccess?: () => void;
@@ -18,23 +19,30 @@ export default function ChangePasswordForm({
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const router = useRouter();
   const passwordRules = [
-    "Essere lunga almeno 8 caratteri.",
-    "Contenere almeno una lettera maiuscola.",
-    "Contenere almeno un carattere speciale.",
     "Contenere almeno un numero.",
+    "Contenere almeno una lettera maiuscola.",
+    "Contenere almeno una lettera minuscola.",
+    "Contenere almeno un carattere speciale.",
+    "Essere lunga almeno 8 caratteri e massimo 15 caratteri.",
   ];
 
   const validatePassword = (passwordToValidate: string) => {
     if (passwordToValidate.length < 8) {
       return "La password deve essere lunga almeno 8 caratteri.";
     }
+    if (passwordToValidate.length > 15) {
+      return "La password deve essere lunga massimo 15 caratteri.";
+    }
     if (!/[A-Z]/.test(passwordToValidate)) {
       return "La password deve contenere almeno una lettera maiuscola.";
     }
+    if (!/[a-z]/.test(passwordToValidate)) {
+      return "La password deve contenere almeno una lettera minuscola.";
+    }
     // eslint-disable-next-line no-useless-escape
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(passwordToValidate)) {
+    if (!/[!@#$%^&*()_+\=\[\]{};':"\\|,.<>\/?]+/.test(passwordToValidate)) {
       return "La password deve contenere almeno un carattere speciale.";
     }
     if (!/\d/.test(passwordToValidate)) {
@@ -88,6 +96,10 @@ export default function ChangePasswordForm({
     }
   };
 
+  const redirectToDashboard = () => {
+    router.push("/dashboard/admin");
+  };
+
   return (
     <form onSubmit={handlePasswordChange} className="space-y-6">
       <div className="space-y-2">
@@ -121,6 +133,7 @@ export default function ChangePasswordForm({
       {error && <p className="text-center text-xs text-red-600">{error}</p>}
       <Button
         type="submit"
+        onClick={redirectToDashboard}
         disabled={
           isLoading ||
           password !== passwordConfirmation ||
