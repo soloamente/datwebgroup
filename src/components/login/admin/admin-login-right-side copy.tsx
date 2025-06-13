@@ -14,6 +14,9 @@ import PasswordInput from "@/components/login/password-input";
 import { userService, type Sharer } from "@/app/api/api";
 import { Loader2 } from "lucide-react";
 import { ResetPasswordDialog } from "@/components/reset-passoword";
+import Aurora from "@/components/backgrounds/aurora";
+import StarBorder from "@/components/ui/star-border/button-border";
+import { toast } from "sonner";
 
 type LoginStep = "usernameInput" | "passwordInput" | "otpInput" | "login";
 
@@ -90,7 +93,7 @@ export default function AdminLoginRightSide({
 
   const handleUsernameContinue = async () => {
     if (!currentUsername.trim()) {
-      setError("Username is required.");
+      toast.error("Inserisci il tuo username.");
       return;
     }
     setError(null);
@@ -175,11 +178,11 @@ export default function AdminLoginRightSide({
       case "usernameInput":
         return (
           <>
-            <div className="mb-8 md:mb-10">
-              <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
+            <div className="mb-8 w-full md:mb-10">
+              <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
                 Benvenuto su NotarShareDoc!
               </h1>
-              <p className="text-description transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
+              <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 Inserisci il tuo username per continuare.
               </p>
             </div>
@@ -191,24 +194,27 @@ export default function AdminLoginRightSide({
               {error && (
                 <p className="text-center text-sm text-red-500">{error}</p>
               )}
-              <Button
+              <StarBorder
+                as="button"
+                color="white"
+                speed="5s"
                 onClick={handleUsernameContinue}
                 disabled={isLoading}
-                className="bg-primary hover:bg-button-hover h-12 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-14 md:text-lg"
+                className="w-full cursor-pointer rounded-2xl md:text-lg"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Continua"
                 )}
-              </Button>
+              </StarBorder>
             </div>
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
+                <span className="text-muted-foreground bg-login-credentials rounded-2xl px-2">
                   o continua con
                 </span>
               </div>
@@ -217,9 +223,19 @@ export default function AdminLoginRightSide({
             <div className="mt-4 flex justify-center">
               <Button
                 onClick={() => onLoginModeChange("qr")}
-                className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+                className="bg-secondary-button/80 hover:bg-secondary-button/60 h-12 w-full rounded-2xl text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
               >
                 Codice QR
+              </Button>
+            </div>
+
+            {/* TODO: Add a button to recover the username. It opens a dialog to put an email and then it sends an email to the user with the username */}
+            <div className="mt-4 flex justify-center">
+              <Button
+                onClick={() => onLoginModeChange("qr")}
+                className="bg-secondary-button/80 hover:bg-secondary-button/60 h-12 w-full rounded-2xl text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+              >
+                Username dimenticato?
               </Button>
             </div>
           </>
@@ -228,10 +244,10 @@ export default function AdminLoginRightSide({
         return (
           <>
             <div className="mb-8 md:mb-10">
-              <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
+              <h1 className="text-primary mb-2 text-center text-3xl font-medium transition-all duration-700 md:text-3xl dark:text-white">
                 Benvenuto {username}
               </h1>
-              <p className="text-description transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
+              <p className="text-description text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 Inserisci la tua password per continuare.
               </p>
             </div>
@@ -239,7 +255,7 @@ export default function AdminLoginRightSide({
               <PasswordInput
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                label="Password"
+                label=""
               />
               {error && (
                 <p className="text-center text-sm text-red-500">{error}</p>
@@ -258,7 +274,7 @@ export default function AdminLoginRightSide({
             </div>
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
+                <Separator className="w-full rounded-2xl" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
@@ -269,7 +285,7 @@ export default function AdminLoginRightSide({
             <Button
               onClick={handleChangePassword}
               disabled={isLoading}
-              className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+              className="bg-secondary-button/80 hover:bg-secondary-button/60 h-12 w-full rounded-2xl text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
             >
               Password dimenticata?
             </Button>
@@ -307,8 +323,16 @@ export default function AdminLoginRightSide({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, ease: "easeInOut" }}
-      className="from-primary/20 to-login-credentials flex h-full w-full flex-col justify-center rounded-2xl bg-gradient-to-t to-60% px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
+      className="flex h-full w-full flex-col justify-center rounded-2xl px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
     >
+      <div className="absolute inset-0 z-0 h-full w-full">
+        <Aurora
+          colorStops={["#0763C9", "#A2A8AB", "#0763C9"]}
+          blend={0.5}
+          amplitude={1.0}
+          speed={0.5}
+        />
+      </div>
       <div className="absolute bottom-2">{/* <AdminGradientTracing /> */}</div>
       <div className="z-10 mx-auto w-full md:w-md lg:max-w-lg">
         <div className="relative h-24 w-24 md:absolute md:top-10 md:right-10 md:h-24 md:w-24">
@@ -336,12 +360,15 @@ export default function AdminLoginRightSide({
               </div>
             </div>
             <div className="mt-4 flex flex-col justify-center gap-4">
-              <Button
+              <StarBorder
+                as="button"
+                color="#0763C9"
+                speed="4s"
                 onClick={() => onLoginModeChange("qr")}
-                className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+                className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border transition-all duration-500 ease-in-out md:h-14 md:text-lg"
               >
                 Codice QR
-              </Button>
+              </StarBorder>
             </div>
             <AdminQrScanner onScan={onQrScan} onError={onQrError} />
             {error && loginMode === "qr" && (

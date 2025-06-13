@@ -6,6 +6,7 @@ import UsernameInput from "@/components/login/username-input";
 import PasswordInput from "@/components/login/password-input";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
+import { ChangePasswordDialog } from "@/components/change-password-dialog";
 
 interface AdminLoginFormProps {
   onSuccess: (data: {
@@ -17,6 +18,8 @@ interface AdminLoginFormProps {
 }
 
 export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
+  const [showChangePasswordDialog, setShowChangePasswordDialog] =
+    useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,7 +70,7 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
       // This code will only run if we don't return above
       if (authStore.isAuthenticated()) {
         if (authStore.user?.must_change_password) {
-          router.push("/change-password");
+          setShowChangePasswordDialog(true);
         } else {
           router.push("/dashboard/clienti");
         }

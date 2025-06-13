@@ -12,8 +12,15 @@
   --background: hsl(0 0% 100%);
   --foreground: hsl(240 10% 3.9%);
 
+  /* Text Colors */
+  --header-login: hsl(0, 0%, 0%);
+  --description-login: hsl(0, 0%, 60%);
+
   /* Login */
   --login-credentials: hsl(0 0% 100%);
+
+  /* Buttons */
+  --secondary-button: oklch(0.24 0.0078 274.61);
 
   /* Card */
   --card: hsl(0 0% 100%);
@@ -23,15 +30,15 @@
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(240 10% 3.9%);
 
-  /* Primary */
+  /* Primary Colors */
   --primary: oklch(0.51 0.1733 256.59);
   --primary-foreground: hsl(0 0% 98%);
 
-  /* Secondary */
+  /* Secondary Colors */
   --secondary: hsl(240 4.8% 95.9%);
   --secondary-foreground: hsl(240 5.9% 10%);
 
-  /* Variables */
+  /* UI Colors */
   --muted: hsl(240 4.8% 95.9%);
   --muted-foreground: hsl(240 3.8% 46.1%);
   --accent: hsl(240 4.8% 95.9%);
@@ -39,21 +46,23 @@
   --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(0 0% 98%);
 
-  /* Border */
-  --border: hsl(240 5.9% 90%);
-
-  /* Input */
-  --input: hsl(240 5.9% 90%);
-
-  /* Ring */
+  /* Border & Input */
+  --border: hsl(240 3.8% 46.1%);
+  --input: oklch(0.19 0.0051 248.1);
   --ring: hsl(240 10% 3.9%);
+
+  /* Chart Colors */
   --chart-1: hsl(12 76% 61%);
   --chart-2: hsl(173 58% 39%);
   --chart-3: hsl(197 37% 24%);
   --chart-4: hsl(43 74% 66%);
   --chart-5: hsl(27 87% 67%);
-  --chart-6: hsl(240, 43%, 44%);
+  --chart-6: hsl(240 43% 44%);
+
+  /* Border Radius */
   --radius: 0.5rem;
+
+  /* Sidebar Colors */
   --sidebar-background: hsl(0 0% 98%);
   --sidebar-foreground: hsl(240 5.3% 26.1%);
   --sidebar-primary: hsl(240 5.9% 10%);
@@ -70,11 +79,9 @@
   --background: oklch(0.11 0 0);
   --foreground: oklch(1 0 0);
 
-  /* Border */
-  --border: oklch(1 0 0 / 90%);
-
-  /* Text */
-  --description: oklch(1 0 0 / 50%);
+  /* Text Colors */
+  --header-login: oklch(0.98 0 0);
+  --description-login: oklch(1 0 0 / 50%);
 
   /* Login */
   --login-credentials: oklch(0.19 0.0051 248.1);
@@ -87,15 +94,18 @@
   --popover: oklch(0.14 0.0044 285.82);
   --popover-foreground: oklch(0.98 0 0);
 
-  /* Primary */
+  /* Primary Colors */
   --primary: oklch(0.51 0.1733 256.59);
   --primary-foreground: oklch(0.21 0.0059 285.88);
 
-  /* Secondary */
+  /* Buttons */
+  --secondary-button: oklch(0.24 0.0078 274.61);
+
+  /* Secondary Colors */
   --secondary: oklch(0.24 0.0078 274.61);
   --secondary-foreground: oklch(0.98 0 0);
 
-  /* Variables */
+  /* UI Colors */
   --muted: oklch(0.27 0.0055 286.03);
   --muted-foreground: oklch(0.98 0 0);
   --accent: oklch(0.27 0.0055 286.03);
@@ -103,23 +113,21 @@
   --warning: oklch(0.79 0.171176 70.1526);
   --destructive: oklch(0.57 0.209 22.65);
   --destructive-foreground: hsl(0 0% 98%);
+
+  /* Border & Input */
   --border: hsl(240 3.7% 15.9%);
-
-  /* Input */
   --input: oklch(0.27 0.0055 286.03);
-
-  /* Ring */
   --ring: oklch(0.27 0.0055 286.03);
 
-  /* Chart */
+  /* Chart Colors */
   --chart-1: hsl(220 70% 50%);
   --chart-2: hsl(160 60% 45%);
   --chart-3: hsl(30 80% 55%);
   --chart-4: hsl(280 65% 60%);
   --chart-5: hsl(340 75% 55%);
-  --chart-6: hsl(240, 43%, 44%);
+  --chart-6: hsl(240 43% 44%);
 
-  /* Sidebar */
+  /* Sidebar Colors */
   --sidebar-background: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -132,6 +140,7 @@
 
 /* Inline Theme Variables */
 @theme inline {
+  /* Fonts */
   --font-inter:
     var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
@@ -139,26 +148,27 @@
     var(--font-ingram), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 
-  /* General */
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-
   --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  /* Text */
-  --color-description: var(--description);
+  /* Text Colors */
+  --color-header-login: var(--header-login);
+  --color-description-login: var(--description-login);
 
   /* Login */
   --color-login-credentials: var(--login-credentials);
 
-  /* Card */
-
+  /* Card & Popover */
   --color-card: var(--card);
-
-  /* Popover */
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+
+  /* UI Colors */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -170,26 +180,31 @@
   --color-warning: var(--warning);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+
+  /* Chart Colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  /* Border Radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
+
+  /* Sidebar Colors */
   --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-fade-down: fade-down 0.5s;

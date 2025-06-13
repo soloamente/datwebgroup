@@ -41,7 +41,7 @@ export default function RootLayout({
           >
             <Preferences />
             {children}
-            <Toaster position={"bottom-center"} />
+            <Toaster position={"bottom-center"} richColors />
           </ReactLenis>
         </ThemeProvider>
       </body>

@@ -1,12 +1,17 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
+import { CheckIcon, ChevronDownIcon, Trash2Icon } from "lucide-react";
 import {
   userService,
   type DocumentClass,
   type DocumentClassField,
   type Sharer,
+  docClassService,
+  type AssignSharerRequest,
+  type AvailableSharersResponse,
+  type RemoveSharerResponse,
 } from "@/app/api/api"; // Import necessary types
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,10 +26,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { Stack } from "@/components/ui/stack";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { FieldsSortableTable } from "@/components/dashboard/detail-page-components/fields-sortable-table"; // Import the new component
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import axios from "axios";
+import { DeleteConfirmationDialog } from "@/components/delete-confirmation";
 
 // --- Copied type definitions from the list page for consistent transformation ---
 // Define interfaces for the raw API response structure (for a list)
@@ -36,7 +57,7 @@ interface ApiDocumentClassField {
   required: number;
   is_primary_key: number;
   sort_order: number;
-  options?: { value: string; label: string }[] | null;
+  options?: { id?: number; value: string; label: string }[] | null;
 }
 
 interface ApiDocumentClass {
@@ -67,6 +88,29 @@ export default function DocumentClassDetailPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [availableSharers, setAvailableSharers] = useState<Sharer[]>([]);
+  const [isLoadingSharers, setIsLoadingSharers] = useState(false);
+  const [selectedSharerId, setSelectedSharerId] = useState<number | "">("");
+  const [isSharerSelectOpen, setIsSharerSelectOpen] = useState(false);
+  const sharerSelectId = useId();
+
+  // State for delete confirmation dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [sharerToDelete, setSharerToDelete] = useState<Sharer | null>(null);
+
+  const [newField, setNewField] = useState({
+    label: "",
+    data_type: "string" as
+      | "string"
+      | "boolean"
+      | "integer"
+      | "decimal"
+      | "date"
+      | "datetime"
+      | "enum",
+    required: false,
+    is_primary_key: false,
+  });
 
   // Helper function to format dates in a pretty format
   const formatDate = (dateString: string | undefined | null): string => {
@@ -83,6 +127,27 @@ export default function DocumentClassDetailPage() {
       });
     } catch {
       return dateString; // fallback to original string if parsing fails
+    }
+  };
+
+  // Function to fetch available sharers for assignment
+  const fetchAvailableSharers = async (docClassId?: number) => {
+    const classId = docClassId ?? documentClass?.id;
+    if (!classId) return;
+
+    setIsLoadingSharers(true);
+    try {
+      const response: AvailableSharersResponse =
+        await docClassService.getAvailableSharers(classId);
+      // Extract the data array from the API response
+      const sharers = response.data || [];
+      setAvailableSharers(sharers);
+      console.log("Available sharers loaded:", sharers);
+    } catch (error) {
+      console.error("Failed to fetch available sharers:", error);
+      toast.error("Impossibile caricare gli sharers disponibili");
+    } finally {
+      setIsLoadingSharers(false);
     }
   };
 
@@ -114,12 +179,8 @@ export default function DocumentClassDetailPage() {
                     sort_order: field.sort_order,
                     options: field.options,
                   })) ?? [],
-                // For sharer, let's attempt to use the first from the list if present,
-                // otherwise null. This matches the previous single-item fetch attempt.
-                sharer:
-                  (apiDoc.sharers && apiDoc.sharers.length > 0
-                    ? apiDoc.sharers[0]
-                    : null) ?? null,
+                // Map sharers array directly from API response
+                sharers: apiDoc.sharers ?? [],
                 created_at: apiDoc.created_at ?? "",
                 updated_at: apiDoc.updated_at ?? "",
               }),
@@ -134,6 +195,9 @@ export default function DocumentClassDetailPage() {
             if (foundDoc) {
               setDocumentClass(foundDoc);
               console.log("Found and set document class:", foundDoc);
+
+              // Automatically load available sharers when document class is found
+              await fetchAvailableSharers(foundDoc.id);
             } else {
               throw new Error(
                 `Document class with ID ${idFromRoute} not found in the list.`,
@@ -182,6 +246,190 @@ export default function DocumentClassDetailPage() {
     );
   }
 
+  const handleAddField = async () => {
+    try {
+      const response = await docClassService.addField(documentClass.id, {
+        name: newField.label.toLowerCase().replace(/\s+/g, "_"),
+        label: newField.label,
+        data_type: newField.data_type,
+        required: newField.required,
+        is_primary: newField.is_primary_key,
+      });
+
+      // Reset form
+      setNewField({
+        label: "",
+        data_type: "string" as
+          | "string"
+          | "boolean"
+          | "integer"
+          | "decimal"
+          | "date"
+          | "datetime"
+          | "enum",
+        required: false,
+        is_primary_key: false,
+      });
+
+      // Refresh the document class data
+      const updatedResponse =
+        (await userService.getDocumentClasses()) as unknown as ApiListResponse;
+      const updatedDoc = updatedResponse.data.find(
+        (doc: ApiDocumentClass) => doc.id === documentClass.id,
+      );
+      if (updatedDoc) {
+        setDocumentClass({
+          ...documentClass,
+          campi: updatedDoc.fields.map((field: ApiDocumentClassField) => ({
+            id: field.id,
+            nome: field.name,
+            label: field.label,
+            tipo: field.data_type,
+            obbligatorio: field.required === 1,
+            is_primary_key: field.is_primary_key === 1,
+            sort_order: field.sort_order,
+            options: field.options,
+          })),
+        });
+      }
+
+      toast.success("Campo aggiunto con successo");
+    } catch (error) {
+      console.error("Failed to add field:", error);
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
+        // Show the specific error message from the API response
+        const responseData = error.response.data as unknown;
+        const errorMessage =
+          typeof responseData === "object" &&
+          responseData !== null &&
+          "message" in responseData
+            ? String((responseData as { message: unknown }).message)
+            : "Errore di conflitto";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Impossibile aggiungere il campo");
+      }
+    }
+  };
+
+  // Function to assign a sharer to the document class
+  const handleAssignSharer = async () => {
+    if (!documentClass || !selectedSharerId) return;
+
+    // Find the selected sharer in the available sharers list
+    const selectedSharer = availableSharers.find(
+      (sharer) => sharer.id === selectedSharerId,
+    );
+
+    if (!selectedSharer) {
+      toast.error("Sharer selezionato non trovato");
+      return;
+    }
+
+    try {
+      const response = await docClassService.assignSharer(documentClass.id, {
+        sharer_id: Number(selectedSharerId),
+      });
+
+      // Update the document class by adding the selected sharer to the existing list
+      setDocumentClass((prev) => {
+        if (!prev) return prev;
+
+        const currentSharers = prev.sharers ?? [];
+        const sharerAlreadyExists = currentSharers.some(
+          (sharer) => sharer.id === selectedSharerId,
+        );
+
+        // Only add if not already present
+        if (!sharerAlreadyExists) {
+          return {
+            ...prev,
+            sharers: [...currentSharers, selectedSharer],
+          };
+        }
+        return prev;
+      });
+
+      // Remove the assigned sharer from the available sharers list immediately
+      setAvailableSharers((prev) =>
+        prev.filter((sharer) => sharer.id !== selectedSharerId),
+      );
+
+      // Reset form
+      setSelectedSharerId("");
+
+      toast.success(response.message ?? "Sharer assegnato con successo");
+    } catch (error) {
+      console.error("Failed to assign sharer:", error);
+      toast.error("Impossibile assegnare lo sharer");
+    }
+  };
+
+  // Function to initiate sharer removal (opens confirmation dialog)
+  const handleRemoveSharer = async (sharerId: number) => {
+    if (!documentClass) return;
+
+    // Find the sharer to be removed
+    const sharerToRemove = documentClass.sharers?.find(
+      (sharer) => sharer.id === sharerId,
+    );
+
+    if (!sharerToRemove) {
+      toast.error("Sharer non trovato");
+      return;
+    }
+
+    // Set the sharer to delete and open confirmation dialog
+    setSharerToDelete(sharerToRemove);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Function to perform the actual sharer removal
+  const confirmRemoveSharer = async (): Promise<boolean> => {
+    if (!documentClass || !sharerToDelete) return false;
+
+    try {
+      const response = await docClassService.removeFromSharer(
+        documentClass.id,
+        sharerToDelete.id,
+      );
+
+      // Update the document class by removing the sharer from the list
+      setDocumentClass((prev) => {
+        if (!prev) return prev;
+
+        const updatedSharers =
+          prev.sharers?.filter((sharer) => sharer.id !== sharerToDelete.id) ??
+          [];
+
+        return {
+          ...prev,
+          sharers: updatedSharers,
+        };
+      });
+
+      // Add the removed sharer back to the available sharers list
+      setAvailableSharers((prev) => [...prev, sharerToDelete]);
+
+      toast.success(response.message ?? "Sharer rimosso con successo");
+
+      // Refresh available sharers to ensure consistency
+      await fetchAvailableSharers();
+
+      return true;
+    } catch (error) {
+      console.error("Failed to remove sharer:", error);
+      toast.error("Impossibile rimuovere lo sharer");
+      return false;
+    }
+  };
+
+  // Function to close the delete confirmation dialog
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setSharerToDelete(null);
+  };
+
   return (
     <div className="w-full p-6">
       {/* Simplified Header */}
@@ -199,7 +447,9 @@ export default function DocumentClassDetailPage() {
           <TabsTrigger value="fields">
             Campi ({documentClass.campi.length})
           </TabsTrigger>
-          <TabsTrigger value="sharers">Utenti</TabsTrigger>
+          <TabsTrigger value="sharers">
+            Sharers ({documentClass.sharers?.length ?? 0})
+          </TabsTrigger>
           <TabsTrigger value="audit">Avanzate</TabsTrigger>
         </TabsList>
 
@@ -261,6 +511,13 @@ export default function DocumentClassDetailPage() {
                     id="new_field_label"
                     className="h-8"
                     placeholder="Nome campo"
+                    value={newField.label}
+                    onChange={(e) =>
+                      setNewField((prev) => ({
+                        ...prev,
+                        label: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -271,6 +528,20 @@ export default function DocumentClassDetailPage() {
                   <select
                     id="new_field_data_type"
                     className="bg-background h-8 w-full rounded-md border px-3 text-sm"
+                    value={newField.data_type}
+                    onChange={(e) =>
+                      setNewField((prev) => ({
+                        ...prev,
+                        data_type: e.target.value as
+                          | "string"
+                          | "boolean"
+                          | "integer"
+                          | "decimal"
+                          | "date"
+                          | "datetime"
+                          | "enum",
+                      }))
+                    }
                   >
                     <option value="string">Testo</option>
                     <option value="boolean">Binario (Si/No)</option>
@@ -284,13 +555,31 @@ export default function DocumentClassDetailPage() {
 
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="new_field_required" />
+                    <Checkbox
+                      id="new_field_required"
+                      checked={newField.required}
+                      onCheckedChange={(checked) =>
+                        setNewField((prev) => ({
+                          ...prev,
+                          required: !!checked,
+                        }))
+                      }
+                    />
                     <Label htmlFor="new_field_required" className="text-xs">
                       Obbligatorio
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="new_field_is_primary_key" />
+                    <Checkbox
+                      id="new_field_is_primary_key"
+                      checked={newField.is_primary_key}
+                      onCheckedChange={(checked) =>
+                        setNewField((prev) => ({
+                          ...prev,
+                          is_primary_key: !!checked,
+                        }))
+                      }
+                    />
                     <Label
                       htmlFor="new_field_is_primary_key"
                       className="text-xs"
@@ -300,14 +589,25 @@ export default function DocumentClassDetailPage() {
                   </div>
                 </div>
 
-                <Button type="submit" size="sm" className="h-8 self-end">
+                <Button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void handleAddField();
+                  }}
+                  type="submit"
+                  size="sm"
+                  className="h-8 self-end"
+                >
                   Aggiungi
                 </Button>
               </form>
             </div>
 
             {documentClass.campi && documentClass.campi.length > 0 ? (
-              <FieldsSortableTable initialFields={documentClass.campi} />
+              <FieldsSortableTable
+                initialFields={documentClass.campi}
+                documentClassId={documentClass.id}
+              />
             ) : (
               <p className="text-muted-foreground text-sm">
                 Nessun campo definito per questa classe documentale.
@@ -317,23 +617,163 @@ export default function DocumentClassDetailPage() {
         </TabsContent>
 
         <TabsContent value="sharers" className="mt-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-xl font-medium">Utenti associati</h2>
-            {documentClass.sharer ? (
-              <div className="rounded-lg border p-4">
-                <p className="text-sm">
-                  <span className="font-medium">Utente assegnato:</span>{" "}
-                  {documentClass.sharer.nominativo}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  ID: {documentClass.sharer.id}
-                </p>
+
+            {/* Current Sharers Display */}
+            {documentClass.sharers && documentClass.sharers.length > 0 ? (
+              <div className="bg-background overflow-hidden rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="h-9 py-2">Nome</TableHead>
+                      <TableHead className="h-9 py-2">Email</TableHead>
+                      <TableHead className="h-9 w-20 py-2">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {documentClass.sharers.map((sharer) => (
+                      <TableRow key={sharer.id}>
+                        <TableCell className="py-2 font-medium">
+                          {sharer.nominativo}
+                        </TableCell>
+                        <TableCell className="py-2">{sharer.email}</TableCell>
+                        <TableCell className="py-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveSharer(sharer.id)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                            title={`Rimuovi ${sharer.nominativo} dalla classe documentale`}
+                          >
+                            <Trash2Icon size={14} />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">
-                Nessun utente associato a questa classe documentale.
-              </p>
+              <div className="rounded-lg border p-4">
+                <p className="text-muted-foreground text-sm">
+                  Nessun utente associato a questa classe documentale.
+                </p>
+              </div>
             )}
+
+            {/* Assign New Sharer Form */}
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-4 text-sm font-medium">
+                {documentClass.sharers && documentClass.sharers.length > 0
+                  ? "Aggiungi Sharer"
+                  : "Assegna Sharer"}
+              </h3>
+
+              <div className="space-y-4">
+                {isLoadingSharers ? (
+                  <p className="text-muted-foreground text-sm">
+                    Caricamento sharers...
+                  </p>
+                ) : availableSharers.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={sharerSelectId} className="text-sm">
+                        Seleziona Sharer
+                      </Label>
+                      <Popover
+                        open={isSharerSelectOpen}
+                        onOpenChange={setIsSharerSelectOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            id={sharerSelectId}
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={isSharerSelectOpen}
+                            className="bg-background hover:bg-background border-input w-full justify-between px-3 font-normal outline-offset-0 outline-none focus-visible:outline-[3px]"
+                          >
+                            <span
+                              className={cn(
+                                "truncate",
+                                !selectedSharerId && "text-muted-foreground",
+                              )}
+                            >
+                              {selectedSharerId
+                                ? availableSharers.find(
+                                    (sharer) => sharer.id === selectedSharerId,
+                                  )?.nominativo +
+                                  " (" +
+                                  availableSharers.find(
+                                    (sharer) => sharer.id === selectedSharerId,
+                                  )?.email +
+                                  ")"
+                                : "Seleziona uno sharer..."}
+                            </span>
+                            <ChevronDownIcon
+                              size={16}
+                              className="text-muted-foreground/80 shrink-0"
+                              aria-hidden="true"
+                            />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="border-input w-full min-w-[var(--radix-popper-anchor-width)] p-0"
+                          align="start"
+                        >
+                          <Command>
+                            <CommandInput placeholder="Cerca sharer..." />
+                            <CommandList>
+                              <CommandEmpty>
+                                Nessun sharer trovato.
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {availableSharers.map((sharer) => (
+                                  <CommandItem
+                                    key={sharer.id}
+                                    value={`${sharer.nominativo} ${sharer.email}`}
+                                    onSelect={() => {
+                                      setSelectedSharerId(
+                                        sharer.id === selectedSharerId
+                                          ? ""
+                                          : sharer.id,
+                                      );
+                                      setIsSharerSelectOpen(false);
+                                    }}
+                                  >
+                                    {sharer.nominativo} ({sharer.email})
+                                    {selectedSharerId === sharer.id && (
+                                      <CheckIcon
+                                        size={16}
+                                        className="ml-auto"
+                                      />
+                                    )}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <Button
+                      onClick={handleAssignSharer}
+                      disabled={!selectedSharerId}
+                      size="sm"
+                    >
+                      {documentClass.sharers && documentClass.sharers.length > 0
+                        ? "Aggiungi Sharer"
+                        : "Assegna Sharer"}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    Nessun sharer disponibile per l&apos;assegnazione.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </TabsContent>
 
@@ -361,6 +801,20 @@ export default function DocumentClassDetailPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      {sharerToDelete && (
+        <DeleteConfirmationDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={closeDeleteDialog}
+          onSuccess={closeDeleteDialog}
+          fieldId={0} // Not used for sharer deletion
+          optionId={0} // Not used for sharer deletion
+          onConfirm={confirmRemoveSharer}
+          isField={false}
+          customMessage={`Sei sicuro di voler rimuovere ${sharerToDelete.nominativo} da questa classe documentale? L'utente non avrà più accesso ai documenti di questa classe.`}
+        />
+      )}
     </div>
   );
 }

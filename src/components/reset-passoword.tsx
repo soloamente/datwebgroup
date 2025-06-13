@@ -34,20 +34,20 @@ export function ResetPasswordDialog({
 
     setIsLoading(true);
     try {
-      const response = await userService.sendUsernameToSharerById({
-        sharer_id: user.id,
-      });
-      // Assuming the API returns a success message or we use a standard one
-      // The user-tables component already shows a toast on success via onUsernameSent callback
-      onPasswordReset();
-      // eslint-disable-next-line
-    } catch (error: any) {
-      console.error("Failed to send username:", error);
-      toast.error(
-        // eslint-disable-next-line
-        error.response?.data?.error ?? "Impossibile inviare l'username.",
-      );
-      // Keep the dialog open on error to allow retry or cancellation
+      const response = await userService.resetPasswordByUsername(user.username);
+      if (response.success) {
+        toast.success(response.message);
+        onPasswordReset();
+      } else {
+        toast.error(response.message ?? "Impossibile resettare la password.");
+      }
+    } catch (error: unknown) {
+      console.error("Failed to reset password:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Impossibile resettare la password.";
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

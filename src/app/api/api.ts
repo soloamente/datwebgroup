@@ -127,7 +127,7 @@ export interface DocumentClassField {
   obbligatorio: boolean;
   is_primary_key: boolean;
   sort_order: number;
-  options?: { value: string; label: string }[] | null;
+  options?: { id?: number; value: string; label: string }[] | null;
 }
 
 export interface DocumentClass {
@@ -135,7 +135,7 @@ export interface DocumentClass {
   nome: string;
   descrizione: string;
   campi: DocumentClassField[];
-  sharer: Sharer | null; // Changed to allow null
+  sharers: Sharer[] | null; // Changed to allow null
   created_at: string;
   updated_at: string;
 }
@@ -149,7 +149,7 @@ interface ApiDocumentClassField {
   required: number;
   is_primary_key: number;
   sort_order: number;
-  options?: { value: string; label: string }[] | null;
+  options?: { id?: number; value: string; label: string }[] | null;
 }
 
 interface ApiDocumentClass {
@@ -251,12 +251,162 @@ const getDocumentClasses = async (): Promise<DocumentClass[]> => {
   return response.data;
 };
 
-// New function to get a single document class by ID
 const getDocumentClassById = async (id: number): Promise<ApiResponseSingle> => {
   const response = await api.get<ApiResponseSingle>(`/document-classes/${id}`);
   return response.data;
 };
-// End of new function
+
+// Interface for delete enum option response
+export interface DeleteEnumOptionResponse {
+  message: string;
+  requires_confirmation?: boolean;
+}
+
+// New function to delete an enum option from a document class field
+const deleteEnumOption = async (
+  fieldId: number,
+  optionId: number,
+  force?: boolean,
+): Promise<DeleteEnumOptionResponse> => {
+  const response = await api.delete<DeleteEnumOptionResponse>(
+    `/document-class-fields/${fieldId}/options/${optionId}`,
+    {
+      params: { force },
+    },
+  );
+  return response.data;
+};
+
+// Interface for add enum option response
+export interface AddEnumOptionResponse {
+  message: string;
+  data: {
+    id: number;
+    value: string;
+    label: string;
+  };
+}
+
+// New function to add an enum option to a document class field
+const addEnumOption = async (
+  fieldId: number,
+  label: string,
+): Promise<AddEnumOptionResponse> => {
+  const response = await api.post<AddEnumOptionResponse>(
+    `/document-class-fields/${fieldId}/options`,
+    { label },
+  );
+  return response.data;
+};
+
+// Interface for add field request
+export interface AddDocumentClassFieldRequest {
+  name: string;
+  label: string;
+  data_type:
+    | "boolean"
+    | "integer"
+    | "decimal"
+    | "string"
+    | "date"
+    | "datetime"
+    | "enum";
+  required?: boolean;
+  is_primary?: boolean;
+  sort_order?: number;
+  options?: Array<{
+    value: string;
+    label: string;
+  }>;
+}
+
+// Interface for add field response
+export interface AddDocumentClassFieldResponse {
+  message: string;
+  data: DocumentClassField;
+}
+
+// Interface for delete field response
+export interface DeleteFieldResponse {
+  message: string;
+  requires_confirmation?: boolean;
+}
+
+// Interface for user response
+export interface UserResponse {
+  user: {
+    id: number;
+    username: string;
+    nominativo: string;
+    email: string;
+    role: string;
+    active: boolean;
+    codice_fiscale?: string;
+    partita_iva?: string;
+    created_at: string;
+    updated_at: string;
+    must_change_password: number;
+  };
+}
+
+// Function to get authenticated user
+const getUser = async (): Promise<UserResponse> => {
+  const response = await api.get<UserResponse>("/user");
+  return response.data;
+};
+
+// Interface for update field request
+export interface UpdateDocumentClassFieldRequest {
+  label?: string;
+  required?: boolean;
+  is_primary?: boolean;
+  sort_order?: number;
+}
+
+// Interface for update field response
+export interface UpdateDocumentClassFieldResponse {
+  message: string;
+  data: DocumentClassField;
+}
+
+// Interface for update field error responses
+export interface UpdateFieldConflictResponse {
+  message: string; // e.g., "Esiste già una primary key per questa classe documentale." or "Non puoi rendere obbligatorio questo campo: esistono documenti senza valore per questo campo."
+}
+
+export interface UpdateFieldNotFoundResponse {
+  message: string; // e.g., "Campo o classe documentale non trovata."
+}
+
+export interface UpdateFieldValidationResponse {
+  message: string; // e.g., "The given data was invalid."
+  errors: Record<string, string[]>;
+}
+
+// Interface for assign sharer request
+export interface AssignSharerRequest {
+  sharer_id: number;
+}
+
+// Interface for assign sharer response
+export interface AssignSharerResponse {
+  message: string;
+  data?: {
+    document_class: DocumentClass;
+    sharers: Sharer[];
+  };
+}
+
+// Interface for remove sharer response
+export interface RemoveSharerResponse {
+  message: string;
+}
+
+// Interface for available sharers response
+export interface AvailableSharersResponse {
+  message: string;
+  data: Sharer[];
+}
 
 export const userService = {
   createViewer: (data: CreateViewerData) => api.post("/create-viewer", data),
@@ -273,5 +423,153 @@ export const userService = {
   checkUsername,
   resetPasswordByUsername,
   getDocumentClasses,
-  getDocumentClassById, // Add new function to exports
+  getUser,
+};
+
+export const docClassService = {
+  getDocumentClassById,
+  deleteEnumOption,
+  addEnumOption,
+  addField: async (
+    documentClassId: number,
+    data: AddDocumentClassFieldRequest,
+  ): Promise<AddDocumentClassFieldResponse> => {
+    const response = await api.post<AddDocumentClassFieldResponse>(
+      `/document-classes/${documentClassId}/fields`,
+      data,
+    );
+    return response.data;
+  },
+  /**
+   * Gets available sharers that can be assigned to a document class
+   *
+   * @param documentClassId - The ID of the document class
+   * @returns Promise<AvailableSharersResponse> - Response with list of available sharers
+   */
+  getAvailableSharers: async (
+    documentClassId: number,
+  ): Promise<AvailableSharersResponse> => {
+    try {
+      const response = await api.get<AvailableSharersResponse>(
+        `/document-classes/${documentClassId}/available-sharers`,
+      );
+
+      console.log("getAvailableSharers response:", response);
+
+      // Check if response.data exists
+      if (!response.data) {
+        console.error("Response data is undefined:", response);
+        throw new Error("API response data is undefined");
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in getAvailableSharers:", error);
+      throw error;
+    }
+  },
+  /**
+   * Updates a document class field
+   *
+   * @param classId - The ID of the document class
+   * @param fieldId - The ID of the field to update
+   * @param data - The field data to update
+   * @returns Promise<UpdateDocumentClassFieldResponse>
+   *
+   * @throws {AxiosError} with response status:
+   * - 200: Campo aggiornato con successo
+   * - 409: Esiste già una primary key per questa classe documentale
+   * - 409: Non puoi rendere obbligatorio questo campo: esistono documenti senza valore per questo campo
+   * - 404: Campo o classe documentale non trovata
+   * - 422: The given data was invalid
+   */
+  updateField: async (
+    classId: number,
+    fieldId: number,
+    data: UpdateDocumentClassFieldRequest,
+  ): Promise<UpdateDocumentClassFieldResponse> => {
+    const response = await api.put<UpdateDocumentClassFieldResponse>(
+      `/document-classes/${classId}/fields/${fieldId}`,
+      data,
+    );
+    return response.data;
+  },
+  deleteField: async (
+    classId: number,
+    fieldId: number,
+    force?: boolean,
+  ): Promise<DeleteFieldResponse> => {
+    const response = await api.delete<DeleteFieldResponse>(
+      `/document-classes/${classId}/fields/${fieldId}`,
+      {
+        params: { force },
+      },
+    );
+    return response.data;
+  },
+  /**
+   * Assigns a sharer to a document class
+   *
+   * @param documentClassId - The ID of the document class
+   * @param data - The sharer assignment data
+   * @returns Promise<AssignSharerResponse>
+   */
+  assignSharer: async (
+    documentClassId: number,
+    data: AssignSharerRequest,
+  ): Promise<AssignSharerResponse> => {
+    try {
+      const response = await api.post<AssignSharerResponse>(
+        `/document-classes/${documentClassId}/assign-to-sharer`,
+        data,
+      );
+
+      console.log("assignSharer response:", response);
+
+      // Check if response.data exists
+      if (!response.data) {
+        console.error("Response data is undefined:", response);
+        throw new Error("API response data is undefined");
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in assignSharer:", error);
+      throw error;
+    }
+  },
+  /**
+   * Removes a document class from a sharer
+   *
+   * @param documentClassId - The ID of the document class
+   * @param sharerId - The ID of the sharer to remove from
+   * @returns Promise<RemoveSharerResponse>
+   *
+   * @throws {AxiosError} with response status:
+   * - 200: Classe rimossa dallo sharer con successo
+   * - 404: Classe non assegnata a quello sharer
+   */
+  removeFromSharer: async (
+    documentClassId: number,
+    sharerId: number,
+  ): Promise<RemoveSharerResponse> => {
+    try {
+      const response = await api.delete<RemoveSharerResponse>(
+        `/document-classes/${documentClassId}/sharers/${sharerId}`,
+      );
+
+      console.log("removeFromSharer response:", response);
+
+      // Check if response.data exists
+      if (!response.data) {
+        console.error("Response data is undefined:", response);
+        throw new Error("API response data is undefined");
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in removeFromSharer:", error);
+      throw error;
+    }
+  },
 };

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useAuthStore from "@/app/api/auth";
 import AdminLoginLeftSide from "./admin-login-left-side";
-import AdminLoginRightSide from "./admin-login-right-side";
+import AdminLoginRightSide from "./admin-login-right-side copy";
 import { userService } from "@/app/api/api";
 
 // Define a type for the expected API response from /api/reset-password-by-username
@@ -121,8 +121,7 @@ export default function AdminLoginWrapper() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center gap-2 overflow-hidden p-2">
-      <AdminLoginLeftSide />
+    <div className="bg-login-credentials flex h-screen w-full items-center justify-center gap-2 overflow-hidden p-2">
       <AdminLoginRightSide
         step={step}
         setStep={setStep}

@@ -86,7 +86,7 @@ import {
 import { type Sharer, type Viewer, userService } from "@/app/api/api";
 import { toast } from "sonner";
 import { EditUserDialog } from "@/components/edit-user-dialog";
-import { ChangePasswordDialog } from "@/components/change-password-dialog";
+import { ResetPasswordDialog } from "@/components/reset-passoword";
 import { SendUsernameDialog } from "@/components/send-username-dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -725,14 +725,14 @@ export default function SharerTable({
             </PopoverContent>
           </Popover>
           {/* New filter button */}
-          <Button variant="outline">
+          {/* <Button variant="outline">
             <RiBardLine
               className="text-muted-foreground/60 -ms-1.5 size-5"
               size={20}
               aria-hidden="true"
             />
             Nuovo Filtro
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -1068,10 +1068,11 @@ function RowActions({
         onUserUpdate={handleCloseEditDialog}
       />
 
-      <ChangePasswordDialog
+      <ResetPasswordDialog
         isOpen={showChangePasswordDialog}
         onClose={handleCloseChangePasswordDialog}
         user={sharer}
+        onPasswordReset={handleCloseChangePasswordDialog}
       />
 
       <SendUsernameDialog
