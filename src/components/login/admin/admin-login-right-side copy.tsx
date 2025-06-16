@@ -194,20 +194,17 @@ export default function AdminLoginRightSide({
               {error && (
                 <p className="text-center text-sm text-red-500">{error}</p>
               )}
-              <StarBorder
-                as="button"
-                color="white"
-                speed="5s"
+              <Button
                 onClick={handleUsernameContinue}
                 disabled={isLoading}
-                className="w-full cursor-pointer rounded-2xl md:text-lg"
+                className="bg-primary hover:bg-button-hover h-12 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-14 md:text-lg"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   "Continua"
                 )}
-              </StarBorder>
+              </Button>
             </div>
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
@@ -244,10 +241,10 @@ export default function AdminLoginRightSide({
         return (
           <>
             <div className="mb-8 md:mb-10">
-              <h1 className="text-primary mb-2 text-center text-3xl font-medium transition-all duration-700 md:text-3xl dark:text-white">
+              <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
                 Benvenuto {username}
               </h1>
-              <p className="text-description text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
+              <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 Inserisci la tua password per continuare.
               </p>
             </div>
@@ -277,7 +274,7 @@ export default function AdminLoginRightSide({
                 <Separator className="w-full rounded-2xl" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
+                <span className="text-muted-foreground bg-login-credentials rounded-2xl px-2">
                   o continua con
                 </span>
               </div>
@@ -295,10 +292,10 @@ export default function AdminLoginRightSide({
         return (
           <>
             <div className="mb-8 md:mb-10">
-              <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
+              <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
                 Benvenuto {username}
               </h1>
-              <p className="text-description transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
+              <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 {`Inserisci qui sotto il codice OTP inviato alla tua email.`}
               </p>
             </div>
@@ -354,7 +351,7 @@ export default function AdminLoginRightSide({
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
+                <span className="text-muted-foreground bg-login-credentials rounded-2xl px-2">
                   o continua con
                 </span>
               </div>

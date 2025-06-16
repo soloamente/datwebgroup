@@ -121,7 +121,7 @@ export default function AdminOtpForm({
             <Separator className="w-full" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
+            <span className="text-muted-foreground bg-login-credentials rounded-2xl px-2">
               oppure
             </span>
           </div>
@@ -133,7 +133,7 @@ export default function AdminOtpForm({
               type="button"
               onClick={handleResendOtp}
               disabled={loading}
-              className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+              className="bg-secondary-button/80 hover:bg-secondary-button/60 h-12 w-full rounded-2xl text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
             >
               Invia nuovo codice OTP
             </Button>

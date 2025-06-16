@@ -64,7 +64,7 @@ export function Preferences() {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="flex flex-col gap-5 rounded-xl p-4"
+          className="border-border flex flex-col gap-5 rounded-xl border-[1.5px] p-4"
         >
           <div>
             <h1 className="font-medium">Aspetto</h1>

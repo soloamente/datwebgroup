@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { OTPInput, SlotProps } from "input-otp";
+import { OTPInput, type SlotProps } from "input-otp";
 import { useId } from "react";
 
 export default function OtpInput({
@@ -36,7 +36,7 @@ function Slot(props: SlotProps) {
   return (
     <div
       className={cn(
-        "border-input bg-background text-foreground flex size-16 items-center justify-center rounded-md border font-medium shadow-xs transition-[color,box-shadow]",
+        "border-input bg-background/50 text-foreground flex size-16 items-center justify-center rounded-md border font-medium shadow-xs transition-[color,box-shadow]",
         { "border-ring ring-ring/50 z-10 ring-[3px]": props.isActive },
       )}
     >

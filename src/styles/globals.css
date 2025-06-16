@@ -13,8 +13,8 @@
   --foreground: hsl(240 10% 3.9%);
 
   /* Text Colors */
-  --header-login: hsl(0, 0%, 0%);
-  --description-login: hsl(0, 0%, 60%);
+  --header-login: hsl(220, 18%, 12%);
+  --description-login: hsl(220, 10%, 40%);
 
   /* Login */
   --login-credentials: hsl(0 0% 100%);
@@ -48,8 +48,8 @@
 
   /* Border & Input */
   --border: hsl(240 3.8% 46.1%);
-  --input: oklch(0.19 0.0051 248.1);
-  --ring: hsl(240 10% 3.9%);
+  --input: oklch(0.19 0.0051 248.1 / 50%);
+  --ring: oklch(0.51 0.1733 256.59);
 
   /* Chart Colors */
   --chart-1: hsl(12 76% 61%);
@@ -117,7 +117,7 @@
   /* Border & Input */
   --border: hsl(240 3.7% 15.9%);
   --input: oklch(0.27 0.0055 286.03);
-  --ring: oklch(0.27 0.0055 286.03);
+  --ring: oklch(0.51 0.1733 256.59);
 
   /* Chart Colors */
   --chart-1: hsl(220 70% 50%);
@@ -161,6 +161,9 @@
 
   /* Login */
   --color-login-credentials: var(--login-credentials);
+
+  /* Buttons */
+  --color-secondary-button: var(--secondary-button);
 
   /* Card & Popover */
   --color-card: var(--card);

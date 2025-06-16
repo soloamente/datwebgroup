@@ -385,9 +385,11 @@ export default function SharerTable({
       columnVisibility,
       globalFilter,
     },
+
     filterFns: {
       activeStatus: activeStatusFilterFn,
       dateRange: dateRangeFilterFn,
+      documentClassDateRange: dateRangeFilterFn,
     },
   });
 
@@ -474,16 +476,18 @@ export default function SharerTable({
   return (
     <div className="space-y-4">
       {/* Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Left side */}
-        <div className="flex items-center gap-3">
-          {/* Filter by name */}
-          <div className="relative">
+      {/* Responsive: stack vertically on mobile, row on larger screens */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        {/* Left side: Search input */}
+        <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
+          {/* Responsive: full width on mobile */}
+          <div className="relative w-full sm:w-auto">
             <Input
               id={`${id}-input`}
               ref={inputRef}
               className={cn(
-                "peer bg-background from-accent/60 to-accent min-w-72 bg-gradient-to-br ps-9",
+                // Responsive: full width on mobile
+                "peer bg-background from-accent/60 to-accent w-full min-w-0 bg-gradient-to-br ps-9 sm:w-auto sm:min-w-72",
                 Boolean(globalFilter) && "pe-9",
               )}
               value={globalFilter}
@@ -511,8 +515,8 @@ export default function SharerTable({
             )}
           </div>
         </div>
-        {/* Right side */}
-        <div className="flex items-center gap-3">
+        {/* Right side: Filter buttons */}
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
           {/* Delete button */}
           {table.getSelectedRowModel().rows.length > 0 && (
             <AlertDialog>
@@ -563,7 +567,7 @@ export default function SharerTable({
           {/* Filter by status */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <RiFilter3Line
                   className="text-muted-foreground/60 -ms-1.5 size-5"
                   size={20}
@@ -610,10 +614,10 @@ export default function SharerTable({
               </div>
             </PopoverContent>
           </Popover>
-          {/* New filter button */}
+          {/* Date filter button */}
           <Popover open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <RiCalendarLine
                   className="text-muted-foreground/60 -ms-1.5 size-5"
                   size={20}

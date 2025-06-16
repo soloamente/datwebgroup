@@ -20,7 +20,7 @@ export default function UsernameInput({
           type="username"
           value={value}
           onChange={onChange}
-          className="peer h-14 rounded-2xl ps-10 placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
+          className="peer border-border h-14 rounded-2xl border-[1.5px] ps-10 placeholder:text-black/30 dark:border-white/20 dark:placeholder:text-white/20"
         />
         <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
           <User size={20} aria-hidden="true" />

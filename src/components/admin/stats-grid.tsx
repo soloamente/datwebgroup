@@ -53,7 +53,7 @@ export function StatsCard({
               <span className={cn("font-medium", trendColor)}>
                 {isPositive ? "↗" : "↘"} {change.value}
               </span>{" "}
-              vs mese scorsa
+              vs mese precedente
             </div>
           )}
 

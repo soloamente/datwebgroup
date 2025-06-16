@@ -84,7 +84,7 @@ export default function PasswordInput({
           id={id}
           value={value}
           onChange={onChange}
-          className="peer h-12 rounded-2xl p-4 ps-10 pe-9 placeholder:text-black/20 lg:h-14 dark:border-white/20 dark:placeholder:text-white/20"
+          className="peer border-border h-12 rounded-2xl border-[1.5px] p-4 ps-10 pe-9 placeholder:text-black/20 lg:h-14 dark:border-white/20 dark:placeholder:text-white/20"
           placeholder="Pa12£$56789!%"
           type={isVisible ? "text" : "password"}
         />
