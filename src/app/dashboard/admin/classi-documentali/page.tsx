@@ -8,6 +8,10 @@ import {
 } from "@/app/api/api";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { StatsGrid } from "@/components/admin/stats-grid";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CreateDocumentClassDialog } from "@/components/dashboard/create-document-class-dialog";
 
 // Define interfaces for the raw API response structure
 interface ApiDocumentClassField {
@@ -42,6 +46,31 @@ interface ApiResponse {
 export default function ClassiDocumentali() {
   const [documents, setDocuments] = useState<DocumentClass[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // State for create dialog
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  // --- Stats calculation ---
+  // Total document classes
+  const totalClasses = documents.length;
+  // Total fields across all classes
+  const totalFields = documents.reduce(
+    (acc, doc) => acc + (doc.campi?.length ?? 0),
+    0,
+  );
+  // Recently created (this month)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const recentlyCreated = documents.filter((doc) => {
+    const createdDate = new Date(doc.created_at);
+    return (
+      createdDate.getMonth() === currentMonth &&
+      createdDate.getFullYear() === currentYear
+    );
+  }).length;
+
+  // --- Handlers for dialog ---
+  const handleOpenCreateDialog = () => setIsCreateDialogOpen(true);
+  const handleCloseCreateDialog = () => setIsCreateDialogOpen(false);
 
   const fetchDocumentClassesData = async () => {
     console.log("fetchDocumentClassesData called");
@@ -69,7 +98,7 @@ export default function ClassiDocumentali() {
                   options: field.options,
                 }),
               ) ?? [],
-            sharer: null,
+            sharers: item.sharers ?? [],
             created_at: item.created_at ?? "",
             updated_at: item.updated_at ?? "",
           }),
@@ -109,12 +138,63 @@ export default function ClassiDocumentali() {
   );
 
   return (
-    <div className="flex h-full w-full flex-col gap-4">
-      <DocumentClassiTable
-        data={documents}
-        isLoading={isLoading}
-        onRefreshData={refreshData}
+    <main className="flex flex-col gap-4">
+      {/* Header and actions */}
+      <div className="flex w-full items-center justify-between py-2 md:py-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-medium md:text-4xl dark:text-white">
+            Classi Documentali
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Gestisci le classi documentali del sistema. Visualizza, modifica o
+            creane di nuove.
+          </p>
+        </div>
+        <Button
+          className="bg-primary text-white"
+          onClick={handleOpenCreateDialog}
+        >
+          <Plus size={20} />
+          Crea Classe Documentale
+        </Button>
+      </div>
+      {/* Stats grid */}
+      <StatsGrid
+        stats={[
+          {
+            title: "Totale Classi",
+            value: totalClasses.toString(),
+            change: { value: "", trend: "up" },
+            icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+          },
+          {
+            title: "Totale Campi",
+            value: totalFields.toString(),
+            change: { value: "", trend: "up" },
+            icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+          },
+          {
+            title: "Create questo mese",
+            value: recentlyCreated.toString(),
+            change: { value: "", trend: "up" },
+            icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+          },
+        ]}
       />
-    </div>
+      {/* Table section */}
+      <div className="flex flex-col gap-4">
+        <DocumentClassiTable
+          data={documents}
+          isLoading={isLoading}
+          onRefreshData={refreshData}
+        />
+      </div>
+      {/* Create Document Class Dialog (to be implemented) */}
+      <CreateDocumentClassDialog
+        isOpen={isCreateDialogOpen}
+        onClose={handleCloseCreateDialog}
+        onCreated={refreshData}
+      />
+    </main>
   );
 }

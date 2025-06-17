@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useTheme } from "next-themes";
 
 import AdminOtpForm from "./admin-otp-form";
 import AdminQrScanner from "./admin-qr-scanner";
@@ -105,6 +106,12 @@ export default function AdminLoginRightSide({
   const [showQrModal, setShowQrModal] = useState(false);
   const [showRecoverUsernameDialog, setShowRecoverUsernameDialog] =
     useState(false);
+  const { theme } = useTheme();
+
+  const colorStops =
+    theme === "dark"
+      ? ["#0763C9", "#A2A8AB", "#0763C9"] // Light colors for dark theme
+      : ["#A2A8AB", "#0763C9", "#A2A8AB"]; // Dark colors for light theme
 
   const handleUsernameContinue = async () => {
     if (!currentUsername.trim()) {
@@ -273,17 +280,20 @@ export default function AdminLoginRightSide({
               {error && (
                 <p className="text-center text-sm text-red-500">{error}</p>
               )}
-              <Button
-                onClick={handlePasswordLogin}
-                disabled={isLoading}
-                className="bg-primary hover:bg-button-hover h-12 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-14 md:text-lg"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Accedi"
-                )}
-              </Button>
+              <div className="relative w-full">
+                <div className="pointer-events-none absolute -inset-1 z-0 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm" />
+                <Button
+                  onClick={handlePasswordLogin}
+                  disabled={isLoading}
+                  className="bg-primary hover:bg-button-hover ring-primary/50 relative z-10 h-12 w-full cursor-pointer rounded-2xl text-white ring-3 transition-all duration-700 md:h-14 md:text-lg"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Continua"
+                  )}
+                </Button>
+              </div>
             </div>
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
@@ -340,7 +350,7 @@ export default function AdminLoginRightSide({
     >
       <div className="absolute inset-0 z-0 h-full w-full">
         <Aurora
-          colorStops={["#0763C9", "#A2A8AB", "#0763C9"]}
+          colorStops={colorStops}
           blend={0.5}
           amplitude={1.0}
           speed={0.5}

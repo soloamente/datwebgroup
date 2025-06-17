@@ -108,13 +108,16 @@ export default function AdminOtpForm({
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       <div className="flex flex-col items-center gap-4">
-        <Button
-          type="submit"
-          disabled={loading}
-          className="bg-primary hover:bg-button-hover h-12 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-14 md:text-lg"
-        >
-          {loading ? "Accedendo..." : "Accedi"}
-        </Button>
+        <div className="relative w-full">
+          <div className="pointer-events-none absolute -inset-1 z-0 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm" />
+          <Button
+            type="submit"
+            disabled={loading}
+            className="bg-primary hover:bg-button-hover ring-primary/50 relative z-10 h-12 w-full cursor-pointer rounded-2xl text-white ring-3 transition-all duration-700 md:h-14 md:text-lg"
+          >
+            {loading ? "Accedendo..." : "Accedi"}
+          </Button>
+        </div>
 
         <div className="relative my-8 w-full">
           <div className="absolute inset-0 flex items-center">

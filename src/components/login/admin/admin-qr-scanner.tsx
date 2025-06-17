@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader } from "@zxing/browser";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 interface AdminQrScannerProps {
   onScan: (data: string) => void;
@@ -58,10 +59,10 @@ export default function AdminQrScanner({
 
         setIsLoading(false);
       } catch (err) {
-        setError(
-          "Camera access denied. Please enable camera access to use QR login.",
-        );
-        onError("Camera access denied"); // Only call onError for fatal error
+        const errorMessage =
+          "Camera access denied. Please enable camera access to use QR login.";
+        setError(errorMessage); // Keep internal state for UI
+        toast.error(errorMessage); // Show toast notification
         setIsLoading(false);
       }
     };
@@ -76,7 +77,7 @@ export default function AdminQrScanner({
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [onScan, onError, disabled]);
+  }, [onScan, disabled]); // Remove onError from dependencies since we're not using it anymore
   // eslint-disable-next-line
   function drawBox(points?: any[]) {
     const canvas = canvasRef.current;

@@ -14,7 +14,13 @@ import {
   type RemoveSharerResponse,
 } from "@/app/api/api"; // Import necessary types
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  TabsContents,
+} from "@/components/animate-ui/components/tabs";
 import {
   Table,
   TableBody,
@@ -46,6 +52,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation";
+import { Badge } from "@/components/ui/badge";
 
 // --- Copied type definitions from the list page for consistent transformation ---
 // Define interfaces for the raw API response structure (for a list)
@@ -111,6 +118,54 @@ export default function DocumentClassDetailPage() {
     required: false,
     is_primary_key: false,
   });
+
+  // --- State for editable fields in Basic Info tab ---
+  const [editNome, setEditNome] = useState<string>("");
+  const [editDescrizione, setEditDescrizione] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // Edit mode toggle
+
+  // When documentClass changes, update local state for editing
+  useEffect(() => {
+    if (documentClass) {
+      setEditNome(documentClass.nome);
+      setEditDescrizione(documentClass.descrizione);
+      setIsEditing(false); // Exit edit mode on doc change
+    }
+  }, [documentClass]);
+
+  // --- Handler to save changes to nome/descrizione ---
+  const handleSaveBasicInfo = async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
+    if (!documentClass) return;
+    setIsSaving(true);
+    try {
+      await docClassService.updateDocumentClass(documentClass.id, {
+        name: editNome,
+        description: editDescrizione,
+      });
+      setDocumentClass((prev) =>
+        prev ? { ...prev, nome: editNome, descrizione: editDescrizione } : prev,
+      );
+      // Show toast message centered (requires Sonner v1.2.0+ or global config)
+      toast.success("Classe documentale aggiornata con successo.", {
+        position: "top-center", // If not supported, set globally in <Toaster position="top-center" />
+      });
+      setIsEditing(false); // Exit edit mode
+    } catch (error) {
+      console.error("Failed to update document class info:", error);
+      toast.error("Impossibile aggiornare le informazioni");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- Helper to check if fields have changed ---
+  const isUnchanged =
+    documentClass &&
+    editNome === documentClass.nome &&
+    editDescrizione === documentClass.descrizione;
+  const isInvalid = editNome.trim() === "";
 
   // Helper function to format dates in a pretty format
   const formatDate = (dateString: string | undefined | null): string => {
@@ -431,7 +486,7 @@ export default function DocumentClassDetailPage() {
   };
 
   return (
-    <div className="w-full p-6">
+    <div className="mx-auto w-full max-w-screen-2xl overflow-x-hidden p-6">
       {/* Simplified Header */}
       <div className="mb-8">
         <h1 className="text-3xl">{documentClass.nome}</h1>
@@ -441,67 +496,210 @@ export default function DocumentClassDetailPage() {
       </div>
 
       {/* Minimal Tabs */}
-      <Tabs defaultValue="basic-info" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 rounded-full">
+      <Tabs
+        defaultValue="basic-info"
+        className="bg-background w-full rounded-full"
+      >
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basic-info">Generale</TabsTrigger>
           <TabsTrigger value="fields">
-            Campi ({documentClass.campi.length})
+            Campi
+            <Badge className="ml-2" variant="secondary">
+              {documentClass.campi.length}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="sharers">
-            Sharers ({documentClass.sharers?.length ?? 0})
+            Sharers
+            <Badge className="ml-2" variant="secondary">
+              {documentClass.sharers?.length ?? 0}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="audit">Avanzate</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basic-info" className="mt-6">
-          <div className="space-y-6">
-            <div className="grid gap-4">
-              <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="id" className="text-sm">
-                  ID
-                </Label>
-                <Input
-                  id="id"
-                  type="number"
-                  defaultValue={documentClass.id}
-                  className="bg-muted/50"
-                />
+        <TabsContents className="bg-background mx-1 -mt-2 mb-1 h-full rounded-sm">
+          {/* Basic Info Tab */}
+          <TabsContent value="basic-info" className="space-y-6 p-6">
+            {/* Card container for visual grouping - now full width, improved UI/UX */}
+            <div
+              className={cn(
+                "w-full rounded-xl border p-0 shadow-sm transition-all duration-200",
+                isEditing
+                  ? "border-primary/70 ring-primary/20 bg-primary/5 ring-2"
+                  : "border-card/60 bg-background",
+              )}
+            >
+              {/* Card Header with icon, title, and edit button/indicator */}
+              <div className="flex items-center justify-between gap-3 border-b px-6 py-4">
+                <div className="flex items-center gap-3">
+                  {/* Info/Document icon */}
+                  <svg
+                    width="28"
+                    height="28"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="text-primary"
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="16"
+                      height="16"
+                      rx="3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M8 8h8M8 12h8M8 16h4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div>
+                    <h2 className="text-xl leading-tight font-semibold">
+                      Informazioni generali
+                    </h2>
+                    <p className="text-muted-foreground text-xs">
+                      Modifica i dettagli di base della classe documentale.
+                    </p>
+                  </div>
+                </div>
+                {!isEditing ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => setIsEditing(true)}
+                    aria-label="Modifica informazioni generali"
+                  >
+                    Modifica
+                  </Button>
+                ) : (
+                  <span className="bg-primary/10 text-primary ml-auto rounded px-3 py-1 text-xs font-medium transition-all">
+                    Modifica in corso…
+                  </span>
+                )}
               </div>
-
-              <div className="grid w-full max-w-sm items-center gap-1.5">
-                <Label htmlFor="nome" className="text-sm">
-                  Nome
-                </Label>
-                <Input
-                  id="nome"
-                  defaultValue={documentClass.nome}
-                  className="bg-background"
-                />
-              </div>
-
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="descrizione" className="text-sm font-medium">
-                  Descrizione
-                </Label>
-                <Textarea
-                  id="descrizione"
-                  defaultValue={documentClass.descrizione}
-                  className="bg-background max-w-lg resize-none"
-                  rows={3}
-                />
-              </div>
+              {/* Form fields, responsive grid */}
+              <form
+                className="grid gap-6 px-6 py-8 md:grid-cols-2"
+                onSubmit={handleSaveBasicInfo}
+              >
+                {/* Nome Field (editable or read-only) */}
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="nome" className="text-sm">
+                    Nome
+                  </Label>
+                  {isEditing ? (
+                    <Input
+                      id="nome"
+                      value={editNome}
+                      onChange={(e) => setEditNome(e.target.value)}
+                      className="bg-background focus-visible:ring-primary"
+                      aria-label="Nome della classe documentale"
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="bg-muted/30 flex min-h-[2.5rem] items-center rounded border border-transparent px-2">
+                      {documentClass.nome}
+                    </div>
+                  )}
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Nome della classe documentale.
+                  </p>
+                </div>
+                {/* Descrizione Field (editable or read-only) */}
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="descrizione" className="text-sm font-medium">
+                    Descrizione
+                  </Label>
+                  {isEditing ? (
+                    <Textarea
+                      id="descrizione"
+                      value={editDescrizione}
+                      onChange={(e) => setEditDescrizione(e.target.value)}
+                      className="bg-background focus-visible:ring-primary max-w-lg resize-none"
+                      rows={3}
+                      aria-label="Descrizione della classe documentale"
+                    />
+                  ) : (
+                    <div className="bg-muted/30 flex min-h-[2.5rem] items-center rounded border border-transparent px-2">
+                      {documentClass.descrizione?.trim() ? (
+                        documentClass.descrizione
+                      ) : (
+                        <span className="text-muted-foreground">
+                          Nessuna descrizione
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Breve descrizione della classe documentale.
+                  </p>
+                </div>
+                {/* Action Buttons (Save/Cancel) - only in edit mode, full width on mobile, right-aligned on desktop */}
+                {isEditing && (
+                  <div className="col-span-2 flex flex-col items-stretch gap-2 pt-4 md:flex-row md:justify-end md:gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-w-[90px]"
+                      onClick={() => {
+                        // Reset fields to original values and exit edit mode
+                        setEditNome(documentClass.nome);
+                        setEditDescrizione(documentClass.descrizione);
+                        setIsEditing(false);
+                      }}
+                      disabled={isSaving}
+                    >
+                      Annulla
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="min-w-[90px]"
+                      disabled={isSaving ?? isUnchanged ?? isInvalid}
+                    >
+                      {isSaving ? "Salvataggio..." : "Salva"}
+                    </Button>
+                  </div>
+                )}
+              </form>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="fields" className="mt-6">
-          <div className="space-y-6">
-            <h2 className="text-xl font-medium">Campi</h2>
+          {/* Fields Tab */}
+          <TabsContent value="fields" className="space-y-6 p-6">
+            {/* Section header for Fields */}
 
-            {/* Simplified Add Field Form */}
-            <div className="rounded-lg border p-4">
-              <h3 className="mb-4 text-sm font-medium">Aggiungi Campo</h3>
+            {/* Card for Add Field Form */}
+            <div className="bg-background mb-4 rounded-xl border p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="text-primary"
+                >
+                  <path
+                    d="M12 4v16m8-8H4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h3 className="text-lg font-medium">Aggiungi Campo</h3>
+              </div>
+              <p className="text-muted-foreground mb-4 text-xs">
+                Definisci un nuovo campo per questa classe documentale. Compila
+                i dettagli e premi &quot;Aggiungi&quot;.
+              </p>
               <form className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {/* Field label input */}
                 <div className="space-y-2">
                   <Label htmlFor="new_field_label" className="text-xs">
                     Nome Etichetta
@@ -520,7 +718,7 @@ export default function DocumentClassDetailPage() {
                     }
                   />
                 </div>
-
+                {/* Field type select */}
                 <div className="space-y-2">
                   <Label htmlFor="new_field_data_type" className="text-xs">
                     Tipologia
@@ -532,14 +730,7 @@ export default function DocumentClassDetailPage() {
                     onChange={(e) =>
                       setNewField((prev) => ({
                         ...prev,
-                        data_type: e.target.value as
-                          | "string"
-                          | "boolean"
-                          | "integer"
-                          | "decimal"
-                          | "date"
-                          | "datetime"
-                          | "enum",
+                        data_type: e.target.value as typeof newField.data_type,
                       }))
                     }
                   >
@@ -552,7 +743,7 @@ export default function DocumentClassDetailPage() {
                     <option value="enum">Lista Opzioni</option>
                   </select>
                 </div>
-
+                {/* Required and Primary Key checkboxes */}
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -588,7 +779,7 @@ export default function DocumentClassDetailPage() {
                     </Label>
                   </div>
                 </div>
-
+                {/* Add button */}
                 <Button
                   onClick={(e) => {
                     e.preventDefault();
@@ -602,206 +793,514 @@ export default function DocumentClassDetailPage() {
                 </Button>
               </form>
             </div>
-
-            {documentClass.campi && documentClass.campi.length > 0 ? (
-              <FieldsSortableTable
-                initialFields={documentClass.campi}
-                documentClassId={documentClass.id}
-              />
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                Nessun campo definito per questa classe documentale.
-              </p>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="sharers" className="mt-6">
-          <div className="space-y-6">
-            <h2 className="text-xl font-medium">Utenti associati</h2>
-
-            {/* Current Sharers Display */}
-            {documentClass.sharers && documentClass.sharers.length > 0 ? (
-              <div className="bg-background overflow-hidden rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="h-9 py-2">Nome</TableHead>
-                      <TableHead className="h-9 py-2">Email</TableHead>
-                      <TableHead className="h-9 w-20 py-2">Azioni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {documentClass.sharers.map((sharer) => (
-                      <TableRow key={sharer.id}>
-                        <TableCell className="py-2 font-medium">
-                          {sharer.nominativo}
-                        </TableCell>
-                        <TableCell className="py-2">{sharer.email}</TableCell>
-                        <TableCell className="py-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveSharer(sharer.id)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-                            title={`Rimuovi ${sharer.nominativo} dalla classe documentale`}
-                          >
-                            <Trash2Icon size={14} />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+            {/* Card for Fields Table or Empty State */}
+            <div className="bg-background rounded-xl border p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="text-primary"
+                >
+                  <rect
+                    x="4"
+                    y="4"
+                    width="16"
+                    height="16"
+                    rx="3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M8 8h8M8 12h8M8 16h4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h3 className="text-lg font-medium">Elenco Campi</h3>
               </div>
-            ) : (
-              <div className="rounded-lg border p-4">
-                <p className="text-muted-foreground text-sm">
-                  Nessun utente associato a questa classe documentale.
-                </p>
-              </div>
-            )}
-
-            {/* Assign New Sharer Form */}
-            <div className="rounded-lg border p-4">
-              <h3 className="mb-4 text-sm font-medium">
-                {documentClass.sharers && documentClass.sharers.length > 0
-                  ? "Aggiungi Sharer"
-                  : "Assegna Sharer"}
-              </h3>
-
-              <div className="space-y-4">
-                {isLoadingSharers ? (
-                  <p className="text-muted-foreground text-sm">
-                    Caricamento sharers...
+              {documentClass.campi && documentClass.campi.length > 0 ? (
+                <FieldsSortableTable
+                  initialFields={documentClass.campi}
+                  documentClassId={documentClass.id}
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 py-8">
+                  {/* Empty state icon */}
+                  <svg
+                    width="40"
+                    height="40"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="text-muted-foreground"
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="16"
+                      height="16"
+                      rx="3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M8 8h8M8 12h8M8 16h4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <p className="text-muted-foreground text-center text-sm">
+                    Nessun campo definito per questa classe documentale.
                   </p>
-                ) : availableSharers.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={sharerSelectId} className="text-sm">
-                        Seleziona Sharer
-                      </Label>
-                      <Popover
-                        open={isSharerSelectOpen}
-                        onOpenChange={setIsSharerSelectOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            id={sharerSelectId}
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={isSharerSelectOpen}
-                            className="bg-background hover:bg-background border-input w-full justify-between px-3 font-normal outline-offset-0 outline-none focus-visible:outline-[3px]"
-                          >
-                            <span
-                              className={cn(
-                                "truncate",
-                                !selectedSharerId && "text-muted-foreground",
-                              )}
-                            >
-                              {selectedSharerId
-                                ? availableSharers.find(
-                                    (sharer) => sharer.id === selectedSharerId,
-                                  )?.nominativo +
-                                  " (" +
-                                  availableSharers.find(
-                                    (sharer) => sharer.id === selectedSharerId,
-                                  )?.email +
-                                  ")"
-                                : "Seleziona uno sharer..."}
-                            </span>
-                            <ChevronDownIcon
-                              size={16}
-                              className="text-muted-foreground/80 shrink-0"
-                              aria-hidden="true"
-                            />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="border-input w-full min-w-[var(--radix-popper-anchor-width)] p-0"
-                          align="start"
-                        >
-                          <Command>
-                            <CommandInput placeholder="Cerca sharer..." />
-                            <CommandList>
-                              <CommandEmpty>
-                                Nessun sharer trovato.
-                              </CommandEmpty>
-                              <CommandGroup>
-                                {availableSharers.map((sharer) => (
-                                  <CommandItem
-                                    key={sharer.id}
-                                    value={`${sharer.nominativo} ${sharer.email}`}
-                                    onSelect={() => {
-                                      setSelectedSharerId(
-                                        sharer.id === selectedSharerId
-                                          ? ""
-                                          : sharer.id,
-                                      );
-                                      setIsSharerSelectOpen(false);
-                                    }}
-                                  >
-                                    {sharer.nominativo} ({sharer.email})
-                                    {selectedSharerId === sharer.id && (
-                                      <CheckIcon
-                                        size={16}
-                                        className="ml-auto"
-                                      />
-                                    )}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
 
-                    <Button
-                      onClick={handleAssignSharer}
-                      disabled={!selectedSharerId}
-                      size="sm"
-                    >
-                      {documentClass.sharers && documentClass.sharers.length > 0
-                        ? "Aggiungi Sharer"
-                        : "Assegna Sharer"}
-                    </Button>
+          {/* Sharers Tab */}
+          <TabsContent value="sharers" className="space-y-6 p-6">
+            {/* --- Associated Users Section --- */}
+            <div className="bg-background mb-8 w-full rounded-xl border p-6 shadow-sm">
+              {/* Section Header */}
+              <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
+                {/* Icon for visual context */}
+                <svg
+                  width="22"
+                  height="22"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="text-primary"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M6.5 18a5.5 5.5 0 0 1 11 0"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                </svg>
+                Utenti associati
+              </h2>
+
+              <div className="space-y-6">
+                {/* Sharers Table or Empty State */}
+                {documentClass.sharers && documentClass.sharers.length > 0 ? (
+                  <div className="w-full overflow-x-auto">
+                    <div className="bg-background w-full min-w-[400px] overflow-hidden rounded-lg border shadow-sm">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="h-9 py-2">Nome</TableHead>
+                            <TableHead className="h-9 py-2">Email</TableHead>
+                            <TableHead className="h-9 w-20 py-2">
+                              Azioni
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {documentClass.sharers.map((sharer) => (
+                            <TableRow
+                              key={sharer.id}
+                              className="group hover:bg-muted/30 transition-colors"
+                            >
+                              <TableCell className="flex items-center gap-2 py-2 font-medium">
+                                {/* Avatar or Initials */}
+                                <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold">
+                                  {sharer.nominativo
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                    .slice(0, 2)}
+                                </div>
+                                <span>{sharer.nominativo}</span>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                {sharer.email}
+                              </TableCell>
+                              <TableCell className="py-2">
+                                {/* Remove button with tooltip */}
+                                <div className="relative flex items-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleRemoveSharer(sharer.id)
+                                    }
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 focus-visible:ring-destructive h-8 w-8 p-0 focus-visible:ring-2"
+                                    title={`Rimuovi ${sharer.nominativo} dalla classe documentale`}
+                                    aria-label={`Rimuovi ${sharer.nominativo}`}
+                                  >
+                                    <Trash2Icon size={16} />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Nessun sharer disponibile per l&apos;assegnazione.
-                  </p>
+                  <div className="flex flex-col items-center gap-2 py-8">
+                    {/* Unified Empty State Icon */}
+                    <svg
+                      width="40"
+                      height="40"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      className="text-muted-foreground"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M8 15c.667-1 2-3 4-3s3.333 2 4 3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <circle cx="9" cy="10" r="1" fill="currentColor" />
+                      <circle cx="15" cy="10" r="1" fill="currentColor" />
+                    </svg>
+                    <p className="text-muted-foreground text-center text-sm">
+                      Nessun utente associato a questa classe documentale.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-        </TabsContent>
 
-        <TabsContent value="audit" className="mt-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-medium">Informazioni avanzate</h2>
-            <div className="grid gap-4">
-              <div>
-                <p className="text-muted-foreground text-xs font-medium">
-                  Creato il
-                </p>
-                <p className="text-sm">
-                  {formatDate(documentClass.created_at)}
+            {/* --- Assign Sharer Section --- */}
+            <div className="bg-background w-full rounded-xl border p-6 shadow-sm">
+              {/* Card Title and Description */}
+              <div className="mb-4">
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                  <svg
+                    width="18"
+                    height="18"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="text-primary"
+                  >
+                    <path
+                      d="M12 4v16m8-8H4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  {documentClass.sharers && documentClass.sharers.length > 0
+                    ? "Aggiungi Sharer"
+                    : "Assegna Sharer"}
+                </h3>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Seleziona un utente da associare a questa classe documentale.
+                  Gli utenti già associati non sono mostrati.
                 </p>
               </div>
-              <div>
-                <p className="text-muted-foreground text-xs font-medium">
-                  Ultima modifica il
-                </p>
-                <p className="text-sm">
-                  {formatDate(documentClass.updated_at)}
-                </p>
+              {/* Assign Sharer Form */}
+              <form
+                className="bg-muted/30 border-muted flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-end"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handleAssignSharer();
+                }}
+                aria-label="Assegna uno sharer a questa classe documentale"
+              >
+                <div className="min-w-[220px] flex-1">
+                  <Label
+                    htmlFor={sharerSelectId}
+                    className="mb-1 block text-sm"
+                  >
+                    Seleziona Sharer
+                  </Label>
+                  <Popover
+                    open={isSharerSelectOpen}
+                    onOpenChange={setIsSharerSelectOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        id={sharerSelectId}
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isSharerSelectOpen}
+                        className={cn(
+                          "focus-visible:outline-primary h-11 w-full justify-between px-3 font-normal outline-offset-0 transition-all outline-none focus-visible:outline-2",
+                          !selectedSharerId && "text-muted-foreground",
+                        )}
+                        tabIndex={0}
+                      >
+                        <span className="flex items-center gap-2 truncate">
+                          {selectedSharerId
+                            ? (() => {
+                                const sharer = availableSharers.find(
+                                  (s) => s.id === selectedSharerId,
+                                );
+                                return sharer ? (
+                                  <>
+                                    <span className="bg-primary/10 text-primary flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold">
+                                      {sharer.nominativo
+                                        .split(" ")
+                                        .map((n) => n[0])
+                                        .join("")
+                                        .toUpperCase()
+                                        .slice(0, 2)}
+                                    </span>
+                                    <span>
+                                      {sharer.nominativo} ({sharer.email})
+                                    </span>
+                                  </>
+                                ) : null;
+                              })()
+                            : "Seleziona uno sharer..."}
+                        </span>
+                        <ChevronDownIcon
+                          size={18}
+                          className="text-muted-foreground/80 ml-2 shrink-0"
+                          aria-hidden="true"
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      // Only the list should scroll, not the entire popover
+                      className="border-input z-50 w-full max-w-full min-w-[var(--radix-popper-anchor-width)] p-0"
+                      align="start"
+                    >
+                      <Command>
+                        <CommandInput placeholder="Cerca sharer..." />
+                        {/* Make the dropdown scrollable with the mouse wheel when there are many sharers */}
+                        <CommandList
+                          className="pointer-events-auto max-h-60 overflow-y-auto"
+                          // Fallback: force scroll on wheel event for mouse wheel compatibility
+                          onWheel={(e) => {
+                            e.currentTarget.scrollTop += e.deltaY;
+                          }}
+                        >
+                          <CommandEmpty>Nessun sharer trovato.</CommandEmpty>
+                          <CommandGroup>
+                            {availableSharers.map((sharer) => (
+                              <CommandItem
+                                key={sharer.id}
+                                value={`${sharer.nominativo} ${sharer.email}`}
+                                onSelect={() => {
+                                  setSelectedSharerId(
+                                    sharer.id === selectedSharerId
+                                      ? ""
+                                      : sharer.id,
+                                  );
+                                  setIsSharerSelectOpen(false);
+                                }}
+                                className="flex cursor-pointer items-center gap-2"
+                              >
+                                <span className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold">
+                                  {sharer.nominativo
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                    .slice(0, 2)}
+                                </span>
+                                <span>{sharer.nominativo}</span>
+                                <span className="text-muted-foreground ml-2 text-xs">
+                                  {sharer.email}
+                                </span>
+                                {selectedSharerId === sharer.id && (
+                                  <CheckIcon
+                                    size={16}
+                                    className="text-primary ml-auto"
+                                  />
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={!selectedSharerId}
+                  size="lg"
+                  className="mt-2 h-11 w-full text-white md:mt-0 md:ml-4 md:w-auto"
+                >
+                  {isLoadingSharers ? (
+                    <svg
+                      className="mr-2 h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      ></path>
+                    </svg>
+                  ) : null}
+                  {documentClass.sharers && documentClass.sharers.length > 0
+                    ? "Aggiungi Sharer"
+                    : "Assegna Sharer"}
+                </Button>
+              </form>
+              {/* No sharers available state */}
+              {!isLoadingSharers && availableSharers.length === 0 && (
+                <div className="text-muted-foreground mt-6 flex flex-col items-center gap-2 text-sm">
+                  <svg
+                    width="28"
+                    height="28"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M8 15c.667-1 2-3 4-3s3.333 2 4 3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <circle cx="9" cy="10" r="1" fill="currentColor" />
+                    <circle cx="15" cy="10" r="1" fill="currentColor" />
+                  </svg>
+                  Nessun sharer disponibile per l&apos;assegnazione.
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Audit Tab */}
+          <TabsContent value="audit" className="space-y-6 p-6">
+            {/* Card for advanced info */}
+            <div className="bg-background rounded-xl border p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                {/* Icon for advanced info */}
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="text-primary"
+                >
+                  <path
+                    d="M12 4v16m8-8H4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <h2 className="text-lg font-semibold">Informazioni avanzate</h2>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Created at info */}
+                <div className="flex items-center gap-3">
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="text-muted-foreground"
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="16"
+                      height="16"
+                      rx="3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M8 8h8"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-muted-foreground text-xs font-medium">
+                      Creato il
+                    </p>
+                    <p className="text-sm">
+                      {formatDate(documentClass.created_at)}
+                    </p>
+                  </div>
+                </div>
+                {/* Updated at info */}
+                <div className="flex items-center gap-3">
+                  <svg
+                    width="20"
+                    height="20"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="text-muted-foreground"
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="16"
+                      height="16"
+                      rx="3"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M8 16h4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-muted-foreground text-xs font-medium">
+                      Ultima modifica il
+                    </p>
+                    <p className="text-sm">
+                      {formatDate(documentClass.updated_at)}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
+        </TabsContents>
       </Tabs>
-
       {/* Delete Confirmation Dialog */}
       {sharerToDelete && (
         <DeleteConfirmationDialog

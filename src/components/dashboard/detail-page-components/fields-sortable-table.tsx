@@ -447,9 +447,9 @@ function FieldEditDrawer({
     <>
       <Drawer.Root open={isOpen} onOpenChange={onClose} direction="right">
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+          <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
           <Drawer.Content
-            className="fixed top-4 right-4 bottom-4 z-10 flex w-[420px] outline-none"
+            className="fixed top-4 right-4 bottom-4 z-50 flex w-[420px] outline-none"
             style={
               {
                 "--initial-transform": "calc(100% + 16px)",
@@ -473,7 +473,7 @@ function FieldEditDrawer({
               </div>
 
               {/* Content - Scrollable Area */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="min-h-0 flex-1 overflow-y-auto">
                 <div className="p-6">
                   <div className="space-y-6">
                     {/* Basic Information Section */}
@@ -1006,10 +1006,18 @@ export function FieldsSortableTable({
       return true;
     } catch (error: unknown) {
       console.error("Failed to delete field:", error);
-      const errorMessage =
+      let errorMessage =
         error instanceof Error
           ? error.message
           : "Impossibile eliminare il campo";
+      // Custom error message for primary key constraint (409)
+      if (
+        error instanceof AxiosError &&
+        error.response &&
+        error.response.status === 409
+      ) {
+        errorMessage = "Impossibile eliminare un campo con chiave primaria";
+      }
       toast.error(errorMessage);
       return false;
     }

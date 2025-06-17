@@ -418,12 +418,130 @@ const recoverUsername = async (
   email: string,
 ): Promise<RecoverUsernameResponse> => {
   const response = await api.post<RecoverUsernameResponse>(
-    "/recover-username",
+    "/recover-username-by-email",
     {
       email,
     },
   );
   return response.data;
+};
+
+// --- Add interface for update document class request/response ---
+export interface UpdateDocumentClassRequest {
+  nome: string;
+  descrizione: string;
+}
+
+export interface UpdateDocumentClassResponse {
+  message: string;
+  data: DocumentClass;
+}
+
+// --- Nuove interfacce per recovery-username-request ---
+export interface RecoveryUsernameRequestData {
+  ragione_sociale: string;
+  email: string;
+}
+
+export interface RecoveryUsernameRequestResponse {
+  success: boolean;
+  message?: string;
+}
+
+// --- Funzione per recovery-username-request ---
+const recoveryUsernameRequest = async (
+  data: RecoveryUsernameRequestData,
+): Promise<RecoveryUsernameRequestResponse> => {
+  const response = await api.post<RecoveryUsernameRequestResponse>(
+    "/recovery-username-request",
+    data,
+  );
+  return response.data;
+};
+
+// Function to update a document class by ID
+export interface UpdateDocumentClassApiRequest {
+  name: string;
+  description: string;
+}
+
+const updateDocumentClass = async (
+  id: number,
+  data: UpdateDocumentClassApiRequest,
+): Promise<UpdateDocumentClassResponse> => {
+  const response = await api.put<UpdateDocumentClassResponse>(
+    `/document-classes/${id}`,
+    data,
+  );
+  return response.data;
+};
+
+/**
+ * Request type for creating a document class
+ * - name: required
+ * - description: optional
+ */
+export interface CreateDocumentClassRequest {
+  name: string; // obbligatorio
+  description?: string; // facoltativo
+}
+
+/**
+ * Response type for creating a document class
+ */
+export interface CreateDocumentClassResponse {
+  message: string;
+  data?: DocumentClass;
+  errors?: Record<string, string[]>; // For validation errors
+}
+
+/**
+ * Creates a new document class via POST /document-classes
+ * @param data - The document class data (name required, description optional)
+ * @returns Promise<CreateDocumentClassResponse>
+ * @throws {AxiosError} - Surfaces API error messages for validation
+ */
+const createDocumentClass = async (
+  data: CreateDocumentClassRequest,
+): Promise<CreateDocumentClassResponse> => {
+  try {
+    const response = await api.post<CreateDocumentClassResponse>(
+      "/document-classes",
+      data,
+    );
+    return response.data;
+  } catch (error) {
+    // Surface API validation errors if present
+    if (axios.isAxiosError(error) && error.response) {
+      const data: unknown = error.response.data;
+      let message = "Errore nella creazione della classe documentale.";
+      let errors: Record<string, string[]> | undefined = undefined;
+      // Type guard for error response
+      type ErrorData = {
+        message?: string;
+        error?: string;
+        errors?: Record<string, string[]>;
+      };
+      function isErrorData(obj: unknown): obj is ErrorData {
+        return typeof obj === "object" && obj !== null;
+      }
+      if (isErrorData(data)) {
+        if (typeof data.message === "string") {
+          message = data.message;
+        } else if (typeof data.error === "string") {
+          message = data.error;
+        }
+        if (typeof data.errors === "object" && data.errors !== null) {
+          errors = data.errors;
+        }
+      }
+      return {
+        message,
+        errors,
+      };
+    }
+    throw error;
+  }
 };
 
 export const userService = {
@@ -443,6 +561,7 @@ export const userService = {
   getDocumentClasses,
   getUser,
   recoverUsername,
+  recoveryUsernameRequest,
 };
 
 export const docClassService = {
@@ -591,4 +710,12 @@ export const docClassService = {
       throw error;
     }
   },
+  // Add the new updateDocumentClass function
+  updateDocumentClass,
+  /**
+   * Creates a new document class (POST /document-classes)
+   * @param data - { name: string (required), description?: string }
+   * @returns Promise<CreateDocumentClassResponse>
+   */
+  createDocumentClass,
 };

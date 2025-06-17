@@ -83,6 +83,7 @@ import {
   useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
   type DocumentClass,
@@ -110,7 +111,7 @@ const globalFilterFn: FilterFn<DocumentClass> = (
   const nome = String(row.getValue("nome") ?? "").toLowerCase();
   const descrizione = String(row.getValue("descrizione") ?? "").toLowerCase();
   const sharerNominativo = String(
-    row.original.sharer?.nominativo ?? "",
+    row.original.sharers?.[0]?.nominativo ?? "",
   ).toLowerCase();
 
   return (
@@ -196,12 +197,14 @@ const getColumns = ({
         <span>Sharer</span>
       </div>
     ),
-    accessorKey: "sharer.nominativo",
-    cell: ({ row }) => (
-      <div className="font-medium">
-        {row.original.sharer?.nominativo ?? "—"}
-      </div>
-    ),
+    accessorKey: "sharers",
+    cell: ({ row }) => {
+      const sharers = row.original.sharers ?? [];
+      if (sharers.length === 0) {
+        return <span className="text-muted-foreground">—</span>;
+      }
+      return <AvatarStack sharers={sharers} />;
+    },
     size: 180,
   },
   {
@@ -393,16 +396,6 @@ export default function DocumentClassiTable({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            Classi Documentali
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Gestisci le classi documentali del sistema
-          </p>
-        </div>
-      </div>
 
       {/* Filters */}
       <div className="flex flex-col gap-4">
@@ -943,4 +936,67 @@ declare module "@tanstack/react-table" {
     activeStatus: FilterFn<Sharer | Viewer>;
     documentClassDateRange: FilterFn<DocumentClass>;
   }
+}
+
+// Inline AvatarStack component for displaying sharers as stacked avatars with initials and optional image
+function AvatarStack({
+  sharers,
+}: {
+  sharers: { nominativo: string; avatarUrl?: string }[];
+}) {
+  // Show up to 3 avatars, stack them, and show a "+N" badge if more
+  const maxVisible = 3;
+  const visibleSharers = sharers.slice(0, maxVisible);
+  const extraCount = sharers.length - maxVisible;
+
+  // Helper to get up to 2 initials, fallback to '?'
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ").filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) {
+      // If only one part, take up to 2 letters
+      return parts[0]?.slice(0, 2).toUpperCase() ?? "?";
+    }
+    // If two or more parts, take the first letter of the first two parts
+    const first = parts[0]?.[0] ?? "";
+    const second = parts[1]?.[0] ?? "";
+    const initials = (first + second).toUpperCase();
+    return initials || "?";
+  };
+
+  return (
+    <div
+      className="*:data-[slot=avatar]:ring-background flex items-center -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale"
+      aria-label="Sharers"
+    >
+      {visibleSharers.map((sharer, idx) => {
+        const nominativo = sharer?.nominativo ?? "?";
+        return (
+          <Avatar
+            key={nominativo + idx}
+            title={nominativo}
+            className="border-background size-7 border-2 shadow"
+          >
+            {/* If you have sharer.avatarUrl, use it. Otherwise, fallback to initials */}
+            {sharer.avatarUrl ? (
+              <AvatarImage src={sharer.avatarUrl} alt={nominativo} />
+            ) : null}
+            <AvatarFallback className="bg-muted-foreground/10 text-foreground font-bold">
+              {getInitials(nominativo)}
+            </AvatarFallback>
+          </Avatar>
+        );
+      })}
+      {extraCount > 0 && (
+        <div
+          className="bg-muted text-foreground border-background flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold shadow"
+          title={`+${extraCount} altri`}
+          aria-label={`+${extraCount} altri`}
+        >
+          +{extraCount}
+        </div>
+      )}
+    </div>
+  );
 }
