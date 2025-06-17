@@ -56,7 +56,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     try {
       setLoading(true);
       await authStore.logout();
-      router.push("/login/admin");
+      router.push("/login");
     } catch (error) {
       console.error("Errore durante il logout:", error);
     } finally {

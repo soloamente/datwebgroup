@@ -408,6 +408,24 @@ export interface AvailableSharersResponse {
   data: Sharer[];
 }
 
+export interface RecoverUsernameResponse {
+  success: boolean;
+  message?: string;
+}
+
+// New function to recover username by email
+const recoverUsername = async (
+  email: string,
+): Promise<RecoverUsernameResponse> => {
+  const response = await api.post<RecoverUsernameResponse>(
+    "/recover-username",
+    {
+      email,
+    },
+  );
+  return response.data;
+};
+
 export const userService = {
   createViewer: (data: CreateViewerData) => api.post("/create-viewer", data),
   createSharer: (data: CreateSharerData) => api.post("/create-sharer", data),
@@ -424,6 +442,7 @@ export const userService = {
   resetPasswordByUsername,
   getDocumentClasses,
   getUser,
+  recoverUsername,
 };
 
 export const docClassService = {

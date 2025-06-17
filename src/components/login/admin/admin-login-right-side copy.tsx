@@ -1,15 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 import AdminOtpForm from "./admin-otp-form";
 import AdminQrScanner from "./admin-qr-scanner";
 import UsernameInput from "@/components/login/username-input";
 import PasswordInput from "@/components/login/password-input";
+import EmailInput from "@/components/ui/email-input";
 
 import { userService, type Sharer } from "@/app/api/api";
 import { Loader2 } from "lucide-react";
@@ -17,6 +25,8 @@ import { ResetPasswordDialog } from "@/components/reset-passoword";
 import Aurora from "@/components/backgrounds/aurora";
 import StarBorder from "@/components/ui/star-border/button-border";
 import { toast } from "sonner";
+import LoginRecoverUsernameDialog from "@/components/login/login-recover-username-dialog";
+import { QrIcon } from "@/components/icons/qr";
 
 type LoginStep = "usernameInput" | "passwordInput" | "otpInput" | "login";
 
@@ -90,6 +100,11 @@ export default function AdminLoginRightSide({
 }: AdminLoginRightSideProps) {
   const [currentUsername, setCurrentUsername] = useState(username || "");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [showChangePasswordDialog, setShowChangePasswordDialog] =
+    useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [showRecoverUsernameDialog, setShowRecoverUsernameDialog] =
+    useState(false);
 
   const handleUsernameContinue = async () => {
     if (!currentUsername.trim()) {
@@ -126,9 +141,6 @@ export default function AdminLoginRightSide({
     }
     setIsLoading(false);
   };
-
-  const [showChangePasswordDialog, setShowChangePasswordDialog] =
-    useState(false);
 
   const handleChangePassword = () => {
     setShowChangePasswordDialog(true);
@@ -194,17 +206,21 @@ export default function AdminLoginRightSide({
               {error && (
                 <p className="text-center text-sm text-red-500">{error}</p>
               )}
-              <Button
-                onClick={handleUsernameContinue}
-                disabled={isLoading}
-                className="bg-primary hover:bg-button-hover h-12 w-full cursor-pointer rounded-2xl text-white transition-all duration-700 md:h-14 md:text-lg"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Continua"
-                )}
-              </Button>
+              {/* Glowing animated background behind the button */}
+              <div className="relative w-full">
+                <div className="pointer-events-none absolute -inset-1 z-0 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm" />
+                <Button
+                  onClick={handleUsernameContinue}
+                  disabled={isLoading}
+                  className="bg-primary hover:bg-button-hover ring-primary/50 relative z-10 h-12 w-full cursor-pointer rounded-2xl text-white ring-3 transition-all duration-700 md:h-14 md:text-lg"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Continua"
+                  )}
+                </Button>
+              </div>
             </div>
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
@@ -219,17 +235,17 @@ export default function AdminLoginRightSide({
 
             <div className="mt-4 flex justify-center">
               <Button
-                onClick={() => onLoginModeChange("qr")}
-                className="bg-secondary-button/80 hover:bg-secondary-button/60 h-12 w-full rounded-2xl text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+                onClick={() => setShowQrModal(true)}
+                className="bg-secondary-button/80 hover:bg-secondary-button/60 ring-secondary-button/50 h-12 w-full rounded-2xl text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
               >
                 Codice QR
               </Button>
             </div>
 
-            {/* TODO: Add a button to recover the username. It opens a dialog to put an email and then it sends an email to the user with the username */}
+            {/* Username recovery button and dialog */}
             <div className="mt-4 flex justify-center">
               <Button
-                onClick={() => onLoginModeChange("qr")}
+                onClick={() => setShowRecoverUsernameDialog(true)}
                 className="bg-secondary-button/80 hover:bg-secondary-button/60 h-12 w-full rounded-2xl text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
               >
                 Username dimenticato?
@@ -344,37 +360,139 @@ export default function AdminLoginRightSide({
 
         {renderStepContent()}
 
-        {loginMode === "qr" && step !== "otpInput" && (
-          <>
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <Separator className="w-full" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="text-muted-foreground bg-login-credentials rounded-2xl px-2">
-                  o continua con
-                </span>
-              </div>
-            </div>
-            <div className="mt-4 flex flex-col justify-center gap-4">
-              <StarBorder
-                as="button"
-                color="#0763C9"
-                speed="4s"
-                onClick={() => onLoginModeChange("qr")}
-                className="bg-secondary hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border transition-all duration-500 ease-in-out md:h-14 md:text-lg"
-              >
-                Codice QR
-              </StarBorder>
-            </div>
-            <AdminQrScanner onScan={onQrScan} onError={onQrError} />
-            {error && loginMode === "qr" && (
-              <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                {error}
-              </div>
+        {/* QR Scanner Modal */}
+        <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
+          <AnimatePresence>
+            {showQrModal && (
+              <DialogContent className="max-w-md overflow-visible !border-0 !bg-transparent p-0 !shadow-none">
+                {/* Overlay moved OUTSIDE the modal card for proper full-screen coverage */}
+                <div
+                  className="fixed inset-0 z-40 backdrop-blur-sm"
+                  aria-hidden="true"
+                />
+                {/* Glassmorphism modal card with improved padding and spacing */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+                  className="relative z-50 mx-auto w-full max-w-md rounded-2xl border border-white/20 bg-white/70 p-6 shadow-2xl backdrop-blur-lg md:p-8 dark:bg-slate-900/80"
+                  style={{ boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)" }}
+                >
+                  {/* Close button (icon) in top-right, spaced from edge */}
+                  <button
+                    onClick={() => setShowQrModal(false)}
+                    aria-label="Chiudi la finestra QR"
+                    className="absolute top-4 right-4 z-10 rounded-full bg-white/70 p-2 text-gray-700 shadow hover:bg-white/90 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  {/* QR code icon/illustration with extra bottom margin */}
+                  <div className="mb-4 flex flex-col items-center justify-center pt-8">
+                    <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100/80 shadow-inner">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-blue-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <rect
+                          x="3"
+                          y="3"
+                          width="6"
+                          height="6"
+                          rx="2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                        <rect
+                          x="15"
+                          y="3"
+                          width="6"
+                          height="6"
+                          rx="2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                        <rect
+                          x="3"
+                          y="15"
+                          width="6"
+                          height="6"
+                          rx="2"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                        <path
+                          d="M15 15h2v2h-2zM19 19h2v2h-2zM15 19h2v2h-2zM19 15h2v2h-2z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                    </div>
+                    {/* Centro tutti i testi del modal QR, sia orizzontalmente che verticalmente */}
+                    <DialogHeader className="flex w-full flex-col items-center justify-center text-center">
+                      <DialogTitle className="text-2xl font-bold text-blue-900 dark:text-white">
+                        Accedi con QR Code
+                      </DialogTitle>
+                      <DialogDescription className="mt-1 text-center text-base text-gray-700 dark:text-gray-200">
+                        Inquadra il codice QR con la fotocamera per accedere
+                      </DialogDescription>
+                    </DialogHeader>
+                  </div>
+                  {/* Scanner area with extra margin and padding for separation */}
+                  <div className="relative mt-4 mb-4 flex w-full justify-center">
+                    <div className="absolute -inset-1 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm" />
+                    <div className="relative z-10 w-full max-w-xs rounded-2xl border border-blue-300/60 bg-white/80 p-2 shadow-lg dark:bg-slate-800/80">
+                      <AdminQrScanner
+                        onScan={onQrScan}
+                        onError={(err) => {
+                          toast.error(err); // Show error as toast
+                          setShowQrModal(false); // Optionally close modal on error
+                        }}
+                        disabled={!showQrModal} // Only scan when modal is open
+                      />
+                    </div>
+                  </div>
+                  {/* Privacy notice with extra margin-top and padding-x */}
+                  <div className="mt-6 flex items-center justify-center px-6 pb-2 text-center">
+                    <span className="text-xs text-gray-500 dark:text-gray-300">
+                      <svg
+                        className="mr-1 inline h-4 w-4 text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z"
+                        />
+                      </svg>
+                      La fotocamera viene utilizzata solo per la scansione del
+                      QR code. Nessun dato viene salvato.
+                    </span>
+                  </div>
+                </motion.div>
+              </DialogContent>
             )}
-          </>
-        )}
+          </AnimatePresence>
+        </Dialog>
       </div>
       <ResetPasswordDialog
         isOpen={showChangePasswordDialog}
@@ -392,6 +510,10 @@ export default function AdminLoginRightSide({
             updated_at: new Date().toISOString(),
           } as Sharer
         }
+      />
+      <LoginRecoverUsernameDialog
+        open={showRecoverUsernameDialog}
+        onClose={() => setShowRecoverUsernameDialog(false)}
       />
     </motion.div>
   );

@@ -77,7 +77,7 @@ export async function middleware(req: NextRequest) {
   // }
 
   if (!isLoggedIn && isOnChangePasswordRoute) {
-    return NextResponse.redirect(new URL("/login/admin", nextUrl));
+    return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   // Handle must_change_password redirect first
@@ -98,15 +98,15 @@ export async function middleware(req: NextRequest) {
   // --- End of must_change_password specific logic ---
 
   if (isOnAdminRoute && (!isLoggedIn || userRole !== "admin")) {
-    return NextResponse.redirect(new URL("/login/admin", nextUrl));
+    return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   if (isOnSharerRoute && (!isLoggedIn || userRole !== "sharer")) {
-    return NextResponse.redirect(new URL("/login/sharer", nextUrl));
+    return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   if (isOnViewerRoute && (!isLoggedIn || userRole !== "viewer")) {
-    return NextResponse.redirect(new URL("/login/viewer", nextUrl));
+    return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
   if (isOnAuthRoute && isLoggedIn) {

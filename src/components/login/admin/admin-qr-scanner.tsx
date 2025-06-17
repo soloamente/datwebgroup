@@ -7,11 +7,16 @@ import { motion } from "framer-motion";
 interface AdminQrScannerProps {
   onScan: (data: string) => void;
   onError: (error: string) => void;
+  /**
+   * If true, disables scanning and camera access. Used to prevent scanning when modal is closed or animating out.
+   */
+  disabled?: boolean;
 }
 
 export default function AdminQrScanner({
   onScan,
   onError,
+  disabled = false,
 }: AdminQrScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -20,7 +25,7 @@ export default function AdminQrScanner({
   const animationFrameId: number | null = null;
 
   useEffect(() => {
-    // eslint-disable-next-line
+    if (disabled) return; // Do not start scanning if disabled
     const reader = new BrowserQRCodeReader();
 
     const startScanning = async () => {
@@ -37,23 +42,17 @@ export default function AdminQrScanner({
           videoRef.current.srcObject = stream;
         }
 
-        // eslint-disable-next-line
-        reader.decodeFromConstraints(
+        // Explicitly ignore the returned promise to satisfy the linter
+        void reader.decodeFromConstraints(
           { video: { facingMode: "environment" } },
           videoRef.current!,
           (result, err) => {
             if (result) {
-              // eslint-disable-next-line
               const qrText = result.getText();
-              // eslint-disable-next-line
               onScan(qrText);
-              // eslint-disable-next-line
               drawBox(result.getResultPoints());
             }
-            if (err && !result) {
-              setError("Failed to scan QR code. Please try again.");
-              onError("Failed to scan QR code");
-            }
+            // Do NOT set error for normal scan misses!
           },
         );
 
@@ -62,12 +61,11 @@ export default function AdminQrScanner({
         setError(
           "Camera access denied. Please enable camera access to use QR login.",
         );
-        onError("Camera access denied");
+        onError("Camera access denied"); // Only call onError for fatal error
         setIsLoading(false);
       }
     };
-    // eslint-disable-next-line
-    startScanning();
+    void startScanning(); // Fix linter: explicitly ignore the returned promise
 
     return () => {
       if (videoRef.current?.srcObject) {
@@ -78,7 +76,7 @@ export default function AdminQrScanner({
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [onScan, onError]);
+  }, [onScan, onError, disabled]);
   // eslint-disable-next-line
   function drawBox(points?: any[]) {
     const canvas = canvasRef.current;
@@ -118,22 +116,30 @@ export default function AdminQrScanner({
   }
 
   if (isLoading) {
+    // Minimal loader UI
     return (
-      <div className="flex h-64 w-full items-center justify-center rounded-lg bg-gray-100">
-        <div className="text-center">
-          <div className="border-primary mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
-          <p className="text-sm text-gray-600">Initializing camera...</p>
+      <div className="bg-muted flex h-64 w-full items-center justify-center rounded-xl">
+        <div className="flex flex-col items-center gap-2">
+          <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+          <p className="text-muted-foreground text-xs">
+            Inizializzazione fotocamera...
+          </p>
         </div>
       </div>
     );
   }
 
   if (error) {
+    // Only for fatal errors, show a friendly error and a retry button
     return (
-      <div className="flex h-64 w-full items-center justify-center rounded-lg bg-red-50">
-        <div className="text-center">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
+      <div className="flex h-64 w-full flex-col items-center justify-center rounded-xl bg-red-50">
+        <p className="text-center text-sm text-red-600">{error}</p>
+        <button
+          className="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+          onClick={() => window.location.reload()} // Reload to retry camera access
+        >
+          Riprova
+        </button>
       </div>
     );
   }
@@ -142,22 +148,34 @@ export default function AdminQrScanner({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative mx-auto w-full max-w-sm"
+      className="relative mx-auto flex w-full max-w-xs flex-col items-center"
     >
-      <video
-        ref={videoRef}
-        className="w-full rounded-lg shadow"
-        onLoadedMetadata={() => {
-          if (canvasRef.current && videoRef.current) {
-            canvasRef.current.width = videoRef.current.clientWidth;
-            canvasRef.current.height = videoRef.current.clientHeight;
-          }
-        }}
+      {/* Animated gradient background for visual interest, reused from QR modal. Purely decorative. */}
+      <div
+        className="pointer-events-none absolute -inset-1 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm"
+        aria-hidden="true"
       />
-      <canvas
-        ref={canvasRef}
-        className="pointer-events-none absolute inset-0"
-      />
+      {/* Video preview with minimal border and shadow */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-gray-200 shadow-lg">
+        <video
+          ref={videoRef}
+          className="h-full w-full rounded-xl object-cover"
+          onLoadedMetadata={() => {
+            if (canvasRef.current && videoRef.current) {
+              canvasRef.current.width = videoRef.current.clientWidth;
+              canvasRef.current.height = videoRef.current.clientHeight;
+            }
+          }}
+          aria-label="Anteprima fotocamera per scansione QR"
+        />
+        {/* Minimal scan guide overlay */}
+        <div
+          className="border-primary/60 pointer-events-none absolute inset-0 rounded-xl border-4"
+          aria-hidden="true"
+        />
+        {/* Canvas for optional QR box (kept for future, but hidden for minimalism) */}
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
     </motion.div>
   );
 }
