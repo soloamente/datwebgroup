@@ -8,13 +8,15 @@ import { ReactLenis } from "lenis/react";
 import { Inter } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 
+// Update: Font now loaded from src/app/fonts/ingram instead of public/fonts/ingram
 const ingram = localFont({
-  src: "../../public/fonts/ingram/IngramMono-Regular.ttf",
+  src: "./fonts/ingram/IngramMono-Regular.ttf",
   variable: "--font-ingram",
 });
 
+// Update: Font now loaded from src/app/fonts/Inter instead of public/fonts/inter
 const inter = localFont({
-  src: "../../public/fonts/inter/InterVariable.ttf",
+  src: "./fonts/Inter/InterVariable.ttf",
   variable: "--font-inter",
 });
 
