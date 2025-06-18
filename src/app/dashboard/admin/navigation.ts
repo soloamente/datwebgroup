@@ -1,6 +1,6 @@
 import { GridIcon } from "public/pikaiconsv2.0/solid/grid";
 import { UserIcon } from "public/pikaiconsv2.0/solid/user";
-import { FileIcon } from "lucide-react";
+import { Icon as DocumentIcon } from "@/components/icons/document";
 
 export const navigationData = {
   navGeneral: [
@@ -22,7 +22,7 @@ export const navigationData = {
     {
       title: "Gestione Classi Documentali",
       url: "/dashboard/admin/classi-documentali",
-      icon: FileIcon,
+      icon: DocumentIcon,
       description: "Visualizza e gestisci le classi documentali",
     },
   ],

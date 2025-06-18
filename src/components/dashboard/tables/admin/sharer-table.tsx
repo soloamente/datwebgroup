@@ -72,6 +72,8 @@ import {
   RiCheckLine,
   RiMoreLine,
   RiCalendarLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
 } from "@remixicon/react";
 import {
   useEffect,
@@ -97,6 +99,10 @@ import { PencilEdit } from "@/components/icons/pencil-edit";
 import { CopyIcon } from "@/components/icons/copy";
 import { Stack } from "@/components/ui/stack";
 import { EmailIcon } from "@/components/icons/email";
+import {
+  ActionsDropdown,
+  type ActionsDropdownAction,
+} from "@/components/ui/actions-dropdown";
 
 // Filter function that correctly handles active status boolean
 const activeStatusFilterFn: FilterFn<Sharer | Viewer> = (
@@ -475,65 +481,235 @@ export default function SharerTable({
 
   return (
     <div className="space-y-4">
-      {/* Actions */}
-      {/* Responsive: stack vertically on mobile, row on larger screens */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-        {/* Left side: Search input */}
-        <div className="flex w-full items-center gap-2 sm:w-auto sm:gap-3">
-          {/* Responsive: full width on mobile */}
-          <div className="relative w-full sm:w-auto">
-            <Input
-              id={`${id}-input`}
-              ref={inputRef}
-              className={cn(
-                // Responsive: full width on mobile
-                "peer bg-background from-accent/60 to-accent w-full min-w-0 bg-gradient-to-br ps-9 sm:w-auto sm:min-w-72",
-                Boolean(globalFilter) && "pe-9",
+      {/* Filters/Header Section */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
+          {/* Left: Search & Reset */}
+          <div className="flex w-full items-center gap-3 sm:w-auto">
+            <div className="relative w-full sm:w-auto">
+              <Input
+                id={`${id}-input`}
+                ref={inputRef}
+                className={cn(
+                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-lg border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-80",
+                  Boolean(globalFilter) && "pr-9",
+                )}
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                placeholder="Cerca per username o nome"
+                type="text"
+                aria-label="Cerca per username o nome"
+              />
+              <div className="text-muted-foreground/60 pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
+                <RiSearch2Line size={18} aria-hidden="true" />
+              </div>
+              {Boolean(globalFilter) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-1/2 right-0 flex h-10 w-10 -translate-y-1/2 items-center justify-center px-2 py-0 hover:bg-transparent"
+                  onClick={() => {
+                    setGlobalFilter("");
+                    inputRef.current?.focus();
+                  }}
+                  aria-label="Cancella ricerca"
+                >
+                  <RiCloseCircleLine size={16} />
+                </Button>
               )}
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              placeholder="Cerca per username, nome o email"
-              type="text"
-              aria-label="Cerca per username, nome o email"
-            />
-            <div className="text-muted-foreground/60 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 peer-disabled:opacity-50">
-              <RiSearch2Line size={20} aria-hidden="true" />
             </div>
-            {Boolean(globalFilter) && (
-              <button
-                className="text-muted-foreground/60 hover:text-foreground focus-visible:outline-ring/70 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg outline-offset-2 transition-colors focus:z-10 focus-visible:outline-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Cancella filtro"
-                onClick={() => {
-                  setGlobalFilter("");
-                  if (inputRef.current) {
-                    inputRef.current.focus();
-                  }
-                }}
-              >
-                <RiCloseCircleLine size={16} aria-hidden="true" />
-              </button>
-            )}
           </div>
-        </div>
-        {/* Right side: Filter buttons */}
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
-          {/* Delete button */}
-          {table.getSelectedRowModel().rows.length > 0 && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button className="ml-auto" variant="outline">
-                  <RiDeleteBinLine
-                    className="-ms-1 opacity-60"
-                    size={16}
+          {/* Right: Filters */}
+          <div className="flex items-center gap-3">
+            {/* Status Filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-muted/30 hover:border-primary/40 rounded-lg"
+                >
+                  <RiFilter3Line
+                    className="text-muted-foreground/60 -ms-1.5 size-5"
+                    size={20}
                     aria-hidden="true"
                   />
-                  Elimina
-                  <span className="border-border bg-background text-muted-foreground/70 ms-1 -me-1 inline-flex h-5 max-h-full items-center rounded border px-1 font-[inherit] text-[0.625rem] font-medium">
+                  Filtra per stato
+                  {selectedStatuses.length > 0 && (
+                    <span className="border-border bg-background text-muted-foreground/70 ml-2 h-5 max-h-full items-center rounded border px-1 text-xs font-medium">
+                      {selectedStatuses.length}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto min-w-36 p-3" align="end">
+                <div className="space-y-3">
+                  <div className="text-muted-foreground/60 text-xs font-medium uppercase">
+                    Stato
+                  </div>
+                  <div className="space-y-3">
+                    {uniqueStatusValues.map((value, i) => (
+                      <div
+                        key={String(value)}
+                        className="flex items-center gap-2"
+                      >
+                        <Checkbox
+                          id={`${id}-${i}`}
+                          checked={selectedStatuses.includes(value)}
+                          onCheckedChange={(checked: boolean) =>
+                            handleStatusChange(checked, value)
+                          }
+                        />
+                        <Label
+                          htmlFor={`${id}-${i}`}
+                          className="flex grow justify-between gap-2 font-normal"
+                        >
+                          {value ? "Attivo" : "Inattivo"}{" "}
+                          <span className="text-muted-foreground ms-2 text-xs">
+                            {statusCounts.get(value)}
+                          </span>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            {/* Date Filter */}
+            <Popover open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-muted/30 hover:border-primary/40 rounded-lg"
+                >
+                  <RiCalendarLine
+                    className="text-muted-foreground/60 -ms-1.5 size-5"
+                    size={20}
+                    aria-hidden="true"
+                  />
+                  {getDateFilterDisplay()}
+                  {(dateRange[0] ?? dateRange[1]) && (
+                    <span className="border-border bg-background text-muted-foreground/70 ml-2 h-5 max-h-full items-center rounded border px-1 text-xs font-medium">
+                      {dateRange[0] && dateRange[1] ? "2" : "1"}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-4" align="end">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="text-muted-foreground/60 text-xs font-medium uppercase">
+                      Campo
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant={
+                          dateField === "created_at" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setDateField("created_at")}
+                        className="text-xs"
+                      >
+                        Data creazione
+                      </Button>
+                      <Button
+                        variant={
+                          dateField === "updated_at" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setDateField("updated_at")}
+                        className="text-xs"
+                      >
+                        Data aggiornamento
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-muted-foreground/60 text-xs font-medium uppercase">
+                      Periodo
+                    </div>
+                    <div className="grid gap-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="text-muted-foreground mb-1 text-xs">
+                            Da
+                          </div>
+                          <Calendar
+                            locale={it}
+                            mode="single"
+                            selected={dateRange[0]}
+                            onSelect={(date) =>
+                              setDateRange([date, dateRange[1]])
+                            }
+                            disabled={(date) =>
+                              dateRange[1] ? date > dateRange[1] : false
+                            }
+                            initialFocus
+                          />
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground mb-1 text-xs">
+                            A
+                          </div>
+                          <Calendar
+                            locale={it}
+                            mode="single"
+                            selected={dateRange[1]}
+                            onSelect={(date) =>
+                              setDateRange([dateRange[0], date])
+                            }
+                            disabled={(date) =>
+                              dateRange[0] ? date < dateRange[0] : false
+                            }
+                            initialFocus
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between pt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setDateRange([undefined, undefined]);
+                        table.getColumn(dateField)?.setFilterValue(undefined);
+                      }}
+                    >
+                      Reimposta
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setDateFilterOpen(false);
+                      }}
+                    >
+                      Applica
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+        {/* Delete selected */}
+        {table.getSelectedRowModel().rows.length > 0 && (
+          <div className="flex items-center gap-3 pt-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <RiDeleteBinLine size={16} className="mr-2" />
+                  Elimina Selezionati
+                  <Badge
+                    variant="secondary"
+                    className="bg-destructive-foreground text-destructive ml-2"
+                  >
                     {table.getSelectedRowModel().rows.length}
-                  </span>
+                  </Badge>
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="z-[100]">
+              <AlertDialogContent>
                 <div className="flex flex-col gap-2 max-sm:items-center sm:flex-row sm:gap-4">
                   <div
                     className="border-border flex size-9 shrink-0 items-center justify-center rounded-full border"
@@ -563,213 +739,38 @@ export default function SharerTable({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          )}
-          {/* Filter by status */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                <RiFilter3Line
-                  className="text-muted-foreground/60 -ms-1.5 size-5"
-                  size={20}
-                  aria-hidden="true"
-                />
-                Filtra per stato
-                {selectedStatuses.length > 0 && (
-                  <span className="border-border bg-background text-muted-foreground/70 ms-3 -me-1 inline-flex h-5 max-h-full items-center rounded border px-1 font-[inherit] text-[0.625rem] font-medium">
-                    {selectedStatuses.length}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto min-w-36 p-3" align="end">
-              <div className="space-y-3">
-                <div className="text-muted-foreground/60 text-xs font-medium uppercase">
-                  Stato
-                </div>
-                <div className="space-y-3">
-                  {uniqueStatusValues.map((value, i) => (
-                    <div
-                      key={String(value)}
-                      className="flex items-center gap-2"
-                    >
-                      <Checkbox
-                        id={`${id}-${i}`}
-                        checked={selectedStatuses.includes(value)}
-                        onCheckedChange={(checked: boolean) =>
-                          handleStatusChange(checked, value)
-                        }
-                      />
-                      <Label
-                        htmlFor={`${id}-${i}`}
-                        className="flex grow justify-between gap-2 font-normal"
-                      >
-                        {value ? "Attivo" : "Inattivo"}{" "}
-                        <span className="text-muted-foreground ms-2 text-xs">
-                          {statusCounts.get(value)}
-                        </span>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          {/* Date filter button */}
-          <Popover open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                <RiCalendarLine
-                  className="text-muted-foreground/60 -ms-1.5 size-5"
-                  size={20}
-                  aria-hidden="true"
-                />
-                {getDateFilterDisplay()}
-                {(dateRange[0] ?? dateRange[1]) && (
-                  <span className="border-border bg-background text-muted-foreground/70 ms-3 -me-1 inline-flex h-5 max-h-full items-center rounded border px-1 font-[inherit] text-[0.625rem] font-medium">
-                    {dateRange[0] && dateRange[1] ? "2" : "1"}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" align="end">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="text-muted-foreground/60 text-xs font-medium uppercase">
-                    Campo
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={
-                        dateField === "created_at" ? "default" : "outline"
-                      }
-                      size="sm"
-                      onClick={() => setDateField("created_at")}
-                      className="text-xs"
-                    >
-                      Data creazione
-                    </Button>
-                    <Button
-                      variant={
-                        dateField === "updated_at" ? "default" : "outline"
-                      }
-                      size="sm"
-                      onClick={() => setDateField("updated_at")}
-                      className="text-xs"
-                    >
-                      Data aggiornamento
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-muted-foreground/60 text-xs font-medium uppercase">
-                    Periodo
-                  </div>
-                  <div className="grid gap-2">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <div className="text-muted-foreground mb-1 text-xs">
-                          Da
-                        </div>
-                        <Calendar
-                          locale={it}
-                          mode="single"
-                          selected={dateRange[0]}
-                          onSelect={(date) =>
-                            setDateRange([date, dateRange[1]])
-                          }
-                          disabled={(date) =>
-                            dateRange[1] ? date > dateRange[1] : false
-                          }
-                          initialFocus
-                        />
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground mb-1 text-xs">
-                          A
-                        </div>
-                        <Calendar
-                          locale={it}
-                          mode="single"
-                          selected={dateRange[1]}
-                          onSelect={(date) =>
-                            setDateRange([dateRange[0], date])
-                          }
-                          disabled={(date) =>
-                            dateRange[0] ? date < dateRange[0] : false
-                          }
-                          initialFocus
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setDateRange([undefined, undefined]);
-                      table.getColumn(dateField)?.setFilterValue(undefined);
-                    }}
-                  >
-                    Reimposta
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setDateFilterOpen(false);
-                    }}
-                  >
-                    Applica
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          {/* New filter button */}
-          {/* <Button variant="outline">
-            <RiBardLine
-              className="text-muted-foreground/60 -ms-1.5 size-5"
-              size={20}
-              aria-hidden="true"
-            />
-            Nuovo Filtro
-          </Button> */}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Table */}
-      <Table className="table-fixed border-separate border-spacing-0 [&_tr:not(:last-child)_td]:border-b">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-transparent">
-              {headerGroup.headers.map((header) => {
-                return (
+      {/* --- Table Section --- */}
+      <div className="bg-card border-muted/30 overflow-x-auto rounded-2xl border shadow-sm">
+        <Table className="min-w-full">
+          <TableHeader className="bg-card/95 border-muted/30 sticky top-0 z-10 border-b backdrop-blur">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow
+                key={headerGroup.id}
+                className="border-b-0 hover:bg-transparent"
+              >
+                {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     style={{ width: `${header.getSize()}px` }}
-                    className="bg-sidebar border-border relative h-9 border-y select-none first:rounded-l-lg first:border-l last:rounded-r-lg last:border-r"
+                    className="text-muted-foreground bg-card/95 h-14 px-5 text-left align-middle text-sm font-semibold tracking-wide uppercase"
                   >
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <div
-                        className={cn(
-                          header.column.getCanSort() &&
-                            "flex h-full cursor-pointer items-center gap-2 select-none",
-                        )}
+                        className="hover:text-foreground flex cursor-pointer items-center gap-2 transition-colors select-none"
                         onClick={header.column.getToggleSortingHandler()}
                         onKeyDown={(e) => {
-                          // Enhanced keyboard handling for sorting
-                          if (
-                            header.column.getCanSort() &&
-                            (e.key === "Enter" || e.key === " ")
-                          ) {
+                          if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
                             header.column.getToggleSortingHandler()?.(e);
                           }
                         }}
-                        tabIndex={header.column.getCanSort() ? 0 : undefined}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Ordina per ${typeof header.column.columnDef.header === "string" ? header.column.columnDef.header : "colonna"}`}
                       >
                         {flexRender(
                           header.column.columnDef.header,
@@ -778,16 +779,14 @@ export default function SharerTable({
                         {{
                           asc: (
                             <RiArrowUpSLine
-                              className="shrink-0 opacity-60"
                               size={16}
-                              aria-hidden="true"
+                              className="text-muted-foreground"
                             />
                           ),
                           desc: (
                             <RiArrowDownSLine
-                              className="shrink-0 opacity-60"
                               size={16}
-                              aria-hidden="true"
+                              className="text-muted-foreground"
                             />
                           ),
                         }[header.column.getIsSorted() as string] ?? null}
@@ -799,79 +798,105 @@ export default function SharerTable({
                       )
                     )}
                   </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <tbody aria-hidden="true" className="table-row h-1"></tbody>
-        <TableBody>
-          {isLoading ? (
-            <TableRow className="hover:bg-transparent [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                Caricamento...
-              </TableCell>
-            </TableRow>
-          ) : table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                className="hover:bg-accent/50 h-12 border-0 [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="h-[inherit] last:py-0">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
                 ))}
               </TableRow>
-            ))
-          ) : (
-            <TableRow className="hover:bg-transparent [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg">
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                Nessun risultato.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-        <tbody aria-hidden="true" className="table-row h-1"></tbody>
-      </Table>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-40 text-center align-middle"
+                >
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
+                    <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+                    <span className="text-muted-foreground text-base">
+                      Caricamento...
+                    </span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className="hover:bg-muted/40 border-muted/20 group h-16 cursor-pointer border-b transition-colors last:border-b-0"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-40 text-center align-middle"
+                >
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
+                    <RiBardLine
+                      size={40}
+                      className="text-muted-foreground/40"
+                    />
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-base">
+                        Nessun risultato trovato
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Pagination */}
+      {/* --- Pagination Section --- */}
       {table.getRowModel().rows.length > 0 && (
-        <div className="flex items-center justify-between gap-3">
-          <p
-            className="text-muted-foreground flex-1 text-sm whitespace-nowrap"
-            aria-live="polite"
-          >
-            Pagina{" "}
-            <span className="text-foreground">
-              {table.getState().pagination.pageIndex + 1}
-            </span>{" "}
-            di <span className="text-foreground">{table.getPageCount()}</span>
-          </p>
-          <Pagination className="w-auto">
-            <PaginationContent className="gap-3">
+        <div className="flex justify-center pt-2">
+          {/* Paginazione centrata */}
+          <Pagination>
+            <PaginationContent className="gap-2">
               <PaginationItem>
                 <Button
                   variant="outline"
-                  className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                  size="icon"
+                  className="border-muted/30 rounded-lg"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
-                  aria-label="Vai alla pagina precedente"
+                  aria-label="Pagina precedente"
                 >
-                  Precedente
+                  <RiArrowLeftSLine size={18} />
                 </Button>
+              </PaginationItem>
+              <PaginationItem>
+                <div className="flex items-center gap-2 px-3">
+                  <span className="text-sm">
+                    Pagina {table.getState().pagination.pageIndex + 1} di{" "}
+                    {table.getPageCount()}
+                  </span>
+                </div>
               </PaginationItem>
               <PaginationItem>
                 <Button
                   variant="outline"
-                  className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                  size="icon"
+                  className="border-muted/30 rounded-lg"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
-                  aria-label="Vai alla pagina successiva"
+                  aria-label="Pagina successiva"
                 >
-                  Successiva
+                  <RiArrowRightSLine size={18} />
                 </Button>
               </PaginationItem>
             </PaginationContent>
@@ -897,7 +922,6 @@ function RowActions({
   const [showChangePasswordDialog, setShowChangePasswordDialog] =
     useState(false);
   const [showSendUsernameDialog, setShowSendUsernameDialog] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Reset all dialog states when any dialog closes
   const resetDialogStates = () => {
@@ -905,7 +929,6 @@ function RowActions({
     setShowEditDialog(false);
     setShowChangePasswordDialog(false);
     setShowSendUsernameDialog(false);
-    setDropdownOpen(false);
     // Force cleanup of any lingering overlay
     document.body.style.pointerEvents = "";
     document.body.style.overflow = "";
@@ -918,24 +941,18 @@ function RowActions({
     };
   }, []);
 
-  const handleStatusToggle = async () => {
-    try {
-      const response = await userService.toggleSharerStatus(sharer.id);
-      toast.success(response.message);
-      onStatusChange();
-      resetDialogStates();
-    } catch (error) {
-      console.error("Failed to toggle status:", error);
-      toast.error("Impossibile cambiare lo stato");
-    }
-  };
-
-  const handleDelete = () => {
-    startUpdateTransition(() => {
-      const updatedData = data.filter((dataItem) => dataItem.id !== sharer.id);
-      onStatusChange();
-      resetDialogStates();
-    });
+  // Action handlers
+  const handleCopyEmail = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    void (async () => {
+      try {
+        await navigator.clipboard.writeText(sharer.email);
+        resetDialogStates();
+      } catch (error) {
+        console.error("Failed to copy email:", error);
+        toast.error("Impossibile copiare l'email");
+      }
+    })();
   };
 
   const handleEdit = () => {
@@ -943,18 +960,9 @@ function RowActions({
     setShowEditDialog(true);
   };
 
-  const handleCloseEditDialog = () => {
-    resetDialogStates();
-    onStatusChange();
-  };
-
   const handleChangePassword = () => {
     resetDialogStates();
     setShowChangePasswordDialog(true);
-  };
-
-  const handleCloseChangePasswordDialog = () => {
-    resetDialogStates();
   };
 
   const handleSendUsername = () => {
@@ -962,128 +970,90 @@ function RowActions({
     setShowSendUsernameDialog(true);
   };
 
-  const handleCloseSendUsernameDialog = () => {
-    resetDialogStates();
+  const handleStatusToggle = () => {
+    // Destructive action: toggle user status
+    userService
+      .toggleSharerStatus(sharer.id)
+      .then((response) => {
+        toast.success(response.message);
+        onStatusChange();
+        resetDialogStates();
+      })
+      .catch((error) => {
+        console.error("Failed to toggle status:", error);
+        toast.error("Impossibile cambiare lo stato");
+      });
   };
+
+  // Define actions for the dropdown
+  const actions: ActionsDropdownAction[] = [
+    {
+      label: "Copia Email",
+      icon: <CopyIcon />,
+      onClick: handleCopyEmail,
+      disabled: isUpdatePending,
+      ariaLabel: "Copia Email",
+    },
+    {
+      label: "Modifica Utente",
+      icon: <PencilEdit />,
+      onClick: handleEdit,
+      disabled: isUpdatePending,
+      ariaLabel: "Modifica Utente",
+    },
+    {
+      label: "Reset Password",
+      onClick: handleChangePassword,
+      disabled: isUpdatePending,
+      ariaLabel: "Reset Password",
+    },
+    {
+      label: "Invia Username",
+      icon: <EmailIcon />,
+      onClick: handleSendUsername,
+      disabled: isUpdatePending,
+      ariaLabel: "Invia Username",
+    },
+    {
+      label: sharer.active ? "Disattiva utente" : "Attiva utente",
+      onClick: handleStatusToggle,
+      disabled: isUpdatePending,
+      destructive: true,
+      ariaLabel: sharer.active ? "Disattiva utente" : "Attiva utente",
+    },
+  ];
 
   return (
     <>
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger asChild>
-          <div className="flex justify-end">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-muted-foreground/60 shadow-none"
-              aria-label="Modifica elemento"
-            >
-              <RiMoreLine className="size-5" size={20} aria-hidden="true" />
-            </Button>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-auto">
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(sharer.email);
-                  resetDialogStates();
-                } catch (error) {
-                  console.error("Failed to copy email:", error);
-                  toast.error("Impossibile copiare l'email");
-                }
-              }}
-              disabled={isUpdatePending}
-            >
-              <Stack direction="row" align="center" gap={2} className="text-sm">
-                <CopyIcon /> Copia Email
-              </Stack>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleEdit} disabled={isUpdatePending}>
-              <Stack direction="row" align="center" gap={2} className="text-sm">
-                <PencilEdit /> Modifica Utente
-              </Stack>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleChangePassword}
-              disabled={isUpdatePending}
-            >
-              Reset Password
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={handleSendUsername}
-              disabled={isUpdatePending}
-            >
-              <Stack direction="row" align="center" gap={2} className="text-sm">
-                <EmailIcon /> Invia Username
-              </Stack>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => handleStatusToggle()}
-            disabled={isUpdatePending}
-            className={cn(
-              "dark:data-[variant=destructive]:focus:bg-destructive/10",
-              sharer.active ? "text-red-500" : "text-green-500",
-            )}
-          >
-            {sharer.active ? "Disattiva utente" : "Attiva utente"}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {/* Reusable, accessible actions dropdown */}
+      <ActionsDropdown actions={actions} triggerAriaLabel="Azioni utente" />
 
-      <AlertDialog
-        open={showDeleteDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            resetDialogStates();
-          }
-          setShowDeleteDialog(open);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Questa azione non può essere annullata. Eliminerà permanentemente
-              questo utente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isUpdatePending}>
-              Annulla
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isUpdatePending}
-              className="bg-destructive hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-white shadow-xs"
-            >
-              Elimina
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
+      {/* Dialogs for edit, password reset, and send username */}
       <EditUserDialog
         isOpen={showEditDialog}
-        onClose={handleCloseEditDialog}
+        onClose={() => {
+          resetDialogStates();
+          onStatusChange();
+        }}
         user={sharer}
-        onUserUpdate={handleCloseEditDialog}
+        onUserUpdate={() => {
+          resetDialogStates();
+          onStatusChange();
+        }}
       />
 
       <ResetPasswordDialog
         isOpen={showChangePasswordDialog}
-        onClose={handleCloseChangePasswordDialog}
+        onClose={resetDialogStates}
         user={sharer}
-        onPasswordReset={handleCloseChangePasswordDialog}
+        onPasswordReset={resetDialogStates}
       />
 
       <SendUsernameDialog
         isOpen={showSendUsernameDialog}
-        onClose={handleCloseSendUsernameDialog}
+        onClose={resetDialogStates}
         user={sharer}
-        onUsernameSent={handleCloseSendUsernameDialog}
+        onUsernameSent={resetDialogStates}
       />
     </>
   );

@@ -68,6 +68,101 @@ export default function ClassiDocumentali() {
     );
   }).length;
 
+  // Calculate previous month and year
+  const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+  const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+  // Count document classes created in the previous month
+  const prevMonthCreated = documents.filter((doc) => {
+    const createdDate = new Date(doc.created_at);
+    return (
+      createdDate.getMonth() === prevMonth &&
+      createdDate.getFullYear() === prevMonthYear
+    );
+  }).length;
+
+  // Calculate the ratio of this month to last month as a percentage for Totale Classi
+  let percentOfLastMonth = 0;
+  if (prevMonthCreated === 0 && recentlyCreated > 0) {
+    percentOfLastMonth = 100;
+  } else if (prevMonthCreated === 0 && recentlyCreated === 0) {
+    percentOfLastMonth = 0;
+  } else {
+    percentOfLastMonth = (recentlyCreated / prevMonthCreated) * 100;
+  }
+  const formattedChange = `${percentOfLastMonth.toFixed(0)}%`;
+  const trend = "up";
+
+  // Calculate the percentage change for 'Create questo mese' (increase/decrease)
+  let monthChange = 0;
+  let monthChangeLabel = "";
+  let monthTrend: "up" | "down" = "up";
+  if (prevMonthCreated === 0 && recentlyCreated > 0) {
+    monthChange = 100;
+    monthChangeLabel = "increase";
+    monthTrend = "up";
+  } else if (prevMonthCreated === 0 && recentlyCreated === 0) {
+    monthChange = 0;
+    monthChangeLabel = "";
+    monthTrend = "up";
+  } else {
+    monthChange =
+      ((recentlyCreated - prevMonthCreated) / prevMonthCreated) * 100;
+    if (monthChange > 0) {
+      monthChangeLabel = "increase";
+      monthTrend = "up";
+    } else if (monthChange < 0) {
+      monthChangeLabel = "decrease";
+      monthTrend = "down";
+    } else {
+      monthChangeLabel = "";
+      monthTrend = "up";
+    }
+  }
+  const formattedMonthChange =
+    monthChange === 0
+      ? "0%"
+      : `${Math.abs(monthChange).toFixed(0)}% ${monthChangeLabel}`;
+
+  // Calculate the percentage change for 'Totale Campi' (increase/decrease)
+  let fieldsChange = 0;
+  let fieldsChangeLabel = "";
+  let fieldsTrend: "up" | "down" = "up";
+  // Calculate total fields for previous month
+  const prevMonthFields = documents
+    .filter((doc) => {
+      const createdDate = new Date(doc.created_at);
+      return (
+        createdDate.getMonth() === prevMonth &&
+        createdDate.getFullYear() === prevMonthYear
+      );
+    })
+    .reduce((acc, doc) => acc + (doc.campi?.length ?? 0), 0);
+  if (prevMonthFields === 0 && totalFields > 0) {
+    fieldsChange = 100;
+    fieldsChangeLabel = "increase";
+    fieldsTrend = "up";
+  } else if (prevMonthFields === 0 && totalFields === 0) {
+    fieldsChange = 0;
+    fieldsChangeLabel = "";
+    fieldsTrend = "up";
+  } else {
+    fieldsChange = ((totalFields - prevMonthFields) / prevMonthFields) * 100;
+    if (fieldsChange > 0) {
+      fieldsChangeLabel = "increase";
+      fieldsTrend = "up";
+    } else if (fieldsChange < 0) {
+      fieldsChangeLabel = "decrease";
+      fieldsTrend = "down";
+    } else {
+      fieldsChangeLabel = "";
+      fieldsTrend = "up";
+    }
+  }
+  const formattedFieldsChange =
+    fieldsChange === 0
+      ? "0%"
+      : `${Math.abs(fieldsChange).toFixed(0)}% ${fieldsChangeLabel}`;
+
   // --- Handlers for dialog ---
   const handleOpenCreateDialog = () => setIsCreateDialogOpen(true);
   const handleCloseCreateDialog = () => setIsCreateDialogOpen(false);
@@ -158,31 +253,32 @@ export default function ClassiDocumentali() {
           Crea Classe Documentale
         </Button>
       </div>
-      {/* Stats grid */}
-      <StatsGrid
-        stats={[
-          {
-            title: "Totale Classi",
-            value: totalClasses.toString(),
-            change: { value: "", trend: "up" },
-            icon: <Plus size={20} />, // Replace with a more relevant icon if desired
-          },
-          {
-            title: "Totale Campi",
-            value: totalFields.toString(),
-            change: { value: "", trend: "up" },
-            icon: <Plus size={20} />, // Replace with a more relevant icon if desired
-          },
-          {
-            title: "Create questo mese",
-            value: recentlyCreated.toString(),
-            change: { value: "", trend: "up" },
-            icon: <Plus size={20} />, // Replace with a more relevant icon if desired
-          },
-        ]}
-      />
-      {/* Table section */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
+        {/* Stats grid */}
+        <StatsGrid
+          stats={[
+            {
+              title: "Totale Classi",
+              value: totalClasses.toString(),
+              change: { value: formattedChange, trend },
+              icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+            },
+            {
+              title: "Totale Campi",
+              value: totalFields.toString(),
+              change: { value: formattedFieldsChange, trend: fieldsTrend },
+              icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+            },
+            {
+              title: "Create questo mese",
+              value: recentlyCreated.toString(),
+              change: { value: formattedMonthChange, trend: monthTrend },
+              icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+            },
+          ]}
+        />
+        {/* Table section */}
+
         <DocumentClassiTable
           data={documents}
           isLoading={isLoading}

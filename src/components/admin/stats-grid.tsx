@@ -47,42 +47,17 @@ export function StatsCard({
           </Link>
           <div className="mb-2 text-2xl font-semibold">{value}</div>
 
-          {/* Primo grafico */}
-          {index === 0 && (
+          {/* Show percentage change for all cards if available */}
+          {change.value && (
             <div className="text-muted-foreground/60 text-xs">
               <span className={cn("font-medium", trendColor)}>
-                {isPositive ? "↗" : "↘"} {change.value}
+                {isPositive ? "↗" : "↘"}{" "}
+                {change.value.startsWith("0") ? "" : isPositive ? "+" : "-"}
+                {change.value}
               </span>{" "}
-              vs mese precedente
+              {index === 0 ? "vs mese precedente" : "vs mese scorsa"}
             </div>
           )}
-
-          {/* Secondo grafico */}
-          {/* {index === 1 && (
-            <div className="text-muted-foreground/60 text-xs">
-              Numbero degli utenti attivi
-            </div>
-          )} */}
-
-          {/* Terzo grafico */}
-          {/* {index === 2 && (
-            <div className="text-muted-foreground/60 text-xs">
-              <span className={cn("font-medium", trendColor)}>
-                {isPositive ? "↗" : "↘"} {change.value}
-              </span>{" "}
-              vs mese scorsa
-            </div>
-          )} */}
-
-          {/* Quarto grafico */}
-          {/* {index === 3 && (
-            <div className="text-muted-foreground/60 text-xs">
-              <span className={cn("font-medium", trendColor)}>
-                {isPositive ? "↗" : "↘"} {change.value}
-              </span>{" "}
-              vs mese scorsa
-            </div>
-          )} */}
         </div>
       </div>
     </div>
@@ -94,8 +69,24 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ stats }: StatsGridProps) {
+  // Dynamically set grid columns for 1-4 cards
+  let gridCols = "";
+  if (stats.length === 4) {
+    gridCols = "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
+  } else if (stats.length === 3) {
+    gridCols = "grid-cols-1 sm:grid-cols-3";
+  } else if (stats.length === 2) {
+    gridCols = "grid-cols-1 sm:grid-cols-2";
+  } else {
+    gridCols = "grid-cols-1";
+  }
   return (
-    <div className="border-border from-sidebar/60 to-sidebar grid grid-cols-2 rounded-xl border bg-gradient-to-br min-[1200px]:grid-cols-4">
+    <div
+      className={cn(
+        "border-border from-sidebar/60 to-sidebar grid rounded-xl border bg-gradient-to-br",
+        gridCols,
+      )}
+    >
       {stats.map((stat, index) => (
         <StatsCard key={stat.title} {...stat} index={index} />
       ))}

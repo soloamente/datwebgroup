@@ -3,7 +3,6 @@
 import * as React from "react";
 import { type DocumentClassField } from "@/app/api/api"; // Assuming DocumentClassField is exported from here
 import {
-  DndContext,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
@@ -71,37 +70,34 @@ interface EnumOption {
   label: string;
 }
 
-// Drag Handle Component
-function DragHandleFields({ id }: { id: number | string }) {
-  // id can be string or number
-  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-    id,
-  });
-
+// Fix: Replace DraggableRowFields with StaticRowFields and ensure alignment
+function StaticRowFields({
+  row,
+  onRowClick,
+}: {
+  row: Row<DocumentClassField>;
+  onRowClick?: (field: DocumentClassField) => void;
+}) {
   return (
-    <Button
-      {...attributes}
-      {...listeners}
-      ref={setNodeRef} // dnd-kit useSortable provides setNodeRef for the draggable element
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground hover:bg-muted/50 hover:text-foreground size-8 cursor-grab transition-colors duration-200 active:cursor-grabbing"
-      // isDragging can be used for styling if needed: data-dragging={isDragging}
+    <TableRow
+      className="hover:bg-muted/30 border-border/50 cursor-pointer border-b transition-all duration-200"
+      onClick={() => onRowClick?.(row.original)}
     >
-      <GripVerticalIcon className="size-4" />
-      <span className="sr-only">Trascina per riordinare il campo</span>
-    </Button>
+      {row.getVisibleCells().map((cell) => (
+        <TableCell
+          key={cell.id}
+          style={{ width: cell.column.getSize() }}
+          className="px-4 py-4 text-left align-middle"
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
   );
 }
 
 // Column Definitions for DocumentClassField
 const fieldColumns: ColumnDef<DocumentClassField>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandleFields id={row.original.id} />,
-    size: 50,
-  },
   {
     accessorKey: "label",
     header: () => <div className="text-sm font-semibold">Etichetta</div>,
@@ -194,45 +190,6 @@ const fieldColumns: ColumnDef<DocumentClassField>[] = [
   //   cell: ({ row }) => row.getValue('sort_order'),
   // },
 ];
-
-// Draggable Row Component for Fields
-function DraggableRowFields({
-  row,
-  onRowClick,
-}: {
-  row: Row<DocumentClassField>;
-  onRowClick?: (field: DocumentClassField) => void;
-}) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id, // Ensure DocumentClassField has a unique `id`
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <TableRow
-      ref={setNodeRef}
-      style={style}
-      data-state={row.getIsSelected() && "selected"} // TanStack Table selection state
-      data-dragging={isDragging} // dnd-kit dragging state
-      className="hover:bg-muted/30 border-border/50 relative cursor-pointer border-b transition-all duration-200 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 data-[dragging=true]:shadow-lg"
-      onClick={() => onRowClick?.(row.original)}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell
-          key={cell.id}
-          style={{ width: cell.column.getSize() }}
-          className="py-4"
-        >
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
-  );
-}
 
 // Field Edit Drawer Component
 function FieldEditDrawer({
@@ -1054,94 +1011,61 @@ export function FieldsSortableTable({
     // No sorting/filtering/pagination from tanstack table itself for this simple version
   });
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (active && over && active.id !== over.id) {
-      setFieldsData((currentFields) => {
-        const oldIndex = fieldIds.indexOf(active.id);
-        const newIndex = fieldIds.indexOf(over.id);
-        const newOrder = arrayMove(currentFields, oldIndex, newIndex);
-        if (onOrderChange) {
-          onOrderChange(
-            newOrder.map((field, index) => ({
-              ...field,
-              sort_order: index + 1,
-            })),
-          );
-        }
-        return newOrder;
-      });
-    }
-  }
-
   return (
     <div className="w-full">
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        modifiers={[restrictToVerticalAxis]}
-        id={sortableId}
+      <div
+        className="border-border bg-background overflow-y-auto rounded-lg border"
+        style={{ maxHeight }}
       >
-        <SortableContext
-          items={fieldIds}
-          strategy={verticalListSortingStrategy}
-        >
-          <div
-            className="border-border bg-background overflow-y-auto rounded-lg border"
-            style={{ maxHeight }}
-          >
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow
-                    key={headerGroup.id}
-                    className="border-border bg-muted/30 border-b"
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow
+                key={headerGroup.id}
+                className="border-border bg-muted/30 border-b"
+              >
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className="px-4 py-4 text-left"
                   >
-                    {headerGroup.headers.map((header) => (
-                      <TableHead
-                        key={header.id}
-                        style={{ width: header.getSize() }}
-                        className="px-4 py-4 text-left"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={fieldColumns.length}
-                      className="text-muted-foreground py-12 text-center"
-                    >
-                      Nessun campo configurato. Clicca su una riga per
-                      modificare le proprietà del campo.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  table
-                    .getRowModel()
-                    .rows.map((row) => (
-                      <DraggableRowFields
-                        key={row.id}
-                        row={row}
-                        onRowClick={handleEditField}
-                      />
-                    ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </SortableContext>
-      </DndContext>
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={fieldColumns.length}
+                  className="text-muted-foreground py-12 text-center"
+                >
+                  Nessun campo configurato. Clicca su una riga per modificare le
+                  proprietà del campo.
+                </TableCell>
+              </TableRow>
+            ) : (
+              table
+                .getRowModel()
+                .rows.map((row) => (
+                  <StaticRowFields
+                    key={row.id}
+                    row={row}
+                    onRowClick={handleEditField}
+                  />
+                ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <FieldEditDrawer
         field={editingField}

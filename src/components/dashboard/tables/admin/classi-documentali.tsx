@@ -72,6 +72,8 @@ import {
   RiFileTextLine,
   RiUserLine,
   RiEyeLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
 } from "@remixicon/react";
 import {
   useEffect,
@@ -84,6 +86,10 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AvatarGroup,
+  AvatarGroupTooltip,
+} from "@/components/animate-ui/components/avatar-group";
 
 import {
   type DocumentClass,
@@ -163,7 +169,6 @@ const getColumns = ({
   {
     header: () => (
       <div className="flex items-center gap-2">
-        <RiFileTextLine size={16} className="text-muted-foreground" />
         <span>Nome Classe</span>
       </div>
     ),
@@ -193,7 +198,6 @@ const getColumns = ({
   {
     header: () => (
       <div className="flex items-center gap-2">
-        <RiUserLine size={16} className="text-muted-foreground" />
         <span>Sharer</span>
       </div>
     ),
@@ -203,7 +207,7 @@ const getColumns = ({
       if (sharers.length === 0) {
         return <span className="text-muted-foreground">—</span>;
       }
-      return <AvatarStack sharers={sharers} />;
+      return <SharerAvatarGroup sharers={sharers} />;
     },
     size: 180,
   },
@@ -214,10 +218,10 @@ const getColumns = ({
       const campiArray = row.original.campi;
       const campiCount = campiArray?.length ?? 0;
       return (
-        <div className="text-center">
+        <div>
           <Badge
             variant={campiCount > 0 ? "default" : "secondary"}
-            className="text-xs"
+            className="ring-secondary h-6 w-6 rounded-full text-xs text-white ring-2"
           >
             {campiCount}
           </Badge>
@@ -271,15 +275,15 @@ const getColumns = ({
     size: 140,
     filterFn: "documentClassDateRange",
   },
-  {
-    id: "actions",
-    header: () => <span className="sr-only">Azioni</span>,
-    cell: ({ row }) => (
-      <RowActions documentClass={row.original} onRefreshData={onRefreshData} />
-    ),
-    size: 60,
-    enableHiding: false,
-  },
+  // {
+  //   id: "actions",
+  //   header: () => <span className="sr-only">Azioni</span>,
+  //   cell: ({ row }) => (
+  //     <RowActions documentClass={row.original} onRefreshData={onRefreshData} />
+  //   ),
+  //   size: 60,
+  //   enableHiding: false,
+  // },
 ];
 
 interface DocumentClassiTableProps {
@@ -394,70 +398,72 @@ export default function DocumentClassiTable({
   const hasActiveFilters = globalFilter ?? dateRange[0] ?? dateRange[1];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-
-      {/* Filters */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Left side - Search */}
+    <div className="space-y-4">
+      {/* Filters/Header Section */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
+          {/* Left: Search & Reset */}
           <div className="flex items-center gap-3">
             <div className="relative">
               <Input
                 id={`${id}-input`}
                 ref={inputRef}
                 className={cn(
-                  "bg-background w-80 pl-9",
+                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-80 rounded-lg border pl-9 text-base shadow-sm transition-all focus:ring-2",
                   Boolean(globalFilter) && "pr-9",
                 )}
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Cerca per nome, descrizione o sharer..."
+                placeholder="Cerca per nome o descrizione"
                 type="text"
                 aria-label="Cerca classi documentali"
               />
               <div className="text-muted-foreground/60 pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3">
-                <RiSearch2Line size={16} aria-hidden="true" />
+                <RiSearch2Line size={18} aria-hidden="true" />
               </div>
               {Boolean(globalFilter) && (
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="absolute inset-y-0 right-0 px-3 py-0 hover:bg-transparent"
+                  size="icon"
+                  className="absolute top-1/2 right-0 flex h-10 w-10 -translate-y-1/2 items-center justify-center px-2 py-0 hover:bg-transparent"
                   onClick={() => {
                     setGlobalFilter("");
                     inputRef.current?.focus();
                   }}
                   aria-label="Cancella ricerca"
                 >
-                  <RiCloseCircleLine size={14} />
+                  <RiCloseCircleLine size={16} />
                 </Button>
               )}
             </div>
-            {hasActiveFilters && (
+            {/* Mostra il bottone Reimposta filtri solo se sono attivi filtri diversi dalla ricerca globale */}
+            {(dateRange[0] ?? dateRange[1]) && !globalFilter && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={resetFilters}
-                className="text-muted-foreground"
+                className="text-muted-foreground border-muted/30 hover:border-primary/40"
               >
                 Reimposta filtri
               </Button>
             )}
           </div>
 
-          {/* Right side - Actions */}
+          {/* Right: Date Filter */}
           <div className="flex items-center gap-3">
-            {/* Date filter */}
             <Popover open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-muted/30 hover:border-primary/40 rounded-lg"
+                >
                   <RiCalendarLine size={16} className="mr-2" />
                   {getDateFilterDisplay()}
                   {(dateRange[0] ?? dateRange[1]) && (
                     <Badge
                       variant="secondary"
-                      className="ml-2 h-5 px-1 text-xs"
+                      className="border-muted/30 ml-2 h-5 border px-1 text-xs"
                     >
                       {dateRange[0] && dateRange[1] ? "2" : "1"}
                     </Badge>
@@ -557,7 +563,7 @@ export default function DocumentClassiTable({
         </div>
         {/* Delete selected */}
         {table.getSelectedRowModel().rows.length > 0 && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pt-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
@@ -605,20 +611,20 @@ export default function DocumentClassiTable({
         )}
       </div>
 
-      {/* Table */}
-      <div className="bg-card rounded-lg border">
-        <Table>
-          <TableHeader>
+      {/* --- Table Section --- */}
+      <div className="bg-card border-muted/30 overflow-x-auto rounded-2xl border shadow-sm">
+        <Table className="min-w-full">
+          <TableHeader className="bg-card/95 border-muted/30 sticky top-0 z-10 border-b backdrop-blur">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="border-b hover:bg-transparent"
+                className="border-b-0 hover:bg-transparent"
               >
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     style={{ width: `${header.getSize()}px` }}
-                    className="text-muted-foreground h-12 px-4 text-left align-middle font-medium"
+                    className="text-muted-foreground bg-card/95 h-14 px-5 text-left align-middle text-sm font-semibold tracking-wide uppercase"
                   >
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <div
@@ -669,11 +675,11 @@ export default function DocumentClassiTable({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-32 text-center"
+                  className="h-40 text-center align-middle"
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
-                    <span className="text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
+                    <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+                    <span className="text-muted-foreground text-base">
                       Caricamento...
                     </span>
                   </div>
@@ -684,7 +690,7 @@ export default function DocumentClassiTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50 cursor-pointer transition-colors"
+                  className="hover:bg-muted/40 border-muted/20 group h-16 cursor-pointer border-b transition-colors last:border-b-0"
                   onClick={() => {
                     router.push(
                       `/dashboard/admin/classi-documentali/${row.original.id}`,
@@ -692,7 +698,10 @@ export default function DocumentClassiTable({
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3">
+                    <TableCell
+                      key={cell.id}
+                      className="group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -705,15 +714,15 @@ export default function DocumentClassiTable({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-32 text-center"
+                  className="h-40 text-center align-middle"
                 >
-                  <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
                     <RiFileTextLine
-                      size={32}
-                      className="text-muted-foreground/50"
+                      size={40}
+                      className="text-muted-foreground/40"
                     />
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">
+                      <p className="text-muted-foreground text-base">
                         Nessuna classe documentale trovata
                       </p>
                       {hasActiveFilters && (
@@ -730,34 +739,22 @@ export default function DocumentClassiTable({
         </Table>
       </div>
 
-      {/* Pagination */}
+      {/* --- Pagination Section --- */}
       {table.getRowModel().rows.length > 0 && (
-        <div className="flex items-center justify-between">
-          <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <span>
-              Mostra{" "}
-              {table.getState().pagination.pageIndex *
-                table.getState().pagination.pageSize +
-                1}{" "}
-              -{" "}
-              {Math.min(
-                (table.getState().pagination.pageIndex + 1) *
-                  table.getState().pagination.pageSize,
-                table.getFilteredRowModel().rows.length,
-              )}{" "}
-              di {table.getFilteredRowModel().rows.length} risultati
-            </span>
-          </div>
+        <div className="flex justify-center pt-2">
+          {/* Paginazione centrata */}
           <Pagination>
             <PaginationContent className="gap-2">
               <PaginationItem>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
+                  className="border-muted/30 rounded-lg"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
+                  aria-label="Pagina precedente"
                 >
-                  Precedente
+                  <RiArrowLeftSLine size={18} />
                 </Button>
               </PaginationItem>
               <PaginationItem>
@@ -771,11 +768,13 @@ export default function DocumentClassiTable({
               <PaginationItem>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
+                  className="border-muted/30 rounded-lg"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
+                  aria-label="Pagina successiva"
                 >
-                  Successiva
+                  <RiArrowRightSLine size={18} />
                 </Button>
               </PaginationItem>
             </PaginationContent>
@@ -938,8 +937,8 @@ declare module "@tanstack/react-table" {
   }
 }
 
-// Inline AvatarStack component for displaying sharers as stacked avatars with initials and optional image
-function AvatarStack({
+// SharerAvatarGroup: Animated, modern avatar group for sharers, matching user-presence-avatar.tsx style
+function SharerAvatarGroup({
   sharers,
 }: {
   sharers: { nominativo: string; avatarUrl?: string }[];
@@ -966,37 +965,40 @@ function AvatarStack({
   };
 
   return (
-    <div
-      className="*:data-[slot=avatar]:ring-background flex items-center -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale"
-      aria-label="Sharers"
-    >
-      {visibleSharers.map((sharer, idx) => {
-        const nominativo = sharer?.nominativo ?? "?";
-        return (
-          <Avatar
-            key={nominativo + idx}
-            title={nominativo}
-            className="border-background size-7 border-2 shadow"
-          >
-            {/* If you have sharer.avatarUrl, use it. Otherwise, fallback to initials */}
-            {sharer.avatarUrl ? (
-              <AvatarImage src={sharer.avatarUrl} alt={nominativo} />
-            ) : null}
-            <AvatarFallback className="bg-muted-foreground/10 text-foreground font-bold">
-              {getInitials(nominativo)}
-            </AvatarFallback>
-          </Avatar>
-        );
-      })}
-      {extraCount > 0 && (
-        <div
-          className="bg-muted text-foreground border-background flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-bold shadow"
-          title={`+${extraCount} altri`}
-          aria-label={`+${extraCount} altri`}
+    <div className="flex items-center">
+      {/* Animated avatar group container with improved contrast */}
+      <div className="flex rounded-full bg-neutral-200/80 p-0.5 dark:bg-neutral-800/80">
+        <AvatarGroup
+          className="h-7 -space-x-2"
+          tooltipProps={{ side: "top", sideOffset: 16 }}
         >
-          +{extraCount}
-        </div>
-      )}
+          {visibleSharers.map((sharer, idx) => (
+            <Avatar
+              key={sharer.nominativo + idx}
+              className="size-7 border-2 border-neutral-200/80 shadow-sm dark:border-neutral-800/80"
+            >
+              {sharer.avatarUrl ? (
+                <AvatarImage src={sharer.avatarUrl} alt={sharer.nominativo} />
+              ) : null}
+              <AvatarFallback className="text-foreground/90 bg-neutral-100 text-[10px] font-semibold dark:bg-neutral-700">
+                {getInitials(sharer.nominativo)}
+              </AvatarFallback>
+              <AvatarGroupTooltip>
+                <span className="text-white">{sharer.nominativo}</span>
+              </AvatarGroupTooltip>
+            </Avatar>
+          ))}
+        </AvatarGroup>
+        {extraCount > 0 && (
+          <div
+            className="text-foreground/90 ml-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-neutral-200/80 bg-neutral-100 text-[10px] font-semibold shadow-sm dark:border-neutral-800/80 dark:bg-neutral-700"
+            title={`+${extraCount} altri`}
+            aria-label={`+${extraCount} altri`}
+          >
+            +{extraCount}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

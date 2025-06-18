@@ -86,8 +86,8 @@ export default function ListaSharerPage() {
     // Calculate percentage of new members relative to total members
     const percentage = (previous / current) * 100;
 
-    // Return the formatted percentage with the correct sign
-    return `${percentage >= 0 ? "+" : ""}${percentage.toFixed(2)}%`;
+    // Return the formatted percentage without any sign
+    return `${Math.abs(percentage).toFixed(2)}%`;
   };
 
   // Calculate current stats
@@ -128,13 +128,17 @@ export default function ListaSharerPage() {
             attiva/disattiva o creane di nuovi.
           </p>
         </div>
-        <Button
-          className="bg-primary text-white"
-          onClick={handleOpenCreateDialog}
-        >
-          <Plus size={20} />
-          Crea Sharer
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Actions dropdown for user management */}
+
+          <Button
+            className="bg-primary text-white"
+            onClick={handleOpenCreateDialog}
+          >
+            <Plus size={20} />
+            Crea Sharer
+          </Button>
+        </div>
       </div>
       <div className="flex flex-col gap-6">
         <StatsGrid

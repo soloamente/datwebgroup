@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Stack } from "@/components/ui/stack";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox as AnimatedCheckbox } from "@/components/animate-ui/base/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -129,7 +129,8 @@ export default function DocumentClassDetailPage() {
   useEffect(() => {
     if (documentClass) {
       setEditNome(documentClass.nome);
-      setEditDescrizione(documentClass.descrizione);
+      // Always set editDescrizione to a string (never null/undefined) for controlled Textarea
+      setEditDescrizione(documentClass.descrizione ?? "");
       setIsEditing(false); // Exit edit mode on doc change
     }
   }, [documentClass]);
@@ -485,6 +486,70 @@ export default function DocumentClassDetailPage() {
     setSharerToDelete(null);
   };
 
+  // --- Handler to update fields order (sort_order) ---
+  const handleFieldsOrderChange = async (
+    updatedFields: DocumentClassField[],
+  ) => {
+    if (!documentClass) return;
+    try {
+      // Aggiorna il sort_order di ogni campo tramite API (in parallelo)
+      await Promise.all(
+        updatedFields.map((field, idx) =>
+          docClassService.updateField(documentClass.id, field.id, {
+            sort_order: idx + 1,
+          }),
+        ),
+      );
+      // Dopo l'aggiornamento, ricarica la document class con i dati aggiornati dal backend
+      const response = await docClassService.getDocumentClassById(
+        documentClass.id,
+      );
+      const updatedDoc = response.data;
+      if (updatedDoc) {
+        setDocumentClass((prev) =>
+          prev
+            ? {
+                ...prev,
+                campi: updatedDoc.fields.map(
+                  (field: ApiDocumentClassField) => ({
+                    id: field.id,
+                    nome: field.name,
+                    label: field.label,
+                    tipo: field.data_type,
+                    obbligatorio: field.required === 1,
+                    is_primary_key: field.is_primary_key === 1,
+                    sort_order: field.sort_order,
+                    options: field.options,
+                  }),
+                ),
+              }
+            : prev,
+        );
+      }
+      toast.success("Ordine dei campi aggiornato");
+    } catch (error) {
+      console.error(
+        "Errore durante l'aggiornamento dell'ordine dei campi:",
+        error,
+      );
+      toast.error("Impossibile aggiornare l'ordine dei campi");
+    }
+  };
+
+  // --- Real-time update handler for single field update (e.g., sort_order change) ---
+  const handleFieldUpdate = (updatedField: DocumentClassField) => {
+    setDocumentClass((prev) =>
+      prev
+        ? {
+            ...prev,
+            campi: prev.campi
+              .map((f) => (f.id === updatedField.id ? updatedField : f))
+              .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
+          }
+        : prev,
+    );
+  };
+
   return (
     <div className="mx-auto w-full max-w-screen-2xl overflow-x-hidden p-6">
       {/* Simplified Header */}
@@ -578,7 +643,7 @@ export default function DocumentClassDetailPage() {
                     Modifica
                   </Button>
                 ) : (
-                  <span className="bg-primary/10 text-primary ml-auto rounded px-3 py-1 text-xs font-medium transition-all">
+                  <span className="bg-primary/10 text-primary ml-auto animate-pulse rounded px-3 py-1 text-xs font-medium transition-all">
                     Modifica in corso…
                   </span>
                 )}
@@ -619,7 +684,8 @@ export default function DocumentClassDetailPage() {
                   {isEditing ? (
                     <Textarea
                       id="descrizione"
-                      value={editDescrizione}
+                      // Defensive: always pass a string to value (never null)
+                      value={editDescrizione ?? ""}
                       onChange={(e) => setEditDescrizione(e.target.value)}
                       className="bg-background focus-visible:ring-primary max-w-lg resize-none"
                       rows={3}
@@ -650,7 +716,7 @@ export default function DocumentClassDetailPage() {
                       onClick={() => {
                         // Reset fields to original values and exit edit mode
                         setEditNome(documentClass.nome);
-                        setEditDescrizione(documentClass.descrizione);
+                        setEditDescrizione(documentClass.descrizione ?? "");
                         setIsEditing(false);
                       }}
                       disabled={isSaving}
@@ -659,7 +725,7 @@ export default function DocumentClassDetailPage() {
                     </Button>
                     <Button
                       type="submit"
-                      className="min-w-[90px]"
+                      className="min-w-[90px] text-white"
                       disabled={isSaving ?? isUnchanged ?? isInvalid}
                     >
                       {isSaving ? "Salvataggio..." : "Salva"}
@@ -743,10 +809,11 @@ export default function DocumentClassDetailPage() {
                     <option value="enum">Lista Opzioni</option>
                   </select>
                 </div>
-                {/* Required and Primary Key checkboxes */}
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
+                {/* Required and Primary Key checkboxes - improved UI/UX */}
+                <div className="flex flex-col gap-2 pt-2">
+                  {/* Obbligatorio Checkbox */}
+                  <label className="group flex cursor-pointer items-center gap-2">
+                    <AnimatedCheckbox
                       id="new_field_required"
                       checked={newField.required}
                       onCheckedChange={(checked) =>
@@ -755,13 +822,17 @@ export default function DocumentClassDetailPage() {
                           required: !!checked,
                         }))
                       }
+                      className="group-hover:ring-primary/40 focus-visible:ring-primary transition-all group-hover:ring-2"
+                      aria-checked={newField.required}
+                      aria-labelledby="label-required"
                     />
-                    <Label htmlFor="new_field_required" className="text-xs">
+                    <span id="label-required" className="text-xs select-none">
                       Obbligatorio
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
+                    </span>
+                  </label>
+                  {/* Chiave Primaria Checkbox */}
+                  <label className="group flex cursor-pointer items-center gap-2">
+                    <AnimatedCheckbox
                       id="new_field_is_primary_key"
                       checked={newField.is_primary_key}
                       onCheckedChange={(checked) =>
@@ -770,14 +841,17 @@ export default function DocumentClassDetailPage() {
                           is_primary_key: !!checked,
                         }))
                       }
+                      className="group-hover:ring-primary/40 focus-visible:ring-primary transition-all group-hover:ring-2"
+                      aria-checked={newField.is_primary_key}
+                      aria-labelledby="label-primary-key"
                     />
-                    <Label
-                      htmlFor="new_field_is_primary_key"
-                      className="text-xs"
+                    <span
+                      id="label-primary-key"
+                      className="text-xs select-none"
                     >
                       Chiave Primaria
-                    </Label>
-                  </div>
+                    </span>
+                  </label>
                 </div>
                 {/* Add button */}
                 <Button
@@ -787,7 +861,7 @@ export default function DocumentClassDetailPage() {
                   }}
                   type="submit"
                   size="sm"
-                  className="h-8 self-end"
+                  className="h-8 self-end text-white"
                 >
                   Aggiungi
                 </Button>
@@ -824,8 +898,12 @@ export default function DocumentClassDetailPage() {
               </div>
               {documentClass.campi && documentClass.campi.length > 0 ? (
                 <FieldsSortableTable
-                  initialFields={documentClass.campi}
+                  initialFields={[...documentClass.campi].sort(
+                    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+                  )}
                   documentClassId={documentClass.id}
+                  onOrderChange={handleFieldsOrderChange}
+                  onFieldUpdate={handleFieldUpdate}
                 />
               ) : (
                 <div className="flex flex-col items-center gap-2 py-8">
