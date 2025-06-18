@@ -98,7 +98,7 @@ export default function ClassiDocumentali() {
   let monthTrend: "up" | "down" = "up";
   if (prevMonthCreated === 0 && recentlyCreated > 0) {
     monthChange = 100;
-    monthChangeLabel = "increase";
+    monthChangeLabel = "";
     monthTrend = "up";
   } else if (prevMonthCreated === 0 && recentlyCreated === 0) {
     monthChange = 0;
@@ -108,10 +108,10 @@ export default function ClassiDocumentali() {
     monthChange =
       ((recentlyCreated - prevMonthCreated) / prevMonthCreated) * 100;
     if (monthChange > 0) {
-      monthChangeLabel = "increase";
+      monthChangeLabel = "";
       monthTrend = "up";
     } else if (monthChange < 0) {
-      monthChangeLabel = "decrease";
+      monthChangeLabel = "";
       monthTrend = "down";
     } else {
       monthChangeLabel = "";
@@ -119,9 +119,7 @@ export default function ClassiDocumentali() {
     }
   }
   const formattedMonthChange =
-    monthChange === 0
-      ? "0%"
-      : `${Math.abs(monthChange).toFixed(0)}% ${monthChangeLabel}`;
+    monthChange === 0 ? "0%" : `${Math.abs(monthChange).toFixed(0)}%`;
 
   // Calculate the percentage change for 'Totale Campi' (increase/decrease)
   let fieldsChange = 0;
@@ -139,7 +137,7 @@ export default function ClassiDocumentali() {
     .reduce((acc, doc) => acc + (doc.campi?.length ?? 0), 0);
   if (prevMonthFields === 0 && totalFields > 0) {
     fieldsChange = 100;
-    fieldsChangeLabel = "increase";
+    fieldsChangeLabel = "";
     fieldsTrend = "up";
   } else if (prevMonthFields === 0 && totalFields === 0) {
     fieldsChange = 0;
@@ -148,10 +146,10 @@ export default function ClassiDocumentali() {
   } else {
     fieldsChange = ((totalFields - prevMonthFields) / prevMonthFields) * 100;
     if (fieldsChange > 0) {
-      fieldsChangeLabel = "increase";
+      fieldsChangeLabel = "";
       fieldsTrend = "up";
     } else if (fieldsChange < 0) {
-      fieldsChangeLabel = "decrease";
+      fieldsChangeLabel = "";
       fieldsTrend = "down";
     } else {
       fieldsChangeLabel = "";
@@ -159,9 +157,7 @@ export default function ClassiDocumentali() {
     }
   }
   const formattedFieldsChange =
-    fieldsChange === 0
-      ? "0%"
-      : `${Math.abs(fieldsChange).toFixed(0)}% ${fieldsChangeLabel}`;
+    fieldsChange === 0 ? "0%" : `${Math.abs(fieldsChange).toFixed(0)}%`;
 
   // --- Handlers for dialog ---
   const handleOpenCreateDialog = () => setIsCreateDialogOpen(true);
