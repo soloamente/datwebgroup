@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/animate-ui/base/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +83,7 @@ import {
   useState,
   useTransition,
   useCallback,
+  useLayoutEffect,
 } from "react";
 
 import { type Sharer, type Viewer, userService } from "@/app/api/api";
@@ -103,6 +104,15 @@ import {
   ActionsDropdown,
   type ActionsDropdownAction,
 } from "@/components/ui/actions-dropdown";
+import CloseIcon from "@/components/icons/close";
+import { StatusIcon } from "@/components/icons/status";
+import { type DateRange as DayPickerDateRange } from "react-day-picker";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { addMonths } from "date-fns";
+import {
+  type DateField,
+  DateRangeFilter,
+} from "@/components/filters/date-range-filter";
 
 // Filter function that correctly handles active status boolean
 const activeStatusFilterFn: FilterFn<Sharer | Viewer> = (
@@ -139,13 +149,13 @@ const globalFilterFn: FilterFn<Sharer> = (
 const dateRangeFilterFn: FilterFn<Sharer> = (
   row,
   columnId,
-  value: [Date | undefined, Date | undefined] | undefined,
+  value: DayPickerDateRange | undefined,
 ) => {
   // If no filter value is provided or both dates are undefined, show all rows
   if (!value) return true;
-  if (!value[0] && !value[1]) return true;
+  if (!value.from && !value.to) return true;
 
-  const [start, end] = value;
+  const { from: start, to: end } = value;
   const dateValue = row.getValue(columnId);
   if (!dateValue) return false;
 
@@ -335,15 +345,13 @@ export default function SharerTable({
   });
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   // Add state for date filters
   const [dateField, setDateField] = useState<"created_at" | "updated_at">(
     "created_at",
   );
-  const [dateRange, setDateRange] = useState<
-    [Date | undefined, Date | undefined]
-  >([undefined, undefined]);
-  const [dateFilterOpen, setDateFilterOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<DayPickerDateRange | undefined>();
 
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -456,28 +464,31 @@ export default function SharerTable({
       ?.setFilterValue(newFilterValue.length ? newFilterValue : undefined);
   };
 
-  // Add useEffect to update the filter when dateRange changes
+  // Apply the filter when the dateRange or dateField changes
   useEffect(() => {
-    if (dateRange[0] || dateRange[1]) {
+    // Apply filter to the selected date field column
+    table.getColumn("created_at")?.setFilterValue(undefined);
+    table.getColumn("updated_at")?.setFilterValue(undefined);
+
+    if (dateRange) {
       table.getColumn(dateField)?.setFilterValue(dateRange);
-    } else {
-      table.getColumn(dateField)?.setFilterValue(undefined);
     }
   }, [dateRange, dateField, table]);
 
-  // Add date filter display
-  const getDateFilterDisplay = useCallback(() => {
-    if (dateRange[0] && dateRange[1]) {
-      return `${format(dateRange[0], "dd/MM/yyyy")} - ${format(dateRange[1], "dd/MM/yyyy")}`;
+  const availableDateFields: DateField[] = [
+    { value: "created_at", label: "Data di creazione" },
+    { value: "updated_at", label: "Data di aggiornamento" },
+  ];
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [popoverWidth, setPopoverWidth] = useState<number>();
+
+  // Update popover width when button content changes
+  useLayoutEffect(() => {
+    if (buttonRef.current) {
+      setPopoverWidth(buttonRef.current.getBoundingClientRect().width);
     }
-    if (dateRange[0]) {
-      return `Da ${format(dateRange[0], "dd/MM/yyyy")}`;
-    }
-    if (dateRange[1]) {
-      return `Fino a ${format(dateRange[1], "dd/MM/yyyy")}`;
-    }
-    return "Filtra per data";
-  }, [dateRange]);
+  }, [selectedStatuses.length, globalFilter]);
 
   return (
     <div className="space-y-4">
@@ -491,10 +502,10 @@ export default function SharerTable({
                 id={`${id}-input`}
                 ref={inputRef}
                 className={cn(
-                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-lg border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-80",
+                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-full border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-64",
                   Boolean(globalFilter) && "pr-9",
                 )}
-                value={globalFilter}
+                value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 placeholder="Cerca per username o nome"
                 type="text"
@@ -507,14 +518,18 @@ export default function SharerTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-1/2 right-0 flex h-10 w-10 -translate-y-1/2 items-center justify-center px-2 py-0 hover:bg-transparent"
+                  className="absolute top-1/2 right-0 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full px-2 py-0 hover:bg-transparent"
                   onClick={() => {
                     setGlobalFilter("");
                     inputRef.current?.focus();
                   }}
                   aria-label="Cancella ricerca"
                 >
-                  <RiCloseCircleLine size={16} />
+                  <CloseIcon
+                    size={16}
+                    strokeColor="currentColor"
+                    strokeWidth={2.2}
+                  />
                 </Button>
               )}
             </div>
@@ -522,175 +537,90 @@ export default function SharerTable({
           {/* Right: Filters */}
           <div className="flex items-center gap-3">
             {/* Status Filter */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="border-muted/30 hover:border-primary/40 rounded-lg"
+            <div className="w-fit">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    ref={buttonRef}
+                    variant="outline"
+                    className="border-muted/30 hover:border-primary/40 w-full rounded-full"
+                  >
+                    <StatusIcon
+                      className="text-muted-foreground/60 -ms-1.5 size-5.5"
+                      ariaLabel="Filtra per stato"
+                      focusable={false}
+                    />
+                    Filtra per stato
+                    {selectedStatuses.length > 0 && (
+                      <span className="border-border bg-background text-muted-foreground/70 -me-1.5 ml-1 items-center rounded-full border px-2 py-[3px] text-xs">
+                        {selectedStatuses.length}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  style={popoverWidth ? { width: popoverWidth } : undefined}
+                  className="rounded-2xl p-2"
+                  align="end"
                 >
-                  <RiFilter3Line
-                    className="text-muted-foreground/60 -ms-1.5 size-5"
-                    size={20}
-                    aria-hidden="true"
-                  />
-                  Filtra per stato
-                  {selectedStatuses.length > 0 && (
-                    <span className="border-border bg-background text-muted-foreground/70 ml-2 h-5 max-h-full items-center rounded border px-1 text-xs font-medium">
-                      {selectedStatuses.length}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto min-w-36 p-3" align="end">
-                <div className="space-y-3">
-                  <div className="text-muted-foreground/60 text-xs font-medium uppercase">
-                    Stato
-                  </div>
-                  <div className="space-y-3">
-                    {uniqueStatusValues.map((value, i) => (
-                      <div
-                        key={String(value)}
-                        className="flex items-center gap-2"
-                      >
-                        <Checkbox
-                          id={`${id}-${i}`}
-                          checked={selectedStatuses.includes(value)}
-                          onCheckedChange={(checked: boolean) =>
-                            handleStatusChange(checked, value)
-                          }
-                        />
-                        <Label
-                          htmlFor={`${id}-${i}`}
-                          className="flex grow justify-between gap-2 font-normal"
+                  <div className="space-y-2">
+                    <div className="text-muted-foreground/60 px-1 text-xs font-medium tracking-wider uppercase">
+                      Stato
+                    </div>
+                    <div className="space-y-0.5">
+                      {uniqueStatusValues.map((value, i) => (
+                        <div
+                          key={String(value)}
+                          className="hover:bg-muted/30 flex items-center gap-2 rounded-lg p-1.5 transition-colors"
                         >
-                          {value ? "Attivo" : "Inattivo"}{" "}
-                          <span className="text-muted-foreground ms-2 text-xs">
-                            {statusCounts.get(value)}
-                          </span>
-                        </Label>
-                      </div>
-                    ))}
+                          <Checkbox
+                            id={`${id}-${i}`}
+                            checked={selectedStatuses.includes(value)}
+                            onCheckedChange={(checked: boolean) =>
+                              handleStatusChange(checked, value)
+                            }
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary size-3.5 hover:cursor-pointer"
+                          />
+                          <Label
+                            htmlFor={`${id}-${i}`}
+                            className="flex grow cursor-pointer items-center justify-between gap-1 text-sm font-normal"
+                          >
+                            {value ? "Attivo" : "Inattivo"}
+
+                            <span className="border-border bg-background text-muted-foreground/70 items-center rounded-full border px-1.5 py-0.5 text-xs">
+                              {statusCounts.get(value) ?? 0}
+                            </span>
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Quick actions */}
+                    <div className="border-t pt-1.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          table.getColumn("active")?.setFilterValue(undefined);
+                        }}
+                        className="h-7 w-full rounded-lg text-xs"
+                      >
+                        Reimposta
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+                </PopoverContent>
+              </Popover>
+            </div>
             {/* Date Filter */}
-            <Popover open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="border-muted/30 hover:border-primary/40 rounded-lg"
-                >
-                  <RiCalendarLine
-                    className="text-muted-foreground/60 -ms-1.5 size-5"
-                    size={20}
-                    aria-hidden="true"
-                  />
-                  {getDateFilterDisplay()}
-                  {(dateRange[0] ?? dateRange[1]) && (
-                    <span className="border-border bg-background text-muted-foreground/70 ml-2 h-5 max-h-full items-center rounded border px-1 text-xs font-medium">
-                      {dateRange[0] && dateRange[1] ? "2" : "1"}
-                    </span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-4" align="end">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="text-muted-foreground/60 text-xs font-medium uppercase">
-                      Campo
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={
-                          dateField === "created_at" ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setDateField("created_at")}
-                        className="text-xs"
-                      >
-                        Data creazione
-                      </Button>
-                      <Button
-                        variant={
-                          dateField === "updated_at" ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setDateField("updated_at")}
-                        className="text-xs"
-                      >
-                        Data aggiornamento
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="text-muted-foreground/60 text-xs font-medium uppercase">
-                      Periodo
-                    </div>
-                    <div className="grid gap-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <div className="text-muted-foreground mb-1 text-xs">
-                            Da
-                          </div>
-                          <Calendar
-                            locale={it}
-                            mode="single"
-                            selected={dateRange[0]}
-                            onSelect={(date) =>
-                              setDateRange([date, dateRange[1]])
-                            }
-                            disabled={(date) =>
-                              dateRange[1] ? date > dateRange[1] : false
-                            }
-                            initialFocus
-                          />
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground mb-1 text-xs">
-                            A
-                          </div>
-                          <Calendar
-                            locale={it}
-                            mode="single"
-                            selected={dateRange[1]}
-                            onSelect={(date) =>
-                              setDateRange([dateRange[0], date])
-                            }
-                            disabled={(date) =>
-                              dateRange[0] ? date < dateRange[0] : false
-                            }
-                            initialFocus
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between pt-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setDateRange([undefined, undefined]);
-                        table.getColumn(dateField)?.setFilterValue(undefined);
-                      }}
-                    >
-                      Reimposta
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setDateFilterOpen(false);
-                      }}
-                    >
-                      Applica
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <DateRangeFilter
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              dateField={dateField}
+              onDateFieldChange={(field) =>
+                setDateField(field as "created_at" | "updated_at")
+              }
+              availableDateFields={availableDateFields}
+            />
           </div>
         </div>
         {/* Delete selected */}

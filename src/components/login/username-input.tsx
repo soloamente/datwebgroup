@@ -19,6 +19,7 @@ export default function UsernameInput({
           placeholder="johndoe"
           type="username"
           value={value}
+          autoFocus
           onChange={onChange}
           className="peer border-border h-14 rounded-2xl border-[1.5px] ps-10 placeholder:text-black/30 dark:border-white/20 dark:placeholder:text-white/20"
         />

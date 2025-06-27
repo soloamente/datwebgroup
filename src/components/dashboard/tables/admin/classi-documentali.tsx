@@ -65,7 +65,6 @@ import {
   RiCloseCircleLine,
   RiDeleteBinLine,
   RiBardLine,
-  RiFilter3Line,
   RiSearch2Line,
   RiMoreLine,
   RiCalendarLine,
@@ -104,6 +103,18 @@ import { it } from "date-fns/locale";
 import { PencilEdit } from "@/components/icons/pencil-edit";
 import { CopyIcon } from "@/components/icons/copy";
 import { Stack } from "@/components/ui/stack";
+import { CalendarDateIcon } from "@/components/icons/calendar-date";
+import { FilterVertical } from "@/components/icons/filter-vertical";
+import {
+  type DateField,
+  DateRangeFilter,
+} from "@/components/filters/date-range-filter";
+import {
+  SharerFilter,
+  type SharerOption,
+} from "@/components/filters/sharer-filter";
+import { type DateRange as DayPickerDateRange } from "react-day-picker";
+import CloseIcon from "@/components/icons/close";
 
 // Global filter function for text search across multiple fields for DocumentClass
 const globalFilterFn: FilterFn<DocumentClass> = (
@@ -157,6 +168,21 @@ const documentClassDateRangeFilterFn: FilterFn<DocumentClass> = (
   return true;
 };
 
+// Add sharer filter function
+const documentClassSharerFilterFn: FilterFn<DocumentClass> = (
+  row,
+  columnId,
+  value: string[] | undefined,
+) => {
+  if (!value || value.length === 0) return true;
+
+  const sharers = row.original.sharers ?? [];
+  if (sharers.length === 0) return false;
+
+  // Check if any of the row's sharers match the selected filter sharers
+  return sharers.some((sharer) => value.includes(sharer.id.toString()));
+};
+
 interface GetColumnsProps {
   data: DocumentClass[];
   onRefreshData: () => void;
@@ -169,7 +195,7 @@ const getColumns = ({
   {
     header: () => (
       <div className="flex items-center gap-2">
-        <span>Nome Classe</span>
+        <span>Nome</span>
       </div>
     ),
     accessorKey: "nome",
@@ -196,11 +222,20 @@ const getColumns = ({
     size: 250,
   },
   {
-    header: () => (
-      <div className="flex items-center gap-2">
-        <span>Sharer</span>
-      </div>
-    ),
+    header: ({ column }) => {
+      const isFiltered = column.getIsFiltered();
+      return (
+        <div className="flex items-center gap-2">
+          <span>Sharer</span>
+          {isFiltered && (
+            <div className="flex items-center gap-1">
+              <div className="bg-primary h-1.5 w-1.5 rounded-full" />
+              <span className="text-primary text-xs font-medium">Filtrato</span>
+            </div>
+          )}
+        </div>
+      );
+    },
     accessorKey: "sharers",
     cell: ({ row }) => {
       const sharers = row.original.sharers ?? [];
@@ -210,6 +245,7 @@ const getColumns = ({
       return <SharerAvatarGroup sharers={sharers} />;
     },
     size: 180,
+    filterFn: "documentClassSharer",
   },
   {
     header: "Campi",
@@ -232,7 +268,20 @@ const getColumns = ({
     enableSorting: false,
   },
   {
-    header: "Creato",
+    header: ({ column }) => {
+      const isFiltered = column.getIsFiltered();
+      return (
+        <div className="flex items-center gap-2">
+          <span>Creato</span>
+          {isFiltered && (
+            <div className="flex items-center gap-1">
+              <div className="bg-primary h-1.5 w-1.5 rounded-full" />
+              <span className="text-primary text-xs font-medium">Filtrato</span>
+            </div>
+          )}
+        </div>
+      );
+    },
     accessorKey: "created_at",
     cell: ({ row }) => {
       const dateValue = row.getValue("created_at");
@@ -254,7 +303,20 @@ const getColumns = ({
     filterFn: "documentClassDateRange",
   },
   {
-    header: "Aggiornato",
+    header: ({ column }) => {
+      const isFiltered = column.getIsFiltered();
+      return (
+        <div className="flex items-center gap-2">
+          <span>Aggiornato</span>
+          {isFiltered && (
+            <div className="flex items-center gap-1">
+              <div className="bg-primary h-1.5 w-1.5 rounded-full" />
+              <span className="text-primary text-xs font-medium">Filtrato</span>
+            </div>
+          )}
+        </div>
+      );
+    },
     accessorKey: "updated_at",
     cell: ({ row }) => {
       const dateValue = row.getValue("updated_at");
@@ -311,10 +373,10 @@ export default function DocumentClassiTable({
   const [dateField, setDateField] = useState<"created_at" | "updated_at">(
     "created_at",
   );
-  const [dateRange, setDateRange] = useState<
-    [Date | undefined, Date | undefined]
-  >([undefined, undefined]);
-  const [dateFilterOpen, setDateFilterOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<DayPickerDateRange | undefined>();
+  const [selectedSharers, setSelectedSharers] = useState<string[]>([]);
+
+  const [rowSelection, setRowSelection] = useState({});
 
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -328,6 +390,26 @@ export default function DocumentClassiTable({
     onRefreshData();
     table.resetRowSelection();
   }, [onRefreshData]);
+
+  // Extract unique sharers from all document classes for filter options
+  const availableSharers = useMemo(() => {
+    const allSharers = data.flatMap((doc) => doc.sharers ?? []);
+    const uniqueSharers = new Map<string, SharerOption>();
+
+    allSharers.forEach((sharer) => {
+      const key = sharer.id.toString();
+      if (!uniqueSharers.has(key)) {
+        uniqueSharers.set(key, {
+          id: key,
+          nominativo: sharer.nominativo,
+        });
+      }
+    });
+
+    return Array.from(uniqueSharers.values()).sort((a, b) =>
+      a.nominativo.localeCompare(b.nominativo),
+    );
+  }, [data]);
 
   const columns = useMemo(
     () =>
@@ -353,54 +435,52 @@ export default function DocumentClassiTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     globalFilterFn: globalFilterFn,
     onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       pagination,
       columnFilters,
       columnVisibility,
       globalFilter,
+      rowSelection,
     },
     filterFns: {
       documentClassDateRange: documentClassDateRangeFilterFn,
+      documentClassSharer: documentClassSharerFilterFn,
       dateRange: (row, id, value) => true,
       activeStatus: (row, id, value) => true,
     },
   });
 
   useEffect(() => {
-    if (dateRange[0] ?? dateRange[1]) {
+    table.getColumn("created_at")?.setFilterValue(undefined);
+    table.getColumn("updated_at")?.setFilterValue(undefined);
+
+    if (dateRange) {
       table.getColumn(dateField)?.setFilterValue(dateRange);
-    } else {
-      table.getColumn(dateField)?.setFilterValue(undefined);
     }
   }, [dateRange, dateField, table]);
 
-  const getDateFilterDisplay = useCallback(() => {
-    if (dateRange[0] && dateRange[1]) {
-      return `${format(dateRange[0], "dd/MM/yyyy")} - ${format(dateRange[1], "dd/MM/yyyy")}`;
-    }
-    if (dateRange[0]) {
-      return `Da ${format(dateRange[0], "dd/MM/yyyy")}`;
-    }
-    if (dateRange[1]) {
-      return `Fino a ${format(dateRange[1], "dd/MM/yyyy")}`;
-    }
-    return "Filtra per data";
-  }, [dateRange]);
+  useEffect(() => {
+    table
+      .getColumn("sharers")
+      ?.setFilterValue(
+        selectedSharers.length > 0 ? selectedSharers : undefined,
+      );
+  }, [selectedSharers, table]);
 
-  const resetFilters = useCallback(() => {
-    setGlobalFilter("");
-    setDateRange([undefined, undefined]);
-    table.resetColumnFilters();
-    table.resetGlobalFilter();
-  }, [table]);
+  const availableDateFields: DateField[] = [
+    { value: "created_at", label: "Data di creazione" },
+    { value: "updated_at", label: "Data di aggiornamento" },
+  ];
 
-  const hasActiveFilters = globalFilter ?? dateRange[0] ?? dateRange[1];
+  const selectedRows = table.getSelectedRowModel().rows;
+  const numSelected = selectedRows.length;
 
   return (
     <div className="space-y-4">
       {/* Filters/Header Section */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
           {/* Left: Search & Reset */}
           <div className="flex items-center gap-3">
@@ -409,12 +489,12 @@ export default function DocumentClassiTable({
                 id={`${id}-input`}
                 ref={inputRef}
                 className={cn(
-                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-80 rounded-lg border pl-9 text-base shadow-sm transition-all focus:ring-2",
+                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-full border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-72",
                   Boolean(globalFilter) && "pr-9",
                 )}
-                value={globalFilter}
+                value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Cerca per nome o descrizione"
+                placeholder="Cerca per nome, descrizione, sharer"
                 type="text"
                 aria-label="Cerca classi documentali"
               />
@@ -425,190 +505,136 @@ export default function DocumentClassiTable({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute top-1/2 right-0 flex h-10 w-10 -translate-y-1/2 items-center justify-center px-2 py-0 hover:bg-transparent"
+                  className="absolute top-1/2 right-0 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full px-2 py-0 hover:bg-transparent"
                   onClick={() => {
                     setGlobalFilter("");
                     inputRef.current?.focus();
                   }}
                   aria-label="Cancella ricerca"
                 >
-                  <RiCloseCircleLine size={16} />
+                  <CloseIcon size={16} strokeWidth={2.2} />
                 </Button>
               )}
             </div>
-            {/* Mostra il bottone Reimposta filtri solo se sono attivi filtri diversi dalla ricerca globale */}
-            {(dateRange[0] ?? dateRange[1]) && !globalFilter && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetFilters}
-                className="text-muted-foreground border-muted/30 hover:border-primary/40"
-              >
-                Reimposta filtri
-              </Button>
-            )}
           </div>
 
-          {/* Right: Date Filter */}
+          {/* Right: Filters */}
           <div className="flex items-center gap-3">
-            <Popover open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
+            <SharerFilter
+              selectedSharers={selectedSharers}
+              onSelectedSharersChange={setSelectedSharers}
+              availableSharers={availableSharers}
+            />
+            <DateRangeFilter
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              dateField={dateField}
+              onDateFieldChange={(field) =>
+                setDateField(field as "created_at" | "updated_at")
+              }
+              availableDateFields={availableDateFields}
+            />
+            {/* Toggle columns visibility */}
+            <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="border-muted/30 hover:border-primary/40 rounded-lg"
+                  className="border-muted/30 hover:border-primary/40 rounded-full"
+                  aria-label="Mostra/nascondi colonne"
                 >
-                  <RiCalendarLine size={16} className="mr-2" />
-                  {getDateFilterDisplay()}
-                  {(dateRange[0] ?? dateRange[1]) && (
-                    <Badge
-                      variant="secondary"
-                      className="border-muted/30 ml-2 h-5 border px-1 text-xs"
-                    >
-                      {dateRange[0] && dateRange[1] ? "2" : "1"}
-                    </Badge>
-                  )}
+                  <FilterVertical className="text-muted-foreground/80 size-4" />
+                  Colonne
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-4" align="end">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground text-xs font-medium uppercase">
-                      Campo Data
-                    </Label>
-                    <div className="flex gap-2">
-                      <Button
-                        variant={
-                          dateField === "created_at" ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setDateField("created_at")}
-                        className="text-xs"
-                      >
-                        Creazione
-                      </Button>
-                      <Button
-                        variant={
-                          dateField === "updated_at" ? "default" : "outline"
-                        }
-                        size="sm"
-                        onClick={() => setDateField("updated_at")}
-                        className="text-xs"
-                      >
-                        Aggiornamento
-                      </Button>
-                    </div>
+              <PopoverContent align="end" className="w-48 rounded-2xl">
+                <div className="space-y-2">
+                  <div className="text-muted-foreground/60 px-1 text-xs font-medium tracking-wider uppercase">
+                    Colonne
                   </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground text-xs font-medium uppercase">
-                      Periodo
-                    </Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-muted-foreground mb-1 text-xs">
-                          Da
-                        </Label>
-                        <Calendar
-                          locale={it}
-                          mode="single"
-                          selected={dateRange[0]}
-                          onSelect={(date) =>
-                            setDateRange([date, dateRange[1]])
-                          }
-                          disabled={(date) =>
-                            dateRange[1] ? date > dateRange[1] : false
-                          }
-                          initialFocus
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground mb-1 text-xs">
-                          A
-                        </Label>
-                        <Calendar
-                          locale={it}
-                          mode="single"
-                          selected={dateRange[1]}
-                          onSelect={(date) =>
-                            setDateRange([dateRange[0], date])
-                          }
-                          disabled={(date) =>
-                            dateRange[0] ? date < dateRange[0] : false
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between border-t pt-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setDateRange([undefined, undefined]);
-                        table.getColumn(dateField)?.setFilterValue(undefined);
-                      }}
-                    >
-                      Reimposta
-                    </Button>
-                    <Button size="sm" onClick={() => setDateFilterOpen(false)}>
-                      Applica
-                    </Button>
+                  <div className="space-y-1">
+                    {table
+                      .getAllColumns()
+                      .filter(
+                        (column) =>
+                          typeof column.accessorFn !== "undefined" &&
+                          column.getCanHide(),
+                      )
+                      .map((column) => (
+                        <div
+                          key={column.id}
+                          className="hover:bg-muted/40 flex items-center gap-2 rounded-lg p-1.5 transition-colors"
+                        >
+                          <Checkbox
+                            id={column.id}
+                            checked={column.getIsVisible()}
+                            onCheckedChange={(value) =>
+                              column.toggleVisibility(!!value)
+                            }
+                            className="size-4"
+                          />
+                          <Label
+                            htmlFor={column.id}
+                            className="grow cursor-pointer text-sm font-normal"
+                          >
+                            {typeof column.columnDef.header === "string"
+                              ? column.columnDef.header
+                              : column.id}
+                          </Label>
+                        </div>
+                      ))}
                   </div>
                 </div>
               </PopoverContent>
             </Popover>
           </div>
         </div>
-        {/* Delete selected */}
-        {table.getSelectedRowModel().rows.length > 0 && (
-          <div className="flex items-center gap-3 pt-2">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  <RiDeleteBinLine size={16} className="mr-2" />
-                  Elimina Selezionati
-                  <Badge
-                    variant="secondary"
-                    className="bg-destructive-foreground text-destructive ml-2"
-                  >
-                    {table.getSelectedRowModel().rows.length}
-                  </Badge>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <div className="flex items-start gap-4">
-                  <div className="border-destructive/20 bg-destructive/10 flex size-10 shrink-0 items-center justify-center rounded-full border">
-                    <RiErrorWarningLine className="text-destructive size-5" />
-                  </div>
-                  <div className="space-y-2">
+
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Left: Actions */}
+          <div className="flex items-center gap-2">
+            {numSelected > 0 && (
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <RiDeleteBinLine size={16} className="mr-2" />
+                      Elimina Selezionati ({numSelected})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
+                      <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Stai per eliminare{" "}
-                        {table.getSelectedRowModel().rows.length}{" "}
-                        {table.getSelectedRowModel().rows.length === 1
-                          ? "classe documentale"
-                          : "classi documentali"}
-                        . Questa azione non può essere annullata.
+                        Stai per eliminare {numSelected} class
+                        {numSelected === 1 ? "e" : "i"} documentale
+                        {numSelected === 1 ? "" : "i"}. Questa azione non può
+                        essere annullata.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                  </div>
-                </div>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDeleteRows}
-                    className="bg-destructive hover:bg-destructive/90"
-                  >
-                    Elimina
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annulla</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          // Handle deletion of selected rows
+                          console.log("Deleting selected rows:", selectedRows);
+                        }}
+                      >
+                        Elimina
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.resetRowSelection()}
+                >
+                  Deseleziona ({numSelected})
+                </Button>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* --- Table Section --- */}
@@ -725,7 +751,7 @@ export default function DocumentClassiTable({
                       <p className="text-muted-foreground text-base">
                         Nessuna classe documentale trovata
                       </p>
-                      {hasActiveFilters && (
+                      {dateRange && (
                         <p className="text-muted-foreground/80 text-xs">
                           Prova a modificare i filtri di ricerca
                         </p>
@@ -934,15 +960,12 @@ declare module "@tanstack/react-table" {
     dateRange: FilterFn<Sharer | Viewer>;
     activeStatus: FilterFn<Sharer | Viewer>;
     documentClassDateRange: FilterFn<DocumentClass>;
+    documentClassSharer: FilterFn<DocumentClass>;
   }
 }
 
 // SharerAvatarGroup: Animated, modern avatar group for sharers, matching user-presence-avatar.tsx style
-function SharerAvatarGroup({
-  sharers,
-}: {
-  sharers: { nominativo: string; avatarUrl?: string }[];
-}) {
+function SharerAvatarGroup({ sharers }: { sharers: { nominativo: string }[] }) {
   // Show up to 3 avatars, stack them, and show a "+N" badge if more
   const maxVisible = 3;
   const visibleSharers = sharers.slice(0, maxVisible);
@@ -977,9 +1000,6 @@ function SharerAvatarGroup({
               key={sharer.nominativo + idx}
               className="size-7 border-2 border-neutral-200/80 shadow-sm dark:border-neutral-800/80"
             >
-              {sharer.avatarUrl ? (
-                <AvatarImage src={sharer.avatarUrl} alt={sharer.nominativo} />
-              ) : null}
               <AvatarFallback className="text-foreground/90 bg-neutral-100 text-[10px] font-semibold dark:bg-neutral-700">
                 {getInitials(sharer.nominativo)}
               </AvatarFallback>

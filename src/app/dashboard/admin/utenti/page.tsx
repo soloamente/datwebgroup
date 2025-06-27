@@ -132,7 +132,7 @@ export default function ListaSharerPage() {
           {/* Actions dropdown for user management */}
 
           <Button
-            className="bg-primary text-white"
+            className="bg-primary rounded-full text-white"
             onClick={handleOpenCreateDialog}
           >
             <Plus size={20} />

@@ -44,7 +44,7 @@ export default function PasswordInput({
   const toggleVisibility = () => setIsVisible((prevState) => !prevState);
 
   return (
-    <div className="*:not-first:mt-2">
+    <div className="">
       <Label
         htmlFor={id}
         className="flex items-center justify-between transition-all duration-700"
@@ -84,7 +84,8 @@ export default function PasswordInput({
           id={id}
           value={value}
           onChange={onChange}
-          className="peer border-border h-12 rounded-2xl border-[1.5px] p-4 ps-10 pe-9 placeholder:text-black/20 lg:h-14 dark:border-white/20 dark:placeholder:text-white/20"
+          autoFocus
+          className="peer border-border h-14 rounded-2xl border-[1.5px] p-4 ps-10 pe-9 placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
           placeholder="Pa12£$56789!%"
           type={isVisible ? "text" : "password"}
         />

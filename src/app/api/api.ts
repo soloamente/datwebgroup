@@ -246,12 +246,14 @@ const resetPasswordByUsername = async (
 };
 
 // New function to get document classes
-const getDocumentClasses = async (): Promise<DocumentClass[]> => {
+export const getDocumentClasses = async (): Promise<DocumentClass[]> => {
   const response = await api.get<DocumentClass[]>("/document-classes");
   return response.data;
 };
 
-const getDocumentClassById = async (id: number): Promise<ApiResponseSingle> => {
+export const getDocumentClassById = async (
+  id: number,
+): Promise<ApiResponseSingle> => {
   const response = await api.get<ApiResponseSingle>(`/document-classes/${id}`);
   return response.data;
 };

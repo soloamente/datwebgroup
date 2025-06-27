@@ -34,7 +34,7 @@ export default function StatCard({
   };
 
   return (
-    <Card className="flex h-full flex-col justify-between p-6 dark:border-gray-700 dark:bg-gray-800">
+    <Card className="flex h-full flex-col justify-between rounded-2xl p-6 dark:border-gray-700 dark:bg-gray-800">
       <div className="mb-2 flex items-center gap-2">
         <Icon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
         <h3 className="text-base font-medium text-gray-800 md:text-lg dark:text-white">

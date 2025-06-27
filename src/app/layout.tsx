@@ -5,7 +5,7 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Preferences } from "@/components/ui/preferences";
 import { ReactLenis } from "lenis/react";
-import { Inter } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 
 const ingram = localFont({
@@ -13,9 +13,10 @@ const ingram = localFont({
   variable: "--font-ingram",
 });
 
-const inter = localFont({
-  src: "../../public/fonts/inter/InterVariable.ttf",
-  variable: "--font-inter",
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-dmSans",
 });
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${ingram.variable} font-inter antialiased`}
+      className={`${dmSans.variable} ${ingram.variable} font-dmSans antialiased`}
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import useAuthStore from "@/app/api/auth";
 import { navigationData } from "@/app/dashboard/admin/navigation";
-import Cookies from "js-cookie";
 
 interface CookieStorage {
   state: {
@@ -33,7 +32,6 @@ export function AdminDashboardClient({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -44,7 +42,9 @@ export function AdminDashboardClient({
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      setSidebarOpen(!mobile);
+      if (!mobile) {
+        setSidebarOpen(true);
+      }
     };
 
     handleResize();
@@ -76,25 +76,25 @@ export function AdminDashboardClient({
 
   const isActiveRoute = (url: string) => {
     if (url === "#") return false;
+    // Exact match to prevent dashboard being active when on sub-routes
     return pathname === url;
   };
 
   const handleSidebarToggle = () => {
-    setIsTransitioning(true);
     setSidebarOpen(!sidebarOpen);
-    setTimeout(() => setIsTransitioning(false), 200);
   };
 
   return (
-    <main className="flex min-h-screen overflow-hidden transition-all duration-700">
+    <main className="flex min-h-screen transition-all duration-300">
+      {/* Sidebar */}
       <aside
-        id="sidebar"
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } bg-sidebar fixed z-30 m-2 w-[300px] flex-col gap-4 rounded-2xl border p-3 transition-all duration-200 md:relative md:m-4 md:w-[300px] md:translate-x-0 md:p-4`}
+        } bg-sidebar fixed z-30 m-2 flex h-[calc(100vh-1rem)] w-[300px] flex-col gap-4 rounded-2xl border p-3 transition-all duration-300 ease-in-out md:sticky md:top-4 md:m-4 md:h-[calc(100vh-2rem)] md:w-[300px] md:translate-x-0 md:p-4`}
         aria-label="Sidebar"
       >
-        <header id="sidebarHeader" className="mb-6 md:mb-8">
+        {/* Header */}
+        <header className="mb-6 md:mb-8">
           <div className="flex items-center justify-between">
             <div className="flex h-[42px] w-full items-center justify-start gap-2">
               <Image
@@ -102,42 +102,54 @@ export function AdminDashboardClient({
                 alt={`Avatar di ${userData.name}`}
                 width={42}
                 height={42}
-                className="rounded-lg"
+                className="ring-border/50 rounded-lg ring-1"
                 priority
               />
               <div className="flex-col">
-                <h2 className="font-semibold">{userData.name}</h2>
-                <p className="text-xs opacity-50">{userData.role}</p>
+                <h2 className="text-sm font-semibold">{userData.name}</h2>
+                <p className="text-xs capitalize opacity-60">{userData.role}</p>
               </div>
             </div>
             <Button
-              className="flex items-center gap-2"
-              onClick={handleLogout}
-              disabled={loading}
-              aria-label="Logout"
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={handleSidebarToggle}
+              aria-label="Chiudi sidebar"
             >
-              <LogOut size={20} className="text-white" />
+              <X size={18} />
             </Button>
           </div>
         </header>
 
-        <nav
-          id="sidebarContent"
-          className="flex flex-col gap-6 md:gap-8"
-          aria-label="Main navigation"
-        >
+        {/* Navigation */}
+        <nav className="flex flex-1 flex-col gap-6 overflow-y-auto md:gap-8">
           {/* General Navigation */}
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm opacity-40">Generale</h3>
+            <h3 className="px-2 text-xs font-medium tracking-wider uppercase opacity-60">
+              Generale
+            </h3>
             {navigationData.navGeneral.map((item) => (
               <div key={item.title}>
                 <Link href={item.url} aria-label={item.description}>
                   <Button
                     variant={isActiveRoute(item.url) ? "outline" : "ghost"}
-                    className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
+                    className={`flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none transition-all duration-200 ${
+                      isActiveRoute(item.url)
+                        ? "bg-accent border-accent-foreground/20"
+                        : "hover:bg-accent/50"
+                    }`}
                   >
-                    <item.icon size={20} className="mr-2" aria-hidden="true" />
-                    <span className="text-sm">{item.title}</span>
+                    <item.icon
+                      size={20}
+                      className={`mr-2 transition-colors duration-200 ${
+                        isActiveRoute(item.url)
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium">{item.title}</span>
                   </Button>
                 </Link>
               </div>
@@ -147,7 +159,9 @@ export function AdminDashboardClient({
           {/* Admin Navigation */}
           {authStore.isAdmin() && (
             <div className="flex flex-col gap-2">
-              <h3 className="text-sm opacity-40">Amministrazione</h3>
+              <h3 className="px-2 text-xs font-medium tracking-wider uppercase opacity-60">
+                Amministrazione
+              </h3>
               {navigationData.navAdmin.map((item) => (
                 <Link
                   href={item.url}
@@ -156,59 +170,86 @@ export function AdminDashboardClient({
                 >
                   <Button
                     variant={isActiveRoute(item.url) ? "outline" : "ghost"}
-                    className="flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none"
+                    className={`flex h-10 w-full items-center justify-start rounded-lg p-2 shadow-none transition-all duration-200 ${
+                      isActiveRoute(item.url)
+                        ? "bg-accent border-accent-foreground/20"
+                        : "hover:bg-accent/50"
+                    }`}
                   >
-                    <item.icon size={20} className="mr-2" aria-hidden="true" />
-                    <span className="text-sm">{item.title}</span>
+                    <item.icon
+                      size={20}
+                      className={`mr-2 transition-colors duration-200 ${
+                        isActiveRoute(item.url)
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium">{item.title}</span>
                   </Button>
                 </Link>
               ))}
             </div>
           )}
         </nav>
-      </aside>
 
-      <section
-        id="content"
-        className="flex w-full flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4"
-      >
-        {isMobile && (
+        {/* Footer */}
+        <div className="border-border/50 border-t pt-4">
           <Button
             variant="outline"
-            size="icon"
-            className="mb-2 md:hidden"
-            onClick={handleSidebarToggle}
-            aria-label={sidebarOpen ? "Chiudi menu" : "Apri menu"}
-            aria-expanded={sidebarOpen}
+            className="hover:bg-accent/50 flex w-full items-center justify-start gap-2 rounded-lg p-2 shadow-none"
+            onClick={handleLogout}
+            disabled={loading}
+            aria-label="Logout"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
+            <LogOut size={20} className="text-muted-foreground" />
+            <span className="text-sm font-medium">
+              {loading ? "Disconnessione..." : "Logout"}
+            </span>
           </Button>
-        )}
-        <div
-          className={`transition-opacity duration-200 ${isTransitioning ? "opacity-50" : "opacity-100"}`}
-        >
-          {children}
         </div>
+      </aside>
+
+      {/* Main Content */}
+      <section className="flex w-full flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4">
+        {/* Mobile Header */}
+        {isMobile && (
+          <div className="mb-4 flex items-center gap-3 md:hidden">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10"
+              onClick={handleSidebarToggle}
+              aria-label="Apri menu"
+              aria-expanded={sidebarOpen}
+            >
+              <Menu size={20} />
+            </Button>
+            <div className="flex items-center gap-2">
+              <Image
+                src={userData.avatar}
+                alt={`Avatar di ${userData.name}`}
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{userData.name}</span>
+                <span className="text-xs capitalize opacity-60">
+                  {userData.role}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1">{children}</div>
       </section>
 
+      {/* Mobile Overlay */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm transition-opacity duration-200"
+          className="fixed inset-0 z-20 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />

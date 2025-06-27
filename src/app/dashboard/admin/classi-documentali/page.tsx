@@ -1,7 +1,7 @@
 "use client";
 import DocumentClassiTable from "@/components/dashboard/tables/admin/classi-documentali";
 import {
-  userService,
+  getDocumentClasses,
   type DocumentClass,
   type DocumentClassField,
   type Sharer,
@@ -92,40 +92,31 @@ export default function ClassiDocumentali() {
   const formattedChange = `${percentOfLastMonth.toFixed(0)}%`;
   const trend = "up";
 
-  // Calculate the percentage change for 'Create questo mese' (increase/decrease)
+  // Calculate the percentage change for 'Create questo mese' (without increase/decrease labels)
   let monthChange = 0;
-  let monthChangeLabel = "";
   let monthTrend: "up" | "down" = "up";
   if (prevMonthCreated === 0 && recentlyCreated > 0) {
     monthChange = 100;
-    monthChangeLabel = "increase";
     monthTrend = "up";
   } else if (prevMonthCreated === 0 && recentlyCreated === 0) {
     monthChange = 0;
-    monthChangeLabel = "";
     monthTrend = "up";
   } else {
     monthChange =
       ((recentlyCreated - prevMonthCreated) / prevMonthCreated) * 100;
     if (monthChange > 0) {
-      monthChangeLabel = "increase";
       monthTrend = "up";
     } else if (monthChange < 0) {
-      monthChangeLabel = "decrease";
       monthTrend = "down";
     } else {
-      monthChangeLabel = "";
       monthTrend = "up";
     }
   }
   const formattedMonthChange =
-    monthChange === 0
-      ? "0%"
-      : `${Math.abs(monthChange).toFixed(0)}% ${monthChangeLabel}`;
+    monthChange === 0 ? "0%" : `${Math.abs(monthChange).toFixed(0)}%`;
 
-  // Calculate the percentage change for 'Totale Campi' (increase/decrease)
+  // Calculate the percentage change for 'Totale Campi' (without increase/decrease labels)
   let fieldsChange = 0;
-  let fieldsChangeLabel = "";
   let fieldsTrend: "up" | "down" = "up";
   // Calculate total fields for previous month
   const prevMonthFields = documents
@@ -139,75 +130,89 @@ export default function ClassiDocumentali() {
     .reduce((acc, doc) => acc + (doc.campi?.length ?? 0), 0);
   if (prevMonthFields === 0 && totalFields > 0) {
     fieldsChange = 100;
-    fieldsChangeLabel = "increase";
     fieldsTrend = "up";
   } else if (prevMonthFields === 0 && totalFields === 0) {
     fieldsChange = 0;
-    fieldsChangeLabel = "";
     fieldsTrend = "up";
   } else {
     fieldsChange = ((totalFields - prevMonthFields) / prevMonthFields) * 100;
     if (fieldsChange > 0) {
-      fieldsChangeLabel = "increase";
       fieldsTrend = "up";
     } else if (fieldsChange < 0) {
-      fieldsChangeLabel = "decrease";
       fieldsTrend = "down";
     } else {
-      fieldsChangeLabel = "";
       fieldsTrend = "up";
     }
   }
   const formattedFieldsChange =
-    fieldsChange === 0
-      ? "0%"
-      : `${Math.abs(fieldsChange).toFixed(0)}% ${fieldsChangeLabel}`;
+    fieldsChange === 0 ? "0%" : `${Math.abs(fieldsChange).toFixed(0)}%`;
 
   // --- Handlers for dialog ---
   const handleOpenCreateDialog = () => setIsCreateDialogOpen(true);
   const handleCloseCreateDialog = () => setIsCreateDialogOpen(false);
 
+  // Type guard function to check if response is valid ApiResponse
+  const isValidApiResponse = (data: unknown): data is ApiResponse => {
+    return (
+      typeof data === "object" &&
+      data !== null &&
+      "data" in data &&
+      Array.isArray((data as ApiResponse).data)
+    );
+  };
+
   const fetchDocumentClassesData = async () => {
     console.log("fetchDocumentClassesData called");
     setIsLoading(true);
     try {
-      const response =
-        (await userService.getDocumentClasses()) as unknown as ApiResponse;
+      // The API actually returns a response object with message and data properties
+      let apiResponse: unknown;
 
-      if (response?.data && Array.isArray(response.data)) {
-        const transformedData: DocumentClass[] = response.data.map(
-          (item: ApiDocumentClass): DocumentClass => ({
-            id: item.id,
-            nome: item.name,
-            descrizione: item.description,
-            campi:
-              item.fields?.map(
-                (field: ApiDocumentClassField): DocumentClassField => ({
-                  id: field.id,
-                  nome: field.name,
-                  label: field.label,
-                  tipo: field.data_type,
-                  obbligatorio: field.required === 1,
-                  is_primary_key: field.is_primary_key === 1,
-                  sort_order: field.sort_order,
-                  options: field.options,
-                }),
-              ) ?? [],
-            sharers: item.sharers ?? [],
-            created_at: item.created_at ?? "",
-            updated_at: item.updated_at ?? "",
-          }),
-        );
-        console.log("Transformed document classes data:", transformedData);
-        setDocuments(transformedData);
-      } else {
-        console.error(
-          "Fetched data is not in the expected format or data array is missing:",
-          response,
-        );
-        toast.error("Dati ricevuti in formato non valido.");
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        apiResponse = await getDocumentClasses();
+      } catch (apiError) {
+        console.error("API call failed:", apiError);
+        toast.error("Impossibile caricare le classi documentali.");
         setDocuments([]);
+        return;
       }
+
+      // Check if the result is a valid ApiResponse
+      if (!isValidApiResponse(apiResponse)) {
+        console.error("Invalid response from getDocumentClasses:", apiResponse);
+        toast.error("Risposta non valida dal server.");
+        setDocuments([]);
+        return;
+      }
+
+      // Now we can safely use apiResponse as ApiResponse and transform the data
+      const transformedData: DocumentClass[] = apiResponse.data.map(
+        (item: ApiDocumentClass): DocumentClass => ({
+          id: item.id,
+          nome: item.name,
+          descrizione: item.description,
+          campi:
+            item.fields?.map(
+              (field: ApiDocumentClassField): DocumentClassField => ({
+                id: field.id,
+                nome: field.name,
+                label: field.label,
+                tipo: field.data_type,
+                obbligatorio: field.required === 1,
+                is_primary_key: field.is_primary_key === 1,
+                sort_order: field.sort_order,
+                options: field.options,
+              }),
+            ) ?? [],
+          sharers: item.sharers ?? [],
+          created_at: item.created_at ?? "",
+          updated_at: item.updated_at ?? "",
+        }),
+      );
+
+      console.log("Transformed document classes data:", transformedData);
+      setDocuments(transformedData);
     } catch (error) {
       console.error("Failed to fetch document classes:", error);
       toast.error("Impossibile caricare le classi documentali.");
@@ -246,7 +251,7 @@ export default function ClassiDocumentali() {
           </p>
         </div>
         <Button
-          className="bg-primary text-white"
+          className="bg-primary rounded-full text-white"
           onClick={handleOpenCreateDialog}
         >
           <Plus size={20} />

@@ -271,7 +271,7 @@ export default function AdminLoginRightSide({
                 Inserisci la tua password per continuare.
               </p>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <PasswordInput
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
