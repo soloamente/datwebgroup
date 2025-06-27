@@ -365,6 +365,7 @@ export default function ViewerTable({
     filterFns: {
       activeStatus: activeStatusFilterFn,
       dateRange: dateRangeFilterFn,
+      documentClassDateRange: dateRangeFilterFn,
     },
   });
 

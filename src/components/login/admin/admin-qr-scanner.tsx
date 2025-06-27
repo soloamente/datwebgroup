@@ -59,8 +59,9 @@ export default function AdminQrScanner({
 
         setIsLoading(false);
       } catch (err) {
+        // Messaggio di errore mostrato all'utente se l'accesso alla fotocamera viene negato
         const errorMessage =
-          "Camera access denied. Please enable camera access to use QR login.";
+          "Accesso alla fotocamera negato. Abilita l'accesso alla fotocamera per utilizzare il login QR.";
         setError(errorMessage); // Keep internal state for UI
         toast.error(errorMessage); // Show toast notification
         setIsLoading(false);

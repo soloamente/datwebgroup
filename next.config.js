@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const config = {
+  // Enable built-in Next.js font optimization for better performance
+  optimizeFonts: true,
   async headers() {
     return [
       {

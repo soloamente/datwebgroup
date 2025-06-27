@@ -8,15 +8,23 @@ import { ReactLenis } from "lenis/react";
 import { DM_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 
+// Update: Font now loaded from src/app/fonts/ingram instead of public/fonts/ingram
 const ingram = localFont({
-  src: "../../public/fonts/ingram/IngramMono-Regular.ttf",
+  src: "./fonts/ingram/IngramMono-Regular.ttf",
   variable: "--font-ingram",
 });
 
+<<<<<<< HEAD
 const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
   variable: "--font-dmSans",
+=======
+// Update: Font now loaded from src/app/fonts/Inter instead of public/fonts/inter
+const inter = localFont({
+  src: "./fonts/Inter/InterVariable.ttf",
+  variable: "--font-inter",
+>>>>>>> cdd9cf6fdf54481c09c423ca26780aa761bc65d3
 });
 
 export const metadata: Metadata = {
