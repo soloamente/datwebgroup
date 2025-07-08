@@ -113,6 +113,7 @@ import {
   type DateField,
   DateRangeFilter,
 } from "@/components/filters/date-range-filter";
+import Image from "next/image";
 
 // Filter function that correctly handles active status boolean
 const activeStatusFilterFn: FilterFn<Sharer | Viewer> = (
@@ -126,7 +127,7 @@ const activeStatusFilterFn: FilterFn<Sharer | Viewer> = (
 };
 
 // Global filter function for text search across multiple fields
-const globalFilterFn: FilterFn<Sharer> = (
+const globalFilterFn: FilterFn<Sharer | Viewer> = (
   row,
   columnId,
   filterValue: string,
@@ -146,7 +147,7 @@ const globalFilterFn: FilterFn<Sharer> = (
 };
 
 // Add date range filter function
-const dateRangeFilterFn: FilterFn<Sharer> = (
+const dateRangeFilterFn: FilterFn<Sharer | Viewer> = (
   row,
   columnId,
   value: DayPickerDateRange | undefined,
@@ -210,6 +211,28 @@ const getColumns = ({
   //   enableSorting: false,
   //   enableHiding: false,
   // },
+  {
+    header: "",
+    accessorKey: "logo_url",
+    cell: ({ row }) => {
+      const logoUrl = row.getValue("logo_url");
+      const nominativo = row.getValue("nominativo");
+      if (typeof logoUrl === "string") {
+        return (
+          <Image
+            src={logoUrl}
+            alt={`Logo di ${nominativo}`}
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+        );
+      }
+      return null;
+    },
+    size: 60,
+    enableSorting: false,
+  },
   {
     header: "Username",
     accessorKey: "username",
@@ -399,12 +422,13 @@ export default function SharerTable({
       columnVisibility,
       globalFilter,
     },
-
     filterFns: {
       activeStatus: activeStatusFilterFn,
       dateRange: dateRangeFilterFn,
-      documentClassDateRange: dateRangeFilterFn,
+      documentClassDateRange: () => true,
+      documentClassSharer: () => true,
     },
+    enableRowSelection: true,
   });
 
   // Extract complex expressions into separate variables
@@ -996,5 +1020,9 @@ declare module "@tanstack/react-table" {
     activeStatus: FilterFn<Sharer | Viewer>;
     // eslint-disable-next-line
     dateRange: FilterFn<Sharer | Viewer>;
+    // eslint-disable-next-line
+    documentClassDateRange: FilterFn<Sharer | Viewer>;
+    // eslint-disable-next-line
+    documentClassSharer: FilterFn<Sharer | Viewer>;
   }
 }

@@ -48,6 +48,7 @@ export interface CreateSharerData {
   email: string;
   codice_fiscale?: string;
   partita_iva?: string;
+  logo?: File;
 }
 
 export interface ChangePasswordData {
@@ -62,6 +63,7 @@ export interface Sharer {
   email: string;
   role: string;
   active: boolean;
+  logo_url: string;
   codice_fiscale?: string;
   partita_iva?: string;
   created_at: string;
@@ -75,6 +77,7 @@ export interface Viewer {
   email: string;
   role: string;
   active: boolean;
+  logo_url: string;
   sharer_id: number;
   codice_fiscale?: string;
   partita_iva?: string;
@@ -106,6 +109,11 @@ export interface SendUsernameByIdData {
   sharer_id: number;
 }
 
+export interface ExtractedInfo {
+  nominativo: string | null;
+  codice_fiscale: string | null;
+}
+
 // Define response types for the new functions
 export interface CheckUsernameResponse {
   exists: boolean;
@@ -134,6 +142,7 @@ export interface DocumentClass {
   id: number;
   nome: string;
   descrizione: string;
+  logo_url: string | null;
   campi: DocumentClassField[];
   sharers: Sharer[] | null; // Changed to allow null
   created_at: string;
@@ -169,6 +178,69 @@ interface ApiResponseSingle {
   data: ApiDocumentClass; // Single ApiDocumentClass object
 }
 // --- End of copied types ---
+
+// --- Inizio Tipi per Shared Batches ---
+
+export interface SharerInfo {
+  id: number;
+  nominativo: string;
+  email: string;
+  logo_url: string;
+}
+
+export interface ViewerInfo {
+  id: number;
+  nominativo: string;
+  email: string;
+}
+
+export interface AttachedFile {
+  id: number;
+  original_filename: string;
+  mime_type: string;
+  size: number;
+}
+
+export interface SharedDocument {
+  id: number;
+  metadata: Record<string, string | number | boolean | null>;
+  files: AttachedFile[];
+}
+
+export interface SharedBatch {
+  id: number;
+  title: string;
+  status: string;
+  sent_at: string;
+  viewers: ViewerInfo[];
+  documents: SharedDocument[];
+}
+
+export interface BatchDocumentClassField {
+  id: number;
+  name: string;
+  label: string;
+  data_type: string;
+  required: number;
+  is_primary_key: number;
+  options: { value: string; label: string }[];
+}
+
+export interface DocumentClassDetails {
+  id: number;
+  name: string;
+  logo_url: string;
+  fields: BatchDocumentClassField[];
+}
+
+export interface GetSharedBatchesResponse {
+  message: string;
+  data: SharedBatch[];
+  document_class: DocumentClassDetails;
+  sharer: SharerInfo;
+}
+
+// --- Fine Tipi per Shared Batches ---
 
 const getSharers = async (): Promise<Sharer[]> => {
   const response = await api.get<Sharer[]>("/sharers");
@@ -300,6 +372,19 @@ const addEnumOption = async (
   );
   return response.data;
 };
+
+// --- Inizio Funzione per Recupero Documenti Condivisi ---
+
+export const getSharedBatchesByDocumentClass = async (
+  document_class_id: number,
+): Promise<GetSharedBatchesResponse> => {
+  const response = await api.get<GetSharedBatchesResponse>(
+    `/document-classes/${document_class_id}/shared-batches`,
+  );
+  return response.data;
+};
+
+// --- Fine Funzione per Recupero Documenti Condivisi ---
 
 // Interface for add field request
 export interface AddDocumentClassFieldRequest {
@@ -439,6 +524,43 @@ export interface UpdateDocumentClassResponse {
   data: DocumentClass;
 }
 
+// Interfaces for my-document-classes endpoint (for sharers)
+export interface MyDocumentClassFieldOption {
+  id: number;
+  value: string;
+  label: string;
+}
+
+export interface MyDocumentClassField {
+  id: number;
+  name: string;
+  label: string;
+  data_type:
+    | "string"
+    | "integer"
+    | "boolean"
+    | "decimal"
+    | "date"
+    | "datetime"
+    | "enum";
+  required: 0 | 1;
+  is_primary_key: 0 | 1;
+  sort_order: number;
+  options: MyDocumentClassFieldOption[] | null;
+}
+
+export interface MyDocumentClass {
+  id: number;
+  name: string;
+  description: string | null;
+  fields: MyDocumentClassField[];
+}
+
+export interface GetMyDocumentClassesResponse {
+  message: string;
+  data: MyDocumentClass[];
+}
+
 // --- Nuove interfacce per recovery-username-request ---
 export interface RecoveryUsernameRequestData {
   ragione_sociale: string;
@@ -482,10 +604,12 @@ const updateDocumentClass = async (
  * Request type for creating a document class
  * - name: required
  * - description: optional
+ * - logo: optional
  */
 export interface CreateDocumentClassRequest {
   name: string; // obbligatorio
   description?: string; // facoltativo
+  logo?: File | null; // facoltativo
 }
 
 /**
@@ -499,74 +623,385 @@ export interface CreateDocumentClassResponse {
 
 /**
  * Creates a new document class via POST /document-classes
- * @param data - The document class data (name required, description optional)
+ * @param data - The document class data (name required, description optional, logo optional)
  * @returns Promise<CreateDocumentClassResponse>
  * @throws {AxiosError} - Surfaces API error messages for validation
  */
 const createDocumentClass = async (
   data: CreateDocumentClassRequest,
 ): Promise<CreateDocumentClassResponse> => {
+  const formData = new FormData();
+  formData.append("name", data.name);
+  if (data.description) {
+    formData.append("description", data.description);
+  }
+  if (data.logo) {
+    formData.append("logo", data.logo);
+  }
+
   try {
     const response = await api.post<CreateDocumentClassResponse>(
       "/document-classes",
-      data,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
     );
     return response.data;
   } catch (error) {
-    // Surface API validation errors if present
-    if (axios.isAxiosError(error) && error.response) {
-      const data: unknown = error.response.data;
-      let message = "Errore nella creazione della classe documentale.";
-      let errors: Record<string, string[]> | undefined = undefined;
-      // Type guard for error response
+    if (axios.isAxiosError(error)) {
       type ErrorData = {
         message?: string;
         error?: string;
         errors?: Record<string, string[]>;
       };
+
       function isErrorData(obj: unknown): obj is ErrorData {
-        return typeof obj === "object" && obj !== null;
+        return (
+          typeof obj === "object" &&
+          obj !== null &&
+          ("message" in obj || "error" in obj || "errors" in obj)
+        );
       }
-      if (isErrorData(data)) {
-        if (typeof data.message === "string") {
-          message = data.message;
-        } else if (typeof data.error === "string") {
-          message = data.error;
-        }
-        if (typeof data.errors === "object" && data.errors !== null) {
-          errors = data.errors;
-        }
+
+      if (isErrorData(error.response?.data)) {
+        const responseData = error.response.data;
+        return {
+          message:
+            responseData.message ??
+            responseData.error ??
+            "Errore di validazione.",
+          errors: responseData.errors,
+        };
       }
-      return {
-        message,
-        errors,
-      };
+    }
+    // Fallback per altri tipi di errori
+    return {
+      message: "An unexpected error occurred.",
+    };
+  }
+};
+
+const createViewer = async (
+  data: CreateViewerData,
+): Promise<{ success: boolean; message: string }> => {
+  const response = await api.post<Blob>("/create-viewer", data, {
+    responseType: "blob",
+    validateStatus: (status) => status < 500,
+  });
+
+  if (response.status === 200 && response.data.type === "application/pdf") {
+    const contentDisposition = response.headers["content-disposition"] as
+      | string
+      | undefined;
+    let filename = `credenziali_${data.nominativo.replace(/\s+/g, "_").toLowerCase()}.pdf`;
+    if (contentDisposition) {
+      const filenameMatch = /filename="?(.+)"?/i.exec(contentDisposition);
+      if (filenameMatch?.[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    return {
+      success: true,
+      message: "Credenziali viewer generate e download avviato.",
+    };
+  } else {
+    const errorText = await response.data.text();
+    const errorJson = JSON.parse(errorText) as {
+      message?: string;
+      error?: string;
+    };
+
+    const error = new AxiosError(
+      errorJson.message ?? "Errore nella creazione del viewer.",
+      String(response.status), // code
+    );
+    error.response = {
+      ...response,
+      data: errorJson,
+      config: response.config,
+      headers: response.headers,
+    };
+    throw error;
+  }
+};
+
+const resetViewerPassword = async (
+  viewerId: number,
+  viewerName: string,
+): Promise<{ success: boolean; message: string }> => {
+  const response = await api.post<Blob>(
+    `/viewers/${viewerId}/reset-password`,
+    null,
+    {
+      responseType: "blob",
+      validateStatus: (status) => status < 500,
+    },
+  );
+
+  if (response.status === 200 && response.data.type === "application/pdf") {
+    const contentDisposition = response.headers["content-disposition"] as
+      | string
+      | undefined;
+    let filename = `credenziali_aggiornate_${viewerName
+      .replace(/\s+/g, "_")
+      .toLowerCase()}.pdf`;
+    if (contentDisposition) {
+      const filenameMatch = /filename="?(.+)"?/i.exec(contentDisposition);
+      if (filenameMatch?.[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    return {
+      success: true,
+      message: "Password resettata e credenziali scaricate con successo.",
+    };
+  } else {
+    const errorText = await response.data.text();
+    const errorJson = JSON.parse(errorText) as {
+      message?: string;
+      error?: string;
+    };
+
+    const error = new AxiosError(
+      errorJson.message ?? "Errore nel reset della password del viewer.",
+      String(response.status), // code
+    );
+    error.response = {
+      ...response,
+      data: errorJson,
+      config: response.config,
+      headers: response.headers,
+    };
+    throw error;
+  }
+};
+
+const downloadViewerCredentials = async (
+  viewerId: number,
+  viewerName: string,
+): Promise<{ success: boolean; message: string }> => {
+  const response = await api.get<Blob>(`/viewers/${viewerId}/print-pdf`, {
+    responseType: "blob",
+    validateStatus: (status) => status < 500,
+  });
+
+  if (response.status === 200 && response.data.type === "application/pdf") {
+    const contentDisposition = response.headers["content-disposition"] as
+      | string
+      | undefined;
+    let filename = `credenziali_${viewerName
+      .replace(/\s+/g, "_")
+      .toLowerCase()}.pdf`;
+    if (contentDisposition) {
+      const filenameMatch = /filename="?(.+)"?/i.exec(contentDisposition);
+      if (filenameMatch?.[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    return {
+      success: true,
+      message: "Credenziali viewer scaricate con successo.",
+    };
+  } else {
+    const errorText = await response.data.text();
+    const errorJson = JSON.parse(errorText) as {
+      message?: string;
+      error?: string;
+    };
+
+    const error = new AxiosError(
+      errorJson.message ?? "Errore nello scaricare le credenziali del viewer.",
+      String(response.status), // code
+    );
+    error.response = {
+      ...response,
+      data: errorJson,
+      config: response.config,
+      headers: response.headers,
+    };
+    throw error;
+  }
+};
+
+const extractInfoFromDocument = async (
+  documento_1: File,
+  documento_2?: File,
+): Promise<ExtractedInfo> => {
+  const formData = new FormData();
+  formData.append("documento_1", documento_1);
+  if (documento_2) {
+    formData.append("documento_2", documento_2);
+  }
+
+  const response = await api.post<ExtractedInfo>(
+    "/viewers/extract-info-from-document",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+/**
+ * Recupera le classi documentali per lo sharer autenticato.
+ * Endpoint: GET /my-document-classes
+ * @returns {Promise<GetMyDocumentClassesResponse>}
+ */
+export const getMyDocumentClasses =
+  async (): Promise<GetMyDocumentClassesResponse> => {
+    const response = await api.get<GetMyDocumentClassesResponse>(
+      "/my-document-classes",
+    );
+    return response.data;
+  };
+
+const createSharer = async (
+  data: FormData,
+): Promise<{ message: string; sharer: Sharer }> => {
+  const response = await api.post<{ message: string; sharer: Sharer }>(
+    "/create-sharer",
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+const updateSharerLogo = async (
+  id: number,
+  logo: File,
+): Promise<{ message: string; sharer: Sharer }> => {
+  const formData = new FormData();
+  formData.append("logo", logo);
+
+  const response = await api.post<{ message: string; sharer: Sharer }>(
+    `/sharers/${id}/logo`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+export interface ShareDocumentsRequest {
+  document_class_id: number;
+  viewer_ids: number[];
+  metadata: Record<string, string | number | boolean>;
+  files: File[];
+}
+
+export interface ShareDocumentsResponse {
+  message: string;
+  batch_id?: number;
+  errors?: Record<string, string[]>;
+}
+
+const shareDocuments = async (
+  data: ShareDocumentsRequest,
+): Promise<ShareDocumentsResponse> => {
+  const formData = new FormData();
+  formData.append("document_class_id", data.document_class_id.toString());
+  data.viewer_ids.forEach((id) =>
+    formData.append("viewer_ids[]", id.toString()),
+  );
+  formData.append("metadata", JSON.stringify(data.metadata));
+  data.files.forEach((file) => formData.append("files[]", file));
+
+  try {
+    const response = await api.post<ShareDocumentsResponse>(
+      "/share-documents",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      // Return the validation errors from the API
+      return error.response.data as ShareDocumentsResponse;
     }
     throw error;
   }
 };
 
 export const userService = {
-  createViewer: (data: CreateViewerData) => api.post("/create-viewer", data),
-  createSharer: (data: CreateSharerData) => api.post("/create-sharer", data),
-  changePassword: (data: ChangePasswordData) =>
-    api.post("/change-password", data),
   getSharers,
   toggleSharerStatus,
   updateSharer,
+  updateSharerLogo,
+  createSharer,
   getViewers,
   updateViewer,
-  sendUsernameToSharerById,
   toggleViewerStatus,
+  sendUsernameToSharerById,
   checkUsername,
   resetPasswordByUsername,
   getDocumentClasses,
+  getDocumentClassById,
+  deleteEnumOption,
+  addEnumOption,
+  createViewer,
+  resetViewerPassword,
+  downloadViewerCredentials,
+  extractInfoFromDocument,
   getUser,
+  getMyDocumentClasses,
   recoverUsername,
   recoveryUsernameRequest,
+  updateDocumentClass,
+  createDocumentClass,
+  changePassword: (data: ChangePasswordData) =>
+    api.post("/change-password", data),
+  shareDocuments,
 };
 
 export const docClassService = {
+  getMyDocumentClasses,
   getDocumentClassById,
   deleteEnumOption,
   addEnumOption,
@@ -716,8 +1151,25 @@ export const docClassService = {
   updateDocumentClass,
   /**
    * Creates a new document class (POST /document-classes)
-   * @param data - { name: string (required), description?: string }
+   * @param data - { name: string (required), description?: string, logo?: File | null }
    * @returns Promise<CreateDocumentClassResponse>
    */
   createDocumentClass,
+  updateDocumentClassLogo: async (
+    id: number,
+    logo: File,
+  ): Promise<{ message: string; data: DocumentClass }> => {
+    const formData = new FormData();
+    formData.append("logo", logo);
+
+    const response = await api.post<{ message: string; data: DocumentClass }>(
+      `/document-classes/${id}/logo`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      },
+    );
+    return response.data;
+  },
+  shareDocuments,
 };

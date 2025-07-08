@@ -29,6 +29,7 @@ interface ApiDocumentClass {
   id: number;
   name: string; // Corresponds to DocumentClass.nome
   description: string; // Corresponds to DocumentClass.descrizione
+  logo_url?: string; // Add logo_url to API response type
   created_by: string; // Not in current DocumentClass, but present
   sharers_count: number;
   sharers: Sharer[]; // Assuming Sharer type from api.ts might be different or not directly applicable here
@@ -97,10 +98,6 @@ export default function ClassiDocumentali() {
   let monthTrend: "up" | "down" = "up";
   if (prevMonthCreated === 0 && recentlyCreated > 0) {
     monthChange = 100;
-<<<<<<< HEAD
-=======
-    monthChangeLabel = "";
->>>>>>> cdd9cf6fdf54481c09c423ca26780aa761bc65d3
     monthTrend = "up";
   } else if (prevMonthCreated === 0 && recentlyCreated === 0) {
     monthChange = 0;
@@ -109,15 +106,8 @@ export default function ClassiDocumentali() {
     monthChange =
       ((recentlyCreated - prevMonthCreated) / prevMonthCreated) * 100;
     if (monthChange > 0) {
-<<<<<<< HEAD
       monthTrend = "up";
     } else if (monthChange < 0) {
-=======
-      monthChangeLabel = "";
-      monthTrend = "up";
-    } else if (monthChange < 0) {
-      monthChangeLabel = "";
->>>>>>> cdd9cf6fdf54481c09c423ca26780aa761bc65d3
       monthTrend = "down";
     } else {
       monthTrend = "up";
@@ -141,10 +131,6 @@ export default function ClassiDocumentali() {
     .reduce((acc, doc) => acc + (doc.campi?.length ?? 0), 0);
   if (prevMonthFields === 0 && totalFields > 0) {
     fieldsChange = 100;
-<<<<<<< HEAD
-=======
-    fieldsChangeLabel = "";
->>>>>>> cdd9cf6fdf54481c09c423ca26780aa761bc65d3
     fieldsTrend = "up";
   } else if (prevMonthFields === 0 && totalFields === 0) {
     fieldsChange = 0;
@@ -152,15 +138,8 @@ export default function ClassiDocumentali() {
   } else {
     fieldsChange = ((totalFields - prevMonthFields) / prevMonthFields) * 100;
     if (fieldsChange > 0) {
-<<<<<<< HEAD
       fieldsTrend = "up";
     } else if (fieldsChange < 0) {
-=======
-      fieldsChangeLabel = "";
-      fieldsTrend = "up";
-    } else if (fieldsChange < 0) {
-      fieldsChangeLabel = "";
->>>>>>> cdd9cf6fdf54481c09c423ca26780aa761bc65d3
       fieldsTrend = "down";
     } else {
       fieldsTrend = "up";
@@ -214,6 +193,7 @@ export default function ClassiDocumentali() {
           id: item.id,
           nome: item.name,
           descrizione: item.description,
+          logo_url: item.logo_url ?? null,
           campi:
             item.fields?.map(
               (field: ApiDocumentClassField): DocumentClassField => ({

@@ -1,4 +1,4 @@
-export const Icon = ({ size = 24, color = "#000000" }) => {
+export const DocumentIcon = ({ size = 24, color = "#000000" }) => {
   return (
     <svg
       width={size}

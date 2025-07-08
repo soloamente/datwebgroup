@@ -79,13 +79,22 @@ export function EditViewerDialog({
       toast.success(response.message || "Viewer aggiornato con successo.");
       onViewerUpdate(); // Refresh the list
       onClose(); // Close the dialog
-      // eslint-disable-next-line
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to update viewer:", error);
-      toast.error(
-        // eslint-disable-next-line
-        error.response?.data?.message ?? "Impossibile aggiornare il viewer.",
-      );
+      let errorMessage = "Impossibile aggiornare il viewer.";
+      if (error instanceof Error) {
+        // A standard error object
+        errorMessage = error.message;
+      }
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const responseError = error.response as {
+          data?: { message?: string };
+        };
+        if (responseError.data?.message) {
+          errorMessage = responseError.data.message;
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

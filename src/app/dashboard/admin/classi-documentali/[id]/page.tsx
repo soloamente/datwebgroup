@@ -53,6 +53,16 @@ import { cn } from "@/lib/utils";
 import axios from "axios";
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import CoverUploader from "@/components/ui/cover-uploader";
+import { RiPencilLine } from "@remixicon/react";
+import { formatDynamicDate } from "@/lib/date-format";
 
 // --- Copied type definitions from the list page for consistent transformation ---
 // Define interfaces for the raw API response structure (for a list)
@@ -71,6 +81,7 @@ interface ApiDocumentClass {
   id: number;
   name: string;
   description: string;
+  logo_url?: string;
   created_by: string;
   sharers_count: number;
   sharers: Sharer[];
@@ -125,6 +136,10 @@ export default function DocumentClassDetailPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false); // Edit mode toggle
 
+  // --- State for cover editing ---
+  const [isEditingCover, setIsEditingCover] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+
   // When documentClass changes, update local state for editing
   useEffect(() => {
     if (documentClass) {
@@ -148,10 +163,8 @@ export default function DocumentClassDetailPage() {
       setDocumentClass((prev) =>
         prev ? { ...prev, nome: editNome, descrizione: editDescrizione } : prev,
       );
-      // Show toast message centered (requires Sonner v1.2.0+ or global config)
-      toast.success("Classe documentale aggiornata con successo.", {
-        position: "top-center", // If not supported, set globally in <Toaster position="top-center" />
-      });
+      // Show toast message using the default position from layout.tsx
+      toast.success("Classe documentale aggiornata con successo.");
       setIsEditing(false); // Exit edit mode
     } catch (error) {
       console.error("Failed to update document class info:", error);
@@ -167,24 +180,6 @@ export default function DocumentClassDetailPage() {
     editNome === documentClass.nome &&
     editDescrizione === documentClass.descrizione;
   const isInvalid = editNome.trim() === "";
-
-  // Helper function to format dates in a pretty format
-  const formatDate = (dateString: string | undefined | null): string => {
-    if (!dateString) return "Non disponibile";
-
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("it-IT", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return dateString; // fallback to original string if parsing fails
-    }
-  };
 
   // Function to fetch available sharers for assignment
   const fetchAvailableSharers = async (docClassId?: number) => {
@@ -224,6 +219,7 @@ export default function DocumentClassDetailPage() {
                 id: apiDoc.id,
                 nome: apiDoc.name,
                 descrizione: apiDoc.description,
+                logo_url: apiDoc.logo_url ?? null,
                 campi:
                   apiDoc.fields?.map((field) => ({
                     id: field.id,
@@ -550,12 +546,41 @@ export default function DocumentClassDetailPage() {
     );
   };
 
+  // --- Handler to save the new cover image ---
+  const handleCoverSave = async (croppedFile: File | null) => {
+    if (!croppedFile || !documentClass) {
+      setIsEditingCover(false);
+      return;
+    }
+
+    setIsUploadingCover(true);
+    try {
+      const response = await docClassService.updateDocumentClassLogo(
+        documentClass.id,
+        croppedFile,
+      );
+
+      // Update state with the new logo_url from the response
+      setDocumentClass((prev) =>
+        prev ? { ...prev, logo_url: response.data.logo_url } : prev,
+      );
+
+      toast.success("Cover aggiornata con successo.");
+    } catch (error) {
+      console.error("Failed to update cover:", error);
+      toast.error("Impossibile aggiornare la cover.");
+    } finally {
+      setIsUploadingCover(false);
+      setIsEditingCover(false);
+    }
+  };
+
   return (
     <div className="mx-auto w-full max-w-screen-2xl overflow-x-hidden p-6">
       {/* Simplified Header */}
       <div className="mb-8">
-        <h1 className="text-3xl">{documentClass.nome}</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
+        <h1 className="text-3xl font-bold">{documentClass.nome}</h1>
+        <p className="text-muted-foreground mt-1 text-base">
           {documentClass.descrizione}
         </p>
       </div>
@@ -585,136 +610,131 @@ export default function DocumentClassDetailPage() {
         <TabsContents className="bg-background mx-1 -mt-2 mb-1 h-full rounded-sm">
           {/* Basic Info Tab */}
           <TabsContent value="basic-info" className="space-y-6 p-6">
-            {/* Card container for visual grouping - now full width, improved UI/UX */}
-            <div
-              className={cn(
-                "w-full rounded-xl border p-0 shadow-sm transition-all duration-200",
-                isEditing
-                  ? "border-primary/70 ring-primary/20 bg-primary/5 ring-2"
-                  : "border-card/60 bg-background",
-              )}
-            >
-              {/* Card Header with icon, title, and edit button/indicator */}
-              <div className="flex items-center justify-between gap-3 border-b px-6 py-4">
-                <div className="flex items-center gap-3">
-                  {/* Info/Document icon */}
-                  <svg
-                    width="28"
-                    height="28"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="text-primary"
+            {/* New layout with cover image inside */}
+            <div className="flex flex-col gap-8 px-6 py-8 md:flex-row md:items-start">
+              {/* Left Side: Cover Image */}
+              <div className="group relative mx-auto w-40 flex-shrink-0 md:mx-0">
+                {documentClass.logo_url ? (
+                  <img
+                    src={documentClass.logo_url}
+                    alt={`Cover for ${documentClass.nome}`}
+                    className="h-60 w-40 rounded-lg object-cover shadow-md"
+                  />
+                ) : (
+                  <div className="bg-muted flex h-60 w-40 flex-shrink-0 items-center justify-center rounded-lg shadow-md">
+                    <span className="text-muted-foreground/50 text-5xl font-bold">
+                      {documentClass.nome.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsEditingCover(true)}
+                    className="flex items-center gap-2"
                   >
-                    <rect
-                      x="4"
-                      y="4"
-                      width="16"
-                      height="16"
-                      rx="3"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M8 8h8M8 12h8M8 16h4"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                    <RiPencilLine size={16} />
+                    Modifica
+                  </Button>
+                </div>
+              </div>
+
+              {/* Right Side: Form */}
+              <form className="w-full flex-grow" onSubmit={handleSaveBasicInfo}>
+                <div className="mb-4 flex items-center justify-between border-b pb-3">
                   <div>
-                    <h2 className="text-xl leading-tight font-semibold">
-                      Informazioni generali
-                    </h2>
-                    <p className="text-muted-foreground text-xs">
-                      Modifica i dettagli di base della classe documentale.
+                    <h3 className="text-xl leading-tight font-semibold">
+                      Informazioni Generali
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      Dettagli di base della classe documentale.
+                    </p>
+                  </div>
+                  {!isEditing ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={() => setIsEditing(true)}
+                      aria-label="Modifica informazioni generali"
+                    >
+                      <RiPencilLine size={16} className="mr-2" />
+                      Modifica
+                    </Button>
+                  ) : (
+                    <span className="bg-primary/10 text-primary ml-auto animate-pulse rounded px-3 py-1 text-xs font-medium transition-all">
+                      Modifica in corso…
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-6">
+                  {/* Nome Field */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="nome" className="text-sm">
+                      Nome
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        id="nome"
+                        value={editNome}
+                        onChange={(e) => setEditNome(e.target.value)}
+                        className="bg-background focus-visible:ring-primary"
+                        aria-label="Nome della classe documentale"
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="bg-muted/30 flex min-h-[2.5rem] items-center rounded border border-transparent px-2">
+                        {documentClass.nome}
+                      </div>
+                    )}
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Nome della classe documentale.
+                    </p>
+                  </div>
+                  {/* Descrizione Field */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label
+                      htmlFor="descrizione"
+                      className="text-sm font-medium"
+                    >
+                      Descrizione
+                    </Label>
+                    {isEditing ? (
+                      <Textarea
+                        id="descrizione"
+                        value={editDescrizione ?? ""}
+                        onChange={(e) => setEditDescrizione(e.target.value)}
+                        className="bg-background focus-visible:ring-primary max-w-lg resize-none"
+                        rows={3}
+                        aria-label="Descrizione della classe documentale"
+                      />
+                    ) : (
+                      <div className="bg-muted/30 flex min-h-[2.5rem] items-center rounded border border-transparent px-2">
+                        {documentClass.descrizione?.trim() ? (
+                          documentClass.descrizione
+                        ) : (
+                          <span className="text-muted-foreground">
+                            Nessuna descrizione
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Breve descrizione della classe documentale.
                     </p>
                   </div>
                 </div>
-                {!isEditing ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="ml-auto"
-                    onClick={() => setIsEditing(true)}
-                    aria-label="Modifica informazioni generali"
-                  >
-                    Modifica
-                  </Button>
-                ) : (
-                  <span className="bg-primary/10 text-primary ml-auto animate-pulse rounded px-3 py-1 text-xs font-medium transition-all">
-                    Modifica in corso…
-                  </span>
-                )}
-              </div>
-              {/* Form fields, responsive grid */}
-              <form
-                className="grid gap-6 px-6 py-8 md:grid-cols-2"
-                onSubmit={handleSaveBasicInfo}
-              >
-                {/* Nome Field (editable or read-only) */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="nome" className="text-sm">
-                    Nome
-                  </Label>
-                  {isEditing ? (
-                    <Input
-                      id="nome"
-                      value={editNome}
-                      onChange={(e) => setEditNome(e.target.value)}
-                      className="bg-background focus-visible:ring-primary"
-                      aria-label="Nome della classe documentale"
-                      autoFocus
-                    />
-                  ) : (
-                    <div className="bg-muted/30 flex min-h-[2.5rem] items-center rounded border border-transparent px-2">
-                      {documentClass.nome}
-                    </div>
-                  )}
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Nome della classe documentale.
-                  </p>
-                </div>
-                {/* Descrizione Field (editable or read-only) */}
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="descrizione" className="text-sm font-medium">
-                    Descrizione
-                  </Label>
-                  {isEditing ? (
-                    <Textarea
-                      id="descrizione"
-                      // Defensive: always pass a string to value (never null)
-                      value={editDescrizione ?? ""}
-                      onChange={(e) => setEditDescrizione(e.target.value)}
-                      className="bg-background focus-visible:ring-primary max-w-lg resize-none"
-                      rows={3}
-                      aria-label="Descrizione della classe documentale"
-                    />
-                  ) : (
-                    <div className="bg-muted/30 flex min-h-[2.5rem] items-center rounded border border-transparent px-2">
-                      {documentClass.descrizione?.trim() ? (
-                        documentClass.descrizione
-                      ) : (
-                        <span className="text-muted-foreground">
-                          Nessuna descrizione
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Breve descrizione della classe documentale.
-                  </p>
-                </div>
-                {/* Action Buttons (Save/Cancel) - only in edit mode, full width on mobile, right-aligned on desktop */}
+
+                {/* Action Buttons */}
                 {isEditing && (
-                  <div className="col-span-2 flex flex-col items-stretch gap-2 pt-4 md:flex-row md:justify-end md:gap-3">
+                  <div className="mt-6 flex flex-col items-stretch gap-2 pt-4 md:flex-row md:justify-end md:gap-3">
                     <Button
                       type="button"
                       variant="outline"
                       className="min-w-[90px]"
                       onClick={() => {
-                        // Reset fields to original values and exit edit mode
                         setEditNome(documentClass.nome);
                         setEditDescrizione(documentClass.descrizione ?? "");
                         setIsEditing(false);
@@ -999,14 +1019,20 @@ export default function DocumentClassDetailPage() {
                             >
                               <TableCell className="flex items-center gap-2 py-2 font-medium">
                                 {/* Avatar or Initials */}
-                                <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold">
-                                  {sharer.nominativo
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .toUpperCase()
-                                    .slice(0, 2)}
-                                </div>
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage
+                                    src={sharer.logo_url}
+                                    alt={sharer.nominativo}
+                                  />
+                                  <AvatarFallback className="text-sm">
+                                    {sharer.nominativo
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")
+                                      .toUpperCase()
+                                      .slice(0, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
                                 <span>{sharer.nominativo}</span>
                               </TableCell>
                               <TableCell className="py-2">
@@ -1138,19 +1164,20 @@ export default function DocumentClassDetailPage() {
                                 );
                                 return sharer ? (
                                   <>
-                                    <span className="bg-primary/10 text-primary flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold">
-                                      {sharer.nominativo
-                                        .split(" ")
-                                        .map((n) => n[0])
-                                        .join("")
-                                        .toUpperCase()
-                                        .slice(0, 2)}
-                                    </span>
-                                    <span>
-                                      {sharer.nominativo} ({sharer.email})
-                                    </span>
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarImage
+                                        src={sharer.logo_url}
+                                        alt={sharer.nominativo}
+                                      />
+                                      <AvatarFallback className="text-xs">
+                                        {sharer.nominativo.charAt(0)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span>{sharer.nominativo}</span>
                                   </>
-                                ) : null;
+                                ) : (
+                                  "Seleziona uno sharer..."
+                                );
                               })()
                             : "Seleziona uno sharer..."}
                         </span>
@@ -1181,35 +1208,36 @@ export default function DocumentClassDetailPage() {
                             {availableSharers.map((sharer) => (
                               <CommandItem
                                 key={sharer.id}
-                                value={`${sharer.nominativo} ${sharer.email}`}
-                                onSelect={() => {
+                                value={sharer.id.toString()}
+                                onSelect={(currentValue) => {
                                   setSelectedSharerId(
-                                    sharer.id === selectedSharerId
+                                    currentValue === selectedSharerId
                                       ? ""
-                                      : sharer.id,
+                                      : Number(currentValue),
                                   );
                                   setIsSharerSelectOpen(false);
                                 }}
-                                className="flex cursor-pointer items-center gap-2"
                               >
-                                <span className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold">
-                                  {sharer.nominativo
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .toUpperCase()
-                                    .slice(0, 2)}
-                                </span>
-                                <span>{sharer.nominativo}</span>
-                                <span className="text-muted-foreground ml-2 text-xs">
-                                  {sharer.email}
-                                </span>
-                                {selectedSharerId === sharer.id && (
-                                  <CheckIcon
-                                    size={16}
-                                    className="text-primary ml-auto"
-                                  />
-                                )}
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage
+                                      src={sharer.logo_url}
+                                      alt={sharer.nominativo}
+                                    />
+                                    <AvatarFallback className="text-xs">
+                                      {sharer.nominativo.charAt(0)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span>{sharer.nominativo}</span>
+                                </div>
+                                <CheckIcon
+                                  className={cn(
+                                    "ml-auto h-4 w-4",
+                                    selectedSharerId === sharer.id
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -1335,7 +1363,7 @@ export default function DocumentClassDetailPage() {
                       Creato il
                     </p>
                     <p className="text-sm">
-                      {formatDate(documentClass.created_at)}
+                      {formatDynamicDate(documentClass.created_at)}
                     </p>
                   </div>
                 </div>
@@ -1370,7 +1398,7 @@ export default function DocumentClassDetailPage() {
                       Ultima modifica il
                     </p>
                     <p className="text-sm">
-                      {formatDate(documentClass.updated_at)}
+                      {formatDynamicDate(documentClass.updated_at)}
                     </p>
                   </div>
                 </div>
@@ -1379,6 +1407,24 @@ export default function DocumentClassDetailPage() {
           </TabsContent>
         </TabsContents>
       </Tabs>
+      {/* Edit Cover Dialog */}
+      <Dialog open={isEditingCover} onOpenChange={setIsEditingCover}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica Cover</DialogTitle>
+          </DialogHeader>
+          {isUploadingCover ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+              <span className="text-muted-foreground">
+                Caricamento in corso...
+              </span>
+            </div>
+          ) : (
+            <CoverUploader onFileCropped={handleCoverSave} />
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Delete Confirmation Dialog */}
       {sharerToDelete && (
         <DeleteConfirmationDialog

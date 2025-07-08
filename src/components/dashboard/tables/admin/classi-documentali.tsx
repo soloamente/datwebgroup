@@ -44,6 +44,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   type ColumnDef,
   type ColumnFiltersState,
   type FilterFn,
@@ -115,6 +121,7 @@ import {
 } from "@/components/filters/sharer-filter";
 import { type DateRange as DayPickerDateRange } from "react-day-picker";
 import CloseIcon from "@/components/icons/close";
+import { formatDynamicDate } from "@/lib/date-format";
 
 // Global filter function for text search across multiple fields for DocumentClass
 const globalFilterFn: FilterFn<DocumentClass> = (
@@ -192,6 +199,31 @@ const getColumns = ({
   data,
   onRefreshData,
 }: GetColumnsProps): ColumnDef<DocumentClass>[] => [
+  {
+    header: "",
+    accessorKey: "logo_url",
+    cell: ({ row }) => {
+      const logoUrl = row.original.logo_url;
+      const nome = row.original.nome;
+      return (
+        <div className="flex items-center justify-start">
+          <Avatar className="h-12 w-9 rounded-md">
+            <AvatarImage
+              src={logoUrl ?? undefined}
+              alt={`Cover for ${nome}`}
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-muted rounded-md text-[10px] font-semibold">
+              {nome.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      );
+    },
+    size: 60,
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     header: () => (
       <div className="flex items-center gap-2">
@@ -284,20 +316,24 @@ const getColumns = ({
     },
     accessorKey: "created_at",
     cell: ({ row }) => {
-      const dateValue = row.getValue("created_at");
-      if (typeof dateValue !== "string")
-        return <span className="text-muted-foreground">—</span>;
-      const date = new Date(dateValue);
-      const formattedDate = date.toLocaleString("it-IT", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      return (
-        <span className="text-muted-foreground text-sm">{formattedDate}</span>
-      );
+      const dateValue: unknown = row.getValue("created_at");
+      if (typeof dateValue === "string" && dateValue) {
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-muted-foreground cursor-default text-sm underline decoration-dotted underline-offset-2">
+                  {format(new Date(dateValue), "d MMM yyyy", { locale: it })}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{formatDynamicDate(dateValue)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      }
+      return <span className="text-muted-foreground text-sm">—</span>;
     },
     size: 140,
     filterFn: "documentClassDateRange",
@@ -319,20 +355,24 @@ const getColumns = ({
     },
     accessorKey: "updated_at",
     cell: ({ row }) => {
-      const dateValue = row.getValue("updated_at");
-      if (typeof dateValue !== "string")
-        return <span className="text-muted-foreground">—</span>;
-      const date = new Date(dateValue);
-      const formattedDate = date.toLocaleString("it-IT", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      return (
-        <span className="text-muted-foreground text-sm">{formattedDate}</span>
-      );
+      const dateValue: unknown = row.getValue("updated_at");
+      if (typeof dateValue === "string" && dateValue) {
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-muted-foreground cursor-default text-sm underline decoration-dotted underline-offset-2">
+                  {format(new Date(dateValue), "d MMM yyyy", { locale: it })}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{formatDynamicDate(dateValue)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      }
+      return <span className="text-muted-foreground text-sm">—</span>;
     },
     size: 140,
     filterFn: "documentClassDateRange",
@@ -402,6 +442,7 @@ export default function DocumentClassiTable({
         uniqueSharers.set(key, {
           id: key,
           nominativo: sharer.nominativo,
+          logo_url: sharer.logo_url,
         });
       }
     });
@@ -965,7 +1006,7 @@ declare module "@tanstack/react-table" {
 }
 
 // SharerAvatarGroup: Animated, modern avatar group for sharers, matching user-presence-avatar.tsx style
-function SharerAvatarGroup({ sharers }: { sharers: { nominativo: string }[] }) {
+function SharerAvatarGroup({ sharers }: { sharers: Sharer[] }) {
   // Show up to 3 avatars, stack them, and show a "+N" badge if more
   const maxVisible = 3;
   const visibleSharers = sharers.slice(0, maxVisible);
@@ -1000,6 +1041,7 @@ function SharerAvatarGroup({ sharers }: { sharers: { nominativo: string }[] }) {
               key={sharer.nominativo + idx}
               className="size-7 border-2 border-neutral-200/80 shadow-sm dark:border-neutral-800/80"
             >
+              <AvatarImage src={sharer.logo_url} alt={sharer.nominativo} />
               <AvatarFallback className="text-foreground/90 bg-neutral-100 text-[10px] font-semibold dark:bg-neutral-700">
                 {getInitials(sharer.nominativo)}
               </AvatarFallback>

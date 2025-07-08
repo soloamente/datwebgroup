@@ -1,0 +1,227 @@
+"use client";
+
+import { useParams } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import {
+  getSharedBatchesByDocumentClass,
+  type SharedBatch,
+  type SharedDocument,
+  type DocumentClassDetails,
+  type ViewerInfo,
+  getMyDocumentClasses,
+} from "../../../../../api/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SharedDocumentsTable } from "@/components/dashboard/tables/sharer/shared-documents-table";
+import { StatsGrid } from "@/components/admin/stats-grid";
+import { Button } from "@/components/ui/button";
+import { FileText, Package, Users, Paperclip, Plus } from "lucide-react";
+import { toast } from "sonner";
+
+// Helper type for documents enriched with batch data
+interface EnrichedDocument extends SharedDocument {
+  batchId: number;
+  sent_at: string;
+  viewers: ViewerInfo[];
+}
+
+const unslugify = (slug: string) => {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const slugify = (text: string) => {
+  if (!text) return "";
+  return text.toLowerCase().replace(/\s+/g, "-");
+};
+
+export default function DocumentClassPage() {
+  const params = useParams();
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+
+  const [docClassName, setDocClassName] = useState("");
+  const [allDocuments, setAllDocuments] = useState<EnrichedDocument[]>([]);
+  const [docClassDetails, setDocClassDetails] =
+    useState<DocumentClassDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (slug) {
+      const unslugifiedName = unslugify(slug);
+      setDocClassName(unslugifiedName);
+
+      const fetchData = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const myDocClassesResponse = await getMyDocumentClasses();
+          const myDocClasses = myDocClassesResponse.data;
+
+          const targetDocClass = myDocClasses.find(
+            (docClass) => slugify(docClass.name) === slug,
+          );
+
+          if (targetDocClass) {
+            const documentClassId = targetDocClass.id;
+            const response =
+              await getSharedBatchesByDocumentClass(documentClassId);
+
+            const flattenedDocs = response.data.flatMap((batch: SharedBatch) =>
+              batch.documents.map((doc) => ({
+                ...doc,
+                batchId: batch.id,
+                sent_at: batch.sent_at,
+                viewers: batch.viewers,
+              })),
+            );
+            setAllDocuments(flattenedDocs);
+
+            setDocClassDetails(response.document_class);
+            setDocClassName(response.document_class.name);
+          } else {
+            setError(`Classe documentale "${unslugifiedName}" non trovata.`);
+          }
+        } catch (err) {
+          setError("Impossibile caricare i dati dei documenti.");
+          if (err instanceof Error) {
+            console.error(`Error fetching document data: ${err.message}`);
+          } else {
+            console.error("An unknown error occurred:", err);
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      void fetchData();
+    } else {
+      setIsLoading(false);
+      setError("Impossibile determinare la classe documentale dall'URL.");
+    }
+  }, [slug]);
+
+  const pageTitle = useMemo(
+    () => (docClassName ? docClassName : "Caricamento..."),
+    [docClassName],
+  );
+
+  const pageDescription = useMemo(
+    () =>
+      docClassDetails
+        ? `Visualizza i documenti condivisi per la classe "${docClassDetails.name}".`
+        : "Recupero dei dettagli della classe documentale.",
+    [docClassDetails],
+  );
+
+  const stats = useMemo(() => {
+    if (isLoading || error || !allDocuments || allDocuments.length === 0) {
+      return {
+        totalDocs: 0,
+        totalBatches: 0,
+        totalViewers: 0,
+        totalFiles: 0,
+      };
+    }
+    const uniqueViewers = new Set(
+      allDocuments.flatMap((doc) => doc.viewers.map((v) => v.id)),
+    );
+    const totalFiles = allDocuments.reduce(
+      (acc, doc) => acc + doc.files.length,
+      0,
+    );
+    return {
+      totalDocs: allDocuments.length,
+      totalBatches: new Set(allDocuments.map((d) => d.batchId)).size,
+      totalViewers: uniqueViewers.size,
+      totalFiles,
+    };
+  }, [allDocuments, isLoading, error]);
+
+  const handleCreateNew = () => {
+    toast.info("Funzionalità per creare una nuova condivisione in arrivo!");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4 p-4 md:p-6">
+        <div className="flex w-full items-center justify-between py-2 md:py-4">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-8 w-48 rounded-lg" />
+            <Skeleton className="h-4 w-64 rounded-lg" />
+          </div>
+          <Skeleton className="h-10 w-36 rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+        </div>
+        <Skeleton className="h-96 w-full rounded-lg" />
+      </div>
+    );
+  }
+
+  return (
+    <main className="flex flex-col gap-4 p-4 md:p-6">
+      <div className="flex w-full items-center justify-between py-2 md:py-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-medium md:text-4xl dark:text-white">
+            {pageTitle}
+          </h1>
+          <p className="text-muted-foreground text-sm">{pageDescription}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            className="bg-primary rounded-full text-white"
+            onClick={handleCreateNew}
+          >
+            <Plus size={20} />
+            Nuova Condivisione
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-6">
+        <StatsGrid
+          stats={[
+            {
+              title: "Totale Documenti",
+              value: stats.totalDocs.toString(),
+              change: { value: "", trend: "up" },
+              icon: <FileText size={20} />,
+            },
+            {
+              title: "Batch di Invio",
+              value: stats.totalBatches.toString(),
+              change: { value: "", trend: "up" },
+              icon: <Package size={20} />,
+            },
+            {
+              title: "Destinatari Unici",
+              value: stats.totalViewers.toString(),
+              change: { value: "", trend: "up" },
+              icon: <Users size={20} />,
+            },
+            {
+              title: "Totale Allegati",
+              value: stats.totalFiles.toString(),
+              change: { value: "", trend: "up" },
+              icon: <Paperclip size={20} />,
+            },
+          ]}
+        />
+
+        {error ? (
+          <div className="flex h-64 items-center justify-center rounded-md border border-dashed">
+            <p className="text-muted-foreground">{error}</p>
+          </div>
+        ) : (
+          <SharedDocumentsTable
+            data={allDocuments}
+            docClassDetails={docClassDetails}
+            isLoading={isLoading}
+          />
+        )}
+      </div>
+    </main>
+  );
+}

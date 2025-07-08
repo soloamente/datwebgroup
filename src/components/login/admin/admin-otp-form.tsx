@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import OtpInput from "@/components/ui/otp-input";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp/input-otp";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -103,7 +107,15 @@ export default function AdminOtpForm({
 
   return (
     <form onSubmit={handleVerifyOtp} className="space-y-8">
-      <OtpInput value={otp} onChange={setOtp} />
+      <InputOTP maxLength={5} value={otp} onChange={setOtp} slotSize="lg">
+        <InputOTPGroup className="w-full justify-center">
+          <InputOTPSlot index={0} />
+          <InputOTPSlot index={1} />
+          <InputOTPSlot index={2} />
+          <InputOTPSlot index={3} />
+          <InputOTPSlot index={4} />
+        </InputOTPGroup>
+      </InputOTP>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 

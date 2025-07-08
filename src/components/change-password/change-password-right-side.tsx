@@ -8,6 +8,8 @@ import { motion } from "motion/react";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 import ChangePasswordForm from "./change-password-form";
+import Aurora from "../backgrounds/aurora";
+import { useTheme } from "next-themes";
 
 export default function ChangePasswordRightSide() {
   const [loading, setLoading] = useState(false);
@@ -26,13 +28,28 @@ export default function ChangePasswordRightSide() {
     }
   };
 
+  const { theme } = useTheme();
+
+  const colorStops =
+    theme === "dark"
+      ? ["#0763C9", "#A2A8AB", "#0763C9"] // Light colors for dark theme
+      : ["#A2A8AB", "#0763C9", "#A2A8AB"]; // Dark colors for light theme
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, ease: "easeInOut" }}
-      className="from-primary/20 to-login-credentials flex h-full w-full flex-col justify-center rounded-2xl bg-gradient-to-t to-60% px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
+      className="flex h-full w-full flex-col justify-center rounded-2xl px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
     >
+      <div className="absolute inset-0 z-0 h-full w-full">
+        <Aurora
+          colorStops={colorStops}
+          blend={0.5}
+          amplitude={1.0}
+          speed={0.5}
+        />
+      </div>
       <div className="z-10 mx-auto w-full md:w-md lg:max-w-lg">
         <div className="relative h-24 w-24 md:absolute md:top-10 md:right-10 md:h-24 md:w-24">
           <Image
@@ -45,10 +62,10 @@ export default function ChangePasswordRightSide() {
         </div>
 
         <div className="mb-8 md:mb-10">
-          <h1 className="text-primary mb-2 text-3xl font-bold transition-all duration-700 md:text-3xl dark:text-white">
+          <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
             Cambia Password
           </h1>
-          <p className="text-description text-sm transition-all duration-700">
+          <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
             Inserisci la tua nuova password
           </p>
         </div>
@@ -59,8 +76,8 @@ export default function ChangePasswordRightSide() {
           <div className="absolute inset-0 flex items-center">
             <Separator className="w-full" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="text-muted-foreground px-2 dark:bg-[#0E151D]">
+          <div className="roudnded-full relative flex justify-center text-xs uppercase">
+            <span className="text-muted-foreground bg-login-credentials rounded-2xl px-2">
               o continua con
             </span>
           </div>

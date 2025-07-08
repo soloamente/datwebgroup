@@ -356,7 +356,6 @@ export default function AdminLoginRightSide({
           speed={0.5}
         />
       </div>
-      <div className="absolute bottom-2">{/* <AdminGradientTracing /> */}</div>
       <div className="z-10 mx-auto w-full md:w-md lg:max-w-lg">
         <div className="relative h-24 w-24 md:absolute md:top-10 md:right-10 md:h-24 md:w-24">
           <Image

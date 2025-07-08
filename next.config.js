@@ -1,7 +1,18 @@
 /** @type {import('next').NextConfig} */
 const config = {
   // Enable built-in Next.js font optimization for better performance
-  optimizeFonts: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "sviluppo.datasystemgroup.it",
+      },
+      {
+        protocol: "http",
+        hostname: "sviluppo.datasystemgroup.it",
+      },
+    ],
+  },
   async headers() {
     return [
       {

@@ -15,70 +15,67 @@ import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export interface SharerOption {
+export interface ViewerOption {
   id: string;
   nominativo: string;
-  logo_url?: string;
 }
 
-interface SharerFilterProps {
-  selectedSharers: string[];
-  onSelectedSharersChange: (sharers: string[]) => void;
-  availableSharers: SharerOption[];
+interface ViewerFilterProps {
+  selectedViewers: string[];
+  onSelectedViewersChange: (viewers: string[]) => void;
+  availableViewers: ViewerOption[];
   className?: string;
 }
 
-export function SharerFilter({
-  selectedSharers,
-  onSelectedSharersChange,
-  availableSharers,
+export function ViewerFilter({
+  selectedViewers,
+  onSelectedViewersChange,
+  availableViewers,
   className,
-}: SharerFilterProps) {
+}: ViewerFilterProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleClearClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onSelectedSharersChange([]);
+    onSelectedViewersChange([]);
   };
 
-  // Filter sharers based on search query
-  const filteredSharers = useMemo(() => {
-    if (!searchQuery) return availableSharers;
+  const filteredViewers = useMemo(() => {
+    if (!searchQuery) return availableViewers;
 
-    return availableSharers.filter((sharer) =>
-      sharer.nominativo.toLowerCase().includes(searchQuery.toLowerCase()),
+    return availableViewers.filter((viewer) =>
+      viewer.nominativo.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [availableSharers, searchQuery]);
+  }, [availableViewers, searchQuery]);
 
-  // Reset search when popover closes
   useEffect(() => {
     if (!open) {
       setSearchQuery("");
     }
   }, [open]);
 
-  const handleSharerToggle = (sharerId: string) => {
-    const isSelected = selectedSharers.includes(sharerId);
+  const handleViewerToggle = (viewerId: string) => {
+    const isSelected = selectedViewers.includes(viewerId);
     if (isSelected) {
-      onSelectedSharersChange(selectedSharers.filter((id) => id !== sharerId));
+      onSelectedViewersChange(selectedViewers.filter((id) => id !== viewerId));
     } else {
-      onSelectedSharersChange([...selectedSharers, sharerId]);
+      onSelectedViewersChange([...selectedViewers, viewerId]);
     }
   };
 
   const clearAllFilters = () => {
-    onSelectedSharersChange([]);
+    onSelectedViewersChange([]);
   };
 
-  const selectedSharerNames = useMemo(() => {
-    return availableSharers
-      .filter((sharer) => selectedSharers.includes(sharer.id))
-      .map((sharer) => sharer.nominativo);
-  }, [availableSharers, selectedSharers]);
+  const selectedViewerNames = useMemo(() => {
+    return availableViewers
+      .filter((viewer) => selectedViewers.includes(viewer.id))
+      .map((viewer) => viewer.nominativo);
+  }, [availableViewers, selectedViewers]);
 
-  const hasActiveFilter = selectedSharers.length > 0;
+  const hasActiveFilter = selectedViewers.length > 0;
 
   return (
     <div className={cn("flex items-center", className)}>
@@ -91,22 +88,22 @@ export function SharerFilter({
               "flex items-center gap-1.5",
               hasActiveFilter && "border-primary/60 bg-primary/5",
             )}
-            aria-label="Filtra per sharer"
+            aria-label="Filtra per destinatario"
             onClick={() => !open && setOpen(true)}
           >
             <RiUserLine className="text-muted-foreground/80 size-4" />
-            Sharer
+            Destinatari
             {hasActiveFilter && (
               <>
                 <Badge
                   variant="secondary"
                   className="ml-1 h-5 min-w-[20px] px-1.5 text-xs"
                 >
-                  {selectedSharers.length}
+                  {selectedViewers.length}
                 </Badge>
                 <span
                   role="button"
-                  aria-label="Rimuovi filtro sharer"
+                  aria-label="Rimuovi filtro destinatari"
                   onClick={handleClearClick}
                   className={cn(
                     "text-muted-foreground/60 hover:text-foreground hover:bg-muted -mr-1 ml-0.5 flex h-5 w-5 items-center justify-center rounded-full",
@@ -123,9 +120,11 @@ export function SharerFilter({
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-semibold">Filtra per Sharer</h4>
+                <h4 className="text-sm font-semibold">
+                  Filtra per Destinatari
+                </h4>
                 <p className="text-muted-foreground text-xs">
-                  Seleziona uno o più sharer
+                  Seleziona uno o più destinatari
                 </p>
               </div>
               {hasActiveFilter && (
@@ -142,11 +141,11 @@ export function SharerFilter({
 
             {/* Search */}
             <div className="space-y-2">
-              <Label htmlFor="sharer-search" className="text-xs font-medium">
-                Cerca sharer
+              <Label htmlFor="viewer-search" className="text-xs font-medium">
+                Cerca destinatario
               </Label>
               <Input
-                id="sharer-search"
+                id="viewer-search"
                 placeholder="Cerca per nome..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -154,14 +153,14 @@ export function SharerFilter({
               />
             </div>
 
-            {/* Sharer List */}
+            {/* Viewer List */}
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Label className="text-xs font-medium">
-                  Sharers disponibili
+                  Destinatari disponibili
                 </Label>
                 <Badge variant="outline" className="h-5 px-1.5 text-xs">
-                  {filteredSharers.length}
+                  {filteredViewers.length}
                 </Badge>
               </div>
               <div
@@ -175,33 +174,32 @@ export function SharerFilter({
                 }}
               >
                 <div className="space-y-1 p-1">
-                  {filteredSharers.length === 0 ? (
+                  {filteredViewers.length === 0 ? (
                     <div className="text-muted-foreground py-4 text-center text-sm">
-                      Nessuno sharer trovato
+                      Nessun destinatario trovato
                     </div>
                   ) : (
-                    filteredSharers.map((sharer) => (
+                    filteredViewers.map((viewer) => (
                       <div
-                        key={sharer.id}
+                        key={viewer.id}
                         className="hover:bg-muted/40 flex items-center gap-3 rounded-lg p-2 transition-colors"
                       >
                         <Checkbox
-                          id={`sharer-${sharer.id}`}
-                          checked={selectedSharers.includes(sharer.id)}
-                          onCheckedChange={() => handleSharerToggle(sharer.id)}
+                          id={`viewer-${viewer.id}`}
+                          checked={selectedViewers.includes(viewer.id)}
+                          onCheckedChange={() => handleViewerToggle(viewer.id)}
                           className="size-4"
                         />
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={sharer.logo_url} />
                           <AvatarFallback className="text-xs">
-                            {sharer.nominativo.charAt(0)}
+                            {viewer.nominativo.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <Label
-                          htmlFor={`sharer-${sharer.id}`}
+                          htmlFor={`viewer-${viewer.id}`}
                           className="grow cursor-pointer text-sm font-normal"
                         >
-                          {sharer.nominativo}
+                          {viewer.nominativo}
                         </Label>
                       </div>
                     ))
@@ -216,11 +214,11 @@ export function SharerFilter({
                 <div className="flex items-center gap-2">
                   <Label className="text-xs font-medium">Selezionati</Label>
                   <Badge variant="outline" className="h-5 px-1.5 text-xs">
-                    {selectedSharers.length}
+                    {selectedViewers.length}
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {selectedSharerNames.map((name, index) => (
+                  {selectedViewerNames.map((name, index) => (
                     <Badge
                       key={index}
                       variant="secondary"

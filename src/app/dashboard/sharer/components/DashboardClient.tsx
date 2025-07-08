@@ -33,7 +33,7 @@ export default function DashboardClient({
   };
 
   return (
-    <main className="flex min-h-screen overflow-hidden transition-all duration-700">
+    <main className="flex min-h-screen transition-all duration-700">
       <Sidebar isOpen={sidebarOpen} onToggle={handleSidebarToggle} />
 
       <section
@@ -47,7 +47,7 @@ export default function DashboardClient({
           />
         )}
         <div
-          className={`transition-opacity duration-200 ${isTransitioning ? "opacity-50" : "opacity-100"}`}
+          className={`flex flex-grow flex-col transition-opacity duration-200 ${isTransitioning ? "opacity-50" : "opacity-100"}`}
         >
           {children}
         </div>
