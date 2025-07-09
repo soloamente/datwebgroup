@@ -86,7 +86,12 @@ import {
   useLayoutEffect,
 } from "react";
 
-import { type Sharer, type Viewer, userService } from "@/app/api/api";
+import {
+  type DocumentClass,
+  type Sharer,
+  type Viewer,
+  userService,
+} from "@/app/api/api";
 import { toast } from "sonner";
 import { EditUserDialog } from "@/components/edit-user-dialog";
 import { ResetPasswordDialog } from "@/components/reset-passoword";
@@ -221,6 +226,7 @@ const getColumns = ({
         return (
           <Image
             src={logoUrl}
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             alt={`Logo di ${nominativo}`}
             width={40}
             height={40}
@@ -422,11 +428,10 @@ export default function SharerTable({
       columnVisibility,
       globalFilter,
     },
+    // @ts-expect-error eslint-disable-next-line @typescript-eslint/ban-ts-comment
     filterFns: {
       activeStatus: activeStatusFilterFn,
       dateRange: dateRangeFilterFn,
-      documentClassDateRange: () => true,
-      documentClassSharer: () => true,
     },
     enableRowSelection: true,
   });
@@ -1020,9 +1025,5 @@ declare module "@tanstack/react-table" {
     activeStatus: FilterFn<Sharer | Viewer>;
     // eslint-disable-next-line
     dateRange: FilterFn<Sharer | Viewer>;
-    // eslint-disable-next-line
-    documentClassDateRange: FilterFn<Sharer | Viewer>;
-    // eslint-disable-next-line
-    documentClassSharer: FilterFn<Sharer | Viewer>;
   }
 }

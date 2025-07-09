@@ -485,6 +485,7 @@ export default function DocumentClassiTable({
       globalFilter,
       rowSelection,
     },
+    // @ts-expect-error eslint-disable-next-line @typescript-eslint/ban-ts-comment
     filterFns: {
       documentClassDateRange: documentClassDateRangeFilterFn,
       documentClassSharer: documentClassSharerFilterFn,
