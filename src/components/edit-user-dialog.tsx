@@ -171,7 +171,7 @@ export function EditUserDialog({
         partita_iva: "",
       });
       setErrors({});
-      if (logoPreview && logoPreview.startsWith("blob:")) {
+      if (logoPreview?.startsWith("blob:")) {
         URL.revokeObjectURL(logoPreview);
       }
       setLogoPreview(null);
@@ -226,7 +226,7 @@ export function EditUserDialog({
             type: "image/jpeg",
           });
           setLogoFile(croppedFile);
-          if (logoPreview && logoPreview.startsWith("blob:")) {
+          if (logoPreview?.startsWith("blob:")) {
             URL.revokeObjectURL(logoPreview);
           }
           setLogoPreview(URL.createObjectURL(croppedImage));
@@ -240,7 +240,7 @@ export function EditUserDialog({
   }, [imageSrc, croppedAreaPixels, logoPreview]);
 
   const handleRemoveFinalImage = () => {
-    if (logoPreview && logoPreview.startsWith("blob:")) {
+    if (logoPreview?.startsWith("blob:")) {
       URL.revokeObjectURL(logoPreview);
     }
     setLogoPreview(user?.logo_url ?? null);
