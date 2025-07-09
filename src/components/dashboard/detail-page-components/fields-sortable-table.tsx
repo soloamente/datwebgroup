@@ -1003,6 +1003,7 @@ export function FieldsSortableTable({
     meta: {
       onEdit: handleEditField,
     },
+    // @ts-expect-error eslint-disable-next-line @typescript-eslint/ban-ts-comment
     filterFns: {
       activeStatus: (row, columnId, filterValue) => true,
       dateRange: (row, columnId, filterValue) => true,
