@@ -192,6 +192,8 @@ export interface ViewerInfo {
   id: number;
   nominativo: string;
   email: string;
+  codice_fiscale?: string;
+  partita_iva?: string;
 }
 
 export interface AttachedFile {
@@ -238,6 +240,14 @@ export interface GetSharedBatchesResponse {
   data: SharedBatch[];
   document_class: DocumentClassDetails;
   sharer: SharerInfo;
+}
+
+export interface AvailableViewersResponse {
+  viewers: ViewerInfo[];
+}
+
+export interface SharedBatchDetails extends SharedBatch {
+  document_class: DocumentClassDetails;
 }
 
 // --- Fine Tipi per Shared Batches ---
@@ -890,6 +900,37 @@ export const getMyDocumentClasses =
     );
     return response.data;
   };
+
+export const getAvailableViewersForBatch = async (
+  batchId: number,
+): Promise<AvailableViewersResponse> => {
+  const response = await api.get<AvailableViewersResponse>(
+    `/share-batches/${batchId}/available-viewers`,
+  );
+  return response.data;
+};
+
+export const attachViewerToBatch = async (
+  batchId: number,
+  viewerId: number,
+): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>(
+    `/share-batches/${batchId}/attach-viewer`,
+    {
+      viewer_id: viewerId,
+    },
+  );
+  return response.data;
+};
+
+export const getSharedBatchById = async (
+  batchId: number,
+): Promise<SharedBatchDetails> => {
+  const response = await api.get<SharedBatchDetails>(
+    `/share-batches/${batchId}`,
+  );
+  return response.data;
+};
 
 const createSharer = async (
   data: FormData,

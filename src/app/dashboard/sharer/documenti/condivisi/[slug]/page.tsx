@@ -2,27 +2,32 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
+import { type DateRange as DayPickerDateRange } from "react-day-picker";
 import {
   getSharedBatchesByDocumentClass,
+  type GetSharedBatchesResponse,
   type SharedBatch,
   type SharedDocument,
   type DocumentClassDetails,
   type ViewerInfo,
   getMyDocumentClasses,
-} from "../../../../../api/api";
+  type GetMyDocumentClassesResponse,
+  type MyDocumentClass,
+} from "@/app/api/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SharedDocumentsTable } from "@/components/dashboard/tables/sharer/shared-documents-table";
+import {
+  SharedDocumentsTable,
+  type EnrichedDocument,
+} from "@/components/dashboard/tables/sharer/shared-documents-table";
 import { StatsGrid } from "@/components/admin/stats-grid";
 import { Button } from "@/components/ui/button";
 import { FileText, Package, Users, Paperclip, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { useBatchStore } from "@/store/batch-store";
+import Link from "next/link";
 
-// Helper type for documents enriched with batch data
-interface EnrichedDocument extends SharedDocument {
-  batchId: number;
-  sent_at: string;
-  viewers: ViewerInfo[];
-}
+// Helper type for documents enriched with batch data - REMOVED, NOW IMPORTED
 
 const unslugify = (slug: string) => {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -44,6 +49,19 @@ export default function DocumentClassPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // State for filters
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [dateRange, setDateRange] = useState<DayPickerDateRange | undefined>(
+    undefined,
+  );
+  const [dateField, setDateField] = useState<string>("sent_at");
+  const [selectedViewers, setSelectedViewers] = useState<string[]>([]);
+  const [dynamicColumnFilters, setDynamicColumnFilters] = useState<
+    Record<string, string | string[] | undefined>
+  >({});
+
+  const setBatches = useBatchStore((state) => state.setBatches);
+
   useEffect(() => {
     if (slug) {
       const unslugifiedName = unslugify(slug);
@@ -53,8 +71,9 @@ export default function DocumentClassPage() {
         setIsLoading(true);
         setError(null);
         try {
-          const myDocClassesResponse = await getMyDocumentClasses();
-          const myDocClasses = myDocClassesResponse.data;
+          const myDocClassesResponse: GetMyDocumentClassesResponse =
+            await getMyDocumentClasses();
+          const myDocClasses: MyDocumentClass[] = myDocClassesResponse.data;
 
           const targetDocClass = myDocClasses.find(
             (docClass) => slugify(docClass.name) === slug,
@@ -62,20 +81,27 @@ export default function DocumentClassPage() {
 
           if (targetDocClass) {
             const documentClassId = targetDocClass.id;
-            const response =
+            const response: GetSharedBatchesResponse =
               await getSharedBatchesByDocumentClass(documentClassId);
 
-            const flattenedDocs = response.data.flatMap((batch: SharedBatch) =>
-              batch.documents.map((doc) => ({
-                ...doc,
+            const enrichedData: EnrichedDocument[] = response.data.map(
+              (batch: SharedBatch) => ({
+                id: batch.id,
                 batchId: batch.id,
+                title: batch.title,
+                status: batch.status,
                 sent_at: batch.sent_at,
                 viewers: batch.viewers,
-              })),
+                documents: batch.documents,
+                // Add dummy properties to satisfy SharedDocument type
+                metadata: {},
+                files: [],
+              }),
             );
-            setAllDocuments(flattenedDocs);
 
+            setAllDocuments(enrichedData);
             setDocClassDetails(response.document_class);
+            setBatches(enrichedData, response.document_class);
             setDocClassName(response.document_class.name);
           } else {
             setError(`Classe documentale "${unslugifiedName}" non trovata.`);
@@ -96,7 +122,7 @@ export default function DocumentClassPage() {
       setIsLoading(false);
       setError("Impossibile determinare la classe documentale dall'URL.");
     }
-  }, [slug]);
+  }, [slug, setBatches]);
 
   const pageTitle = useMemo(
     () => (docClassName ? docClassName : "Caricamento..."),
@@ -111,6 +137,8 @@ export default function DocumentClassPage() {
     [docClassDetails],
   );
 
+  const canRenderTable = !isLoading && docClassDetails;
+
   const stats = useMemo(() => {
     if (isLoading || error || !allDocuments || allDocuments.length === 0) {
       return {
@@ -121,7 +149,7 @@ export default function DocumentClassPage() {
       };
     }
     const uniqueViewers = new Set(
-      allDocuments.flatMap((doc) => doc.viewers.map((v) => v.id)),
+      allDocuments.flatMap((doc) => doc.viewers.map((v: ViewerInfo) => v.id)),
     );
     const totalFiles = allDocuments.reduce(
       (acc, doc) => acc + doc.files.length,
@@ -138,6 +166,34 @@ export default function DocumentClassPage() {
   const handleCreateNew = () => {
     toast.info("Funzionalità per creare una nuova condivisione in arrivo!");
   };
+
+  const filters = useMemo(
+    () => ({
+      globalFilter,
+      dateRange,
+      dateField,
+      selectedViewers,
+      dynamicColumnFilters,
+    }),
+    [globalFilter, dateRange, dateField, selectedViewers, dynamicColumnFilters],
+  );
+
+  const setFilters = useMemo(
+    () => ({
+      setGlobalFilter,
+      setDateRange,
+      setDateField,
+      setSelectedViewers,
+      setDynamicColumnFilters,
+    }),
+    [
+      setGlobalFilter,
+      setDateRange,
+      setDateField,
+      setSelectedViewers,
+      setDynamicColumnFilters,
+    ],
+  );
 
   if (isLoading) {
     return (
@@ -166,16 +222,14 @@ export default function DocumentClassPage() {
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-medium md:text-4xl dark:text-white">
             {pageTitle}
+            {}
           </h1>
           <p className="text-muted-foreground text-sm">{pageDescription}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            className="bg-primary rounded-full text-white"
-            onClick={handleCreateNew}
-          >
+          <Button className="bg-primary rounded-full text-white">
             <Plus size={20} />
-            Nuova Condivisione
+            <Link href="/dashboard/sharer/documenti">Nuova Condivisione</Link>
           </Button>
         </div>
       </div>
@@ -209,18 +263,27 @@ export default function DocumentClassPage() {
             },
           ]}
         />
-
-        {error ? (
-          <div className="flex h-64 items-center justify-center rounded-md border border-dashed">
-            <p className="text-muted-foreground">{error}</p>
-          </div>
-        ) : (
-          <SharedDocumentsTable
-            data={allDocuments}
-            docClassDetails={docClassDetails}
-            isLoading={isLoading}
-          />
-        )}
+        <TooltipProvider>
+          {canRenderTable ? (
+            <SharedDocumentsTable
+              data={allDocuments}
+              docClassDetails={docClassDetails}
+              filters={filters}
+              setFilters={setFilters}
+            />
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="flex w-full items-center justify-between">
+                <Skeleton className="h-10 w-64 rounded-lg" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-10 w-24 rounded-lg" />
+                  <Skeleton className="h-10 w-24 rounded-lg" />
+                </div>
+              </div>
+              <Skeleton className="h-96 w-full rounded-lg" />
+            </div>
+          )}
+        </TooltipProvider>
       </div>
     </main>
   );

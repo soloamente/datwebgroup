@@ -192,6 +192,22 @@ export default function AdminLoginRightSide({
     setIsLoading(false);
   };
 
+  const handleUsernameInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === "Enter") {
+      void handleUsernameContinue();
+    }
+  };
+
+  const handlePasswordInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === "Enter") {
+      void handlePasswordLogin();
+    }
+  };
+
   const renderStepContent = () => {
     switch (step) {
       case "usernameInput":
@@ -209,6 +225,8 @@ export default function AdminLoginRightSide({
               <UsernameInput
                 value={currentUsername}
                 onChange={(e) => setCurrentUsername(e.target.value)}
+                // Add Enter key handler
+                onKeyDown={handleUsernameInputKeyDown}
               />
               {error && (
                 <p className="text-center text-sm text-red-500">{error}</p>
@@ -276,6 +294,8 @@ export default function AdminLoginRightSide({
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 label=""
+                // Add Enter key handler
+                onKeyDown={handlePasswordInputKeyDown}
               />
               {error && (
                 <p className="text-center text-sm text-red-500">{error}</p>

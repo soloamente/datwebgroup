@@ -1,6 +1,6 @@
 import { GridIcon } from "public/pikaiconsv2.0/solid/grid";
 import { UserIcon } from "public/pikaiconsv2.0/solid/user";
-import { Icon as DocumentIcon } from "@/components/icons/document";
+import { DocumentIcon } from "@/components/icons/document";
 
 export const navigationData = {
   navGeneral: [

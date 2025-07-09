@@ -24,6 +24,7 @@ interface PasswordInputProps {
   infoColor?: string;
   infoClassName?: string;
   infoStrokeWidth?: number;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export default function PasswordInput({
@@ -37,6 +38,7 @@ export default function PasswordInput({
   infoColor,
   infoClassName,
   infoStrokeWidth,
+  onKeyDown,
 }: PasswordInputProps) {
   const id = useId();
   const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -88,6 +90,7 @@ export default function PasswordInput({
           className="peer border-border h-14 rounded-2xl border-[1.5px] p-4 ps-10 pe-9 placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
           placeholder="Pa12£$56789!%"
           type={isVisible ? "text" : "password"}
+          onKeyDown={onKeyDown}
         />
         <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
           <LockIcon size={16} aria-hidden="true" />
