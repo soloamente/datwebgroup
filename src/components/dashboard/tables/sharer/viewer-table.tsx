@@ -332,6 +332,7 @@ export default function ViewerTable({
       columnVisibility,
       globalFilter,
     },
+    // @ts-expect-error eslint-disable-next-line @typescript-eslint/ban-ts-comment
     filterFns: {
       dateRange: dateRangeFilterFn,
       activeStatus: dummyFilter,
