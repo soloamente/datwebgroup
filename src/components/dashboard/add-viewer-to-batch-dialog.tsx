@@ -30,9 +30,15 @@ import {
   type ViewerInfo,
 } from "@/app/api/api";
 import { toast } from "sonner";
-import { RiCheckLine, RiLoader4Line } from "@remixicon/react";
+import {
+  RiCheckLine,
+  RiLoader4Line,
+  RiUserSearchLine,
+  RiUserAddLine,
+  RiUserSmileLine,
+} from "@remixicon/react";
 import { ChevronsUpDown } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AddViewerToBatchDialogProps {
   batchId: number;
@@ -100,11 +106,15 @@ export function AddViewerToBatchDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Aggiungi Destinatario al Batch</DialogTitle>
+          <DialogTitle>Aggiungi Destinatario</DialogTitle>
+          <p className="text-muted-foreground text-sm">
+            Seleziona un utente da associare a questo batch. Gli utenti già
+            inclusi non verranno mostrati.
+          </p>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-2">
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -114,7 +124,19 @@ export function AddViewerToBatchDialog({
                 className="w-full justify-between"
                 disabled={isLoading}
               >
-                <span className="truncate">{selectedViewerDisplay}</span>
+                <div className="flex items-center gap-2">
+                  {selectedViewer ? (
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-xs">
+                        {selectedViewer.nominativo.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <RiUserSearchLine className="text-muted-foreground h-5 w-5" />
+                  )}
+                  <span className="truncate">{selectedViewerDisplay}</span>
+                </div>
+
                 {isLoading ? (
                   <RiLoader4Line className="ml-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -124,37 +146,59 @@ export function AddViewerToBatchDialog({
             </PopoverTrigger>
             <PopoverContent className="z-[100] w-[--radix-popover-trigger-width] p-0">
               <Command>
-                <CommandInput placeholder="Cerca destinatario..." />
-                <CommandList>
-                  <ScrollArea className="h-48">
-                    <CommandEmpty>Nessun destinatario trovato.</CommandEmpty>
+                <CommandInput placeholder="Cerca per nome, email o CF..." />
+                <CommandList
+                  className="max-h-60 overflow-y-auto"
+                  onWheel={(e) => {
+                    e.currentTarget.scrollTop += e.deltaY;
+                  }}
+                >
+                  {isLoading ? (
+                    <div className="text-muted-foreground flex items-center justify-center gap-2 p-4 text-sm">
+                      <RiLoader4Line className="h-4 w-4 animate-spin" />
+                      <span>Caricamento destinatari...</span>
+                    </div>
+                  ) : availableViewers.length === 0 ? (
+                    <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 p-4 text-center text-sm">
+                      <RiUserSmileLine className="h-8 w-8" />
+                      <span>Nessun nuovo destinatario disponibile.</span>
+                    </div>
+                  ) : (
                     <CommandGroup>
                       {availableViewers.map((viewer) => (
                         <CommandItem
                           key={viewer.id}
-                          value={`${viewer.nominativo} ${viewer.email} ${viewer.codice_fiscale ?? ""}`}
+                          value={`${viewer.nominativo} ${viewer.email} ${
+                            viewer.codice_fiscale ?? ""
+                          }`}
                           onSelect={() => {
                             setSelectedViewer(viewer);
                             setPopoverOpen(false);
                           }}
+                          className="flex items-center gap-3"
                         >
-                          <RiCheckLine
-                            className={`mr-2 h-4 w-4 ${
-                              selectedViewer?.id === viewer.id
-                                ? "opacity-100"
-                                : "opacity-0"
-                            }`}
-                          />
-                          <div>
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback>
+                              {viewer.nominativo.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
                             <p className="font-medium">{viewer.nominativo}</p>
                             <p className="text-muted-foreground text-sm">
                               {viewer.email}
                             </p>
                           </div>
+                          <RiCheckLine
+                            className={`ml-auto h-4 w-4 ${
+                              selectedViewer?.id === viewer.id
+                                ? "opacity-100"
+                                : "opacity-0"
+                            }`}
+                          />
                         </CommandItem>
                       ))}
                     </CommandGroup>
-                  </ScrollArea>
+                  )}
                 </CommandList>
               </Command>
             </PopoverContent>
@@ -168,8 +212,10 @@ export function AddViewerToBatchDialog({
             onClick={handleAttachViewer}
             disabled={!selectedViewer || isAttaching}
           >
-            {isAttaching && (
+            {isAttaching ? (
               <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RiUserAddLine className="mr-2 h-4 w-4" />
             )}
             Aggiungi Destinatario
           </Button>

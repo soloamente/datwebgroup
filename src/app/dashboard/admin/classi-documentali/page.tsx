@@ -9,7 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { StatsGrid } from "@/components/admin/stats-grid";
-import { Plus } from "lucide-react";
+import { FileStack, ListChecks, CalendarPlus, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateDocumentClassDialog } from "@/components/dashboard/create-document-class-dialog";
 
@@ -256,7 +256,7 @@ export default function ClassiDocumentali() {
           className="bg-primary rounded-full text-white"
           onClick={handleOpenCreateDialog}
         >
-          <Plus size={20} />
+          <FilePlus className="mr-2 h-4 w-4" />
           Crea Classe Documentale
         </Button>
       </div>
@@ -268,19 +268,19 @@ export default function ClassiDocumentali() {
               title: "Totale Classi",
               value: totalClasses.toString(),
               change: { value: formattedChange, trend },
-              icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+              icon: <FileStack size={20} />, // Replace with a more relevant icon if desired
             },
             {
               title: "Totale Campi",
               value: totalFields.toString(),
               change: { value: formattedFieldsChange, trend: fieldsTrend },
-              icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+              icon: <ListChecks size={20} />, // Replace with a more relevant icon if desired
             },
             {
               title: "Create questo mese",
               value: recentlyCreated.toString(),
               change: { value: formattedMonthChange, trend: monthTrend },
-              icon: <Plus size={20} />, // Replace with a more relevant icon if desired
+              icon: <CalendarPlus size={20} />, // Replace with a more relevant icon if desired
             },
           ]}
         />

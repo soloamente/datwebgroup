@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  type GetMyDocumentClassesResponse,
   type MyDocumentClass,
   type MyDocumentClassField,
   type Viewer,
@@ -9,7 +8,7 @@ import {
   userService,
 } from "@/app/api/api";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -18,25 +17,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 
+import { Checkbox } from "@/components/animate-ui/base/checkbox";
 import { CreateViewerDialog } from "@/components/create-viewer-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/kamui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -44,15 +38,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
+import { SingleDatePicker } from "@/components/ui/single-date-picker";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { AnimatePresence, motion } from "framer-motion";
 import {
+  Check,
   File as FileIcon,
+  FileText,
   FileUp,
+  Loader2,
   Pencil,
   PlusCircle,
   Search,
+  Send,
   Trash2,
   UploadCloud,
   User,
@@ -68,7 +67,25 @@ interface FileWithPreview extends File {
   preview: string;
 }
 
+const steps = [
+  {
+    id: 1,
+    name: "Destinatari",
+    description: "Seleziona i clienti",
+    icon: Users,
+  },
+  {
+    id: 2,
+    name: "Dettagli",
+    description: "Compila i metadati",
+    icon: FileText,
+  },
+  { id: 3, name: "File", description: "Carica i documenti", icon: FileUp },
+  { id: 4, name: "Riepilogo", description: "Controlla e invia", icon: Check },
+];
+
 export default function DocumentiPage() {
+  const [currentStep, setCurrentStep] = useState(1);
   const [selectedClients, setSelectedClients] = useState<Viewer[]>([]);
   const [clientSearch, setClientSearch] = useState("");
 
@@ -95,6 +112,18 @@ export default function DocumentiPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const nextStep = () => {
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
   const fetchViewers = useCallback(async () => {
     try {
       const viewersData = await userService.getViewers();
@@ -103,7 +132,7 @@ export default function DocumentiPage() {
       }
     } catch (error) {
       console.error("Failed to fetch viewers:", error);
-      // TODO: show toast notification on error
+      toast.error("Impossibile caricare i destinatari.");
     }
   }, []);
 
@@ -121,7 +150,7 @@ export default function DocumentiPage() {
         }
       } catch (error) {
         console.error("Failed to fetch document classes:", error);
-        // TODO: show toast notification on error
+        toast.error("Impossibile caricare le classi documentali.");
       } finally {
         setIsLoading(false);
       }
@@ -244,7 +273,6 @@ export default function DocumentiPage() {
             placeholder={`Inserisci ${field.label.toLowerCase()}`}
             value={(value as string) ?? ""}
             onChange={(e) => handleMetadataChange(field.name, e.target.value)}
-            className="bg-background"
             required={!!field.required}
           />
         );
@@ -257,19 +285,19 @@ export default function DocumentiPage() {
             placeholder={`Inserisci ${field.label.toLowerCase()}`}
             value={(value as number) ?? ""}
             onChange={(e) => handleMetadataChange(field.name, e.target.value)}
-            className="bg-background"
             required={!!field.required}
           />
         );
       case "date":
         return (
-          <Input
-            id={field.name}
-            type="date"
-            value={(value as string) ?? ""}
-            onChange={(e) => handleMetadataChange(field.name, e.target.value)}
-            className="bg-background"
-            required={!!field.required}
+          <SingleDatePicker
+            value={value ? new Date(value as string) : undefined}
+            onChange={(date) =>
+              handleMetadataChange(
+                field.name,
+                date ? format(date, "yyyy-MM-dd") : "",
+              )
+            }
           />
         );
       case "datetime":
@@ -279,13 +307,12 @@ export default function DocumentiPage() {
             type="datetime-local"
             value={(value as string) ?? ""}
             onChange={(e) => handleMetadataChange(field.name, e.target.value)}
-            className="bg-background"
             required={!!field.required}
           />
         );
       case "boolean":
         return (
-          <div className="border-input bg-background flex h-10 items-center space-x-2 rounded-md border px-3">
+          <div className="border-input flex h-10 items-center space-x-2 rounded-md border px-3">
             <Checkbox
               id={field.name}
               checked={!!value}
@@ -411,301 +438,525 @@ export default function DocumentiPage() {
     }
   };
 
+  const renderStepContent = () => {
+    const animationProps = {
+      initial: { opacity: 0, x: 50 },
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: -50 },
+      transition: { duration: 0.3 },
+    };
+
+    switch (currentStep) {
+      case 1: // Client Selection
+        return (
+          <motion.div {...animationProps}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Selezione Destinatari</CardTitle>
+                <CardDescription>
+                  Seleziona i clienti a cui inviare i documenti. Puoi cercarli o
+                  crearne di nuovi.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Cerca cliente..."
+                    className="rounded-full"
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                    startContent={<Search className="h-4 w-4" />}
+                    wrapperClassName="flex-grow"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateViewerDialogOpen(true)}
+                    className="h-10 rounded-full"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Nuovo cliente
+                  </Button>
+                </div>
+                {selectedClients.length > 0 && (
+                  <ScrollArea className="h-auto max-h-40">
+                    <div className="flex flex-wrap gap-2 rounded-lg bg-stone-100 p-2 dark:bg-stone-900">
+                      {selectedClients.map((client) => (
+                        <Badge
+                          key={client.id}
+                          variant="secondary"
+                          className="flex items-center gap-1.5 py-1 pr-1 pl-2"
+                        >
+                          <User className="h-3.5 w-3.5" />
+                          <span className="text-sm font-normal">
+                            {client.nominativo}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={`Rimuovi ${client.nominativo}`}
+                            onClick={() => removeClient(client.id)}
+                            className="text-muted-foreground hover:bg-muted-foreground/20 flex-shrink-0 rounded-full p-0.5 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+                <ScrollArea className="h-96 min-h-0 shrink">
+                  <div className="space-y-1 p-1">
+                    {filteredClients.length > 0 ? (
+                      filteredClients.map((client) => (
+                        <div
+                          key={client.id}
+                          onClick={() => handleClientSelect(client)}
+                          className="hover:bg-muted flex cursor-pointer items-center justify-between rounded-full border border-transparent p-2 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full">
+                              <User className="text-muted-foreground h-4 w-4" />
+                            </div>
+                            <span className="text-sm font-medium">
+                              {client.nominativo}
+                            </span>
+                          </div>
+                          <PlusCircle className="text-muted-foreground h-5 w-5" />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground p-4 text-center text-sm">
+                        {clientSearch
+                          ? "Nessun risultato."
+                          : "Inizia a cercare un cliente."}
+                      </p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      case 2: // Document Details
+        return (
+          <motion.div {...animationProps}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Dettagli Documento</CardTitle>
+                <CardDescription>
+                  Seleziona una classe e compila i metadati richiesti.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col space-y-6">
+                <div className="grid w-full gap-2">
+                  <Label htmlFor="doc-class">Classe Documentale</Label>
+                  <Select
+                    onValueChange={handleDocClassChange}
+                    value={selectedDocClassId}
+                  >
+                    <SelectTrigger id="doc-class">
+                      <SelectValue placeholder="Seleziona una classe..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Caricamento...
+                        </SelectItem>
+                      ) : (
+                        documentClasses.map((dc) => (
+                          <SelectItem key={dc.id} value={dc.id.toString()}>
+                            {dc.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedDocClass ? (
+                  <ScrollArea className="flex-1">
+                    <div className="bg-muted/50 space-y-4 rounded-lg border p-4">
+                      <h4 className="text-foreground font-semibold">
+                        Metadati per {selectedDocClass.name}
+                      </h4>
+                      {renderMetadataFields()}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="border-border bg-muted/50 text-muted-foreground flex h-full min-h-[150px] flex-1 items-center justify-center rounded-lg border-2 border-dashed text-center text-sm">
+                    Seleziona una classe documentale
+                    <br />
+                    per compilare i metadati.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      case 3: // File Upload
+        return (
+          <motion.div {...animationProps}>
+            <Card className="flex flex-1 flex-col">
+              <CardHeader>
+                <CardTitle>Caricamento File</CardTitle>
+                <CardDescription>
+                  Carica i documenti che vuoi inviare. Puoi trascinarli o
+                  selezionarli dal tuo computer.
+                </CardDescription>
+              </CardHeader>
+              <CardContent
+                className="flex flex-1 flex-col"
+                onDrop={handleFileDrop}
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={() => setIsDragging(true)}
+                onDragLeave={() => setIsDragging(false)}
+              >
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  multiple
+                  onChange={handleFileInput}
+                />
+                <Label
+                  htmlFor="file-upload"
+                  className={cn(
+                    "border-border flex flex-1 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                    isDragging
+                      ? "border-primary bg-primary/10"
+                      : "bg-background hover:border-primary/50",
+                    "min-h-[200px]",
+                  )}
+                >
+                  {files.length === 0 ? (
+                    <div className="p-6 text-center">
+                      <div
+                        className={cn(
+                          "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full",
+                          isDragging ? "bg-primary/20" : "bg-muted",
+                        )}
+                      >
+                        <UploadCloud
+                          className={cn(
+                            "h-8 w-8",
+                            isDragging
+                              ? "text-primary"
+                              : "text-muted-foreground",
+                          )}
+                        />
+                      </div>
+                      <p className="text-foreground font-semibold">
+                        Trascina i file qui o{" "}
+                        <span className="text-primary">
+                          clicca per caricare
+                        </span>
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Puoi caricare più documenti contemporaneamente.
+                      </p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-full w-full">
+                      <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {files.map((file) => (
+                          <div
+                            key={file.name}
+                            className="group border-border bg-muted relative aspect-square overflow-hidden rounded-lg border"
+                          >
+                            {file.type.startsWith("image/") ? (
+                              <Image
+                                src={file.preview}
+                                alt={file.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full flex-col items-center justify-center gap-2 p-2">
+                                <FileIcon className="text-muted-foreground h-8 w-8" />
+                                <p className="text-muted-foreground text-center text-xs break-all">
+                                  {file.name}
+                                </p>
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 backdrop-blur-[2px] transition-all group-hover:opacity-100" />
+                            <div className="absolute top-1 right-1 flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="bg-background/50 hover:bg-background h-7 w-7"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setFileToRename(file);
+                                  setNewFileName(file.name);
+                                }}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                <span className="sr-only">Rinomina file</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive h-7 w-7"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  removeFile(file.name);
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span className="sr-only">Rimuovi file</span>
+                              </Button>
+                            </div>
+                            {isPreviewable(file) && (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                                <Button
+                                  variant="outline"
+                                  className="bg-background/50 hover:bg-background"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setFileToPreview(file);
+                                  }}
+                                >
+                                  <Search className="mr-2 h-4 w-4" />
+                                  Anteprima
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <Label
+                          htmlFor="file-upload"
+                          className="group border-border bg-muted/50 hover:border-primary/50 flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors"
+                        >
+                          <div className="text-center">
+                            <PlusCircle className="text-muted-foreground group-hover:text-primary mx-auto h-8 w-8 transition-colors" />
+                            <p className="text-muted-foreground group-hover:text-primary mt-2 text-sm font-semibold transition-colors">
+                              Aggiungi altri file
+                            </p>
+                          </div>
+                        </Label>
+                      </div>
+                    </ScrollArea>
+                  )}
+                </Label>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      case 4: // Summary and Send
+        return (
+          <motion.div {...animationProps}>
+            <div className="bg-muted/50 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
+              <div className="bg-primary/10 text-primary mb-6 flex h-20 w-20 items-center justify-center rounded-full">
+                <Check className="h-10 w-10" />
+              </div>
+              <h2 className="text-2xl font-bold">Tutto pronto!</h2>
+              <p className="text-muted-foreground mt-2">
+                Ricontrolla il riepilogo sulla destra.
+                <br />
+                Se è tutto corretto, puoi procedere con l&apos;invio.
+              </p>
+            </div>
+          </motion.div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="bg-background flex h-full flex-col">
-      <header className="flex flex-shrink-0 items-center justify-between border-b p-4 lg:px-6 lg:py-4">
-        <div>
+    <div className="grid h-full flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
+      <main className="flex h-full flex-col">
+        <header className="flex-shrink-0 border-b p-4 lg:px-8 lg:py-6">
           <h1 className="text-foreground text-2xl font-bold tracking-tight">
             Nuova Spedizione
           </h1>
           <p className="text-muted-foreground">
             Componi e invia i documenti ai tuoi clienti in un unico posto.
           </p>
-        </div>
-        <Button
-          size="lg"
-          disabled={!isFormValid || isSubmitting}
-          color="primary"
-          onClick={handleSendDocuments}
-        >
-          {isSubmitting ? (
-            "Invio in corso..."
-          ) : (
-            <>
-              <FileUp className="mr-2 h-4 w-4" />
-              Invia a {selectedClients.length} Cliente(i)
-            </>
-          )}
-        </Button>
-      </header>
+        </header>
 
-      <main className="grid flex-1 gap-6 overflow-y-auto p-4 lg:grid-cols-12 lg:p-6">
-        {/* Left Column: Client Selection */}
-        <div className="flex flex-col gap-6 lg:col-span-3">
-          <Card className="flex flex-1 flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                <span>Destinatari</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col gap-4">
-              <Input
-                placeholder="Cerca cliente..."
-                className="rounded-full"
-                value={clientSearch}
-                onChange={(e) => setClientSearch(e.target.value)}
-                startContent={<Search className="h-4 w-4" />}
-                endContent={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-full"
-                    onClick={() => setIsCreateViewerDialogOpen(true)}
-                  >
-                    <UserPlus className="h-4 w-4 rounded-full" />
-                  </Button>
-                }
-                wrapperClassName="w-full"
-              />
-              <ScrollArea className="flex-1">
-                <div className="space-y-2">
-                  {filteredClients.map((client) => (
-                    <div
-                      key={client.id}
-                      onClick={() => handleClientSelect(client)}
-                      className="hover:bg-muted flex cursor-pointer items-center justify-between rounded-full border border-transparent p-2 transition-colors"
-                    >
-                      <span className="text-sm font-medium">
-                        {client.nominativo}
-                      </span>
-                      <PlusCircle className="text-muted-foreground h-4 w-4" />
-                    </div>
-                  ))}
-                  {filteredClients.length === 0 && clientSearch && (
-                    <p className="text-muted-foreground p-2 text-center text-sm">
-                      Nessun risultato.
-                    </p>
-                  )}
-                </div>
-              </ScrollArea>
-              <div className="mt-auto space-y-2">
-                <h3 className="text-muted-foreground text-sm font-medium">
-                  Clienti Selezionati ({selectedClients.length})
-                </h3>
-                <div className="border-border flex min-h-[96px] flex-wrap content-start gap-2 rounded-lg border-2 border-dashed p-2">
-                  {selectedClients.length > 0 ? (
-                    selectedClients.map((client) => (
-                      <Badge
-                        key={client.id}
-                        variant="secondary"
-                        className="flex items-center gap-1 py-1 pr-1 pl-2"
-                      >
-                        <span className="text-sm">{client.nominativo}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeClient(client.id)}
-                          aria-label={`Rimuovi ${client.nominativo}`}
-                          className="h-5 w-5"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </Badge>
-                    ))
-                  ) : (
-                    <div className="flex w-full items-center justify-center py-4 text-center">
-                      <p className="text-muted-foreground text-sm">
-                        Nessun cliente selezionato.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Center Column: File Upload */}
-        <div className="flex flex-col gap-6 lg:col-span-5">
-          <Card className="flex flex-1 flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileIcon className="h-5 w-5" />
-                <span>File da Spedire</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent
-              className="flex flex-1 flex-col"
-              onDrop={handleFileDrop}
-              onDragOver={(e) => e.preventDefault()}
-              onDragEnter={() => setIsDragging(true)}
-              onDragLeave={() => setIsDragging(false)}
-            >
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                multiple
-                onChange={handleFileInput}
-              />
-              <Label
-                htmlFor="file-upload"
-                className={cn(
-                  "border-border flex flex-1 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
-                  isDragging
-                    ? "border-primary bg-primary/10"
-                    : "bg-background hover:border-primary/50",
-                )}
-              >
-                {files.length === 0 ? (
-                  <div className="p-6 text-center">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+          {/* Stepper */}
+          <div className="mb-12">
+            <div className="flex items-center">
+              {steps.map((step, index) => (
+                <React.Fragment key={step.id}>
+                  <div className="flex flex-col items-center text-center">
                     <div
                       className={cn(
-                        "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full",
-                        isDragging ? "bg-primary/20" : "bg-muted",
+                        "flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold transition-colors",
+                        currentStep > step.id
+                          ? "bg-primary text-primary-foreground"
+                          : currentStep === step.id
+                            ? "border-primary bg-primary/10 text-primary border-2"
+                            : "bg-muted text-muted-foreground",
                       )}
                     >
-                      <UploadCloud
-                        className={cn(
-                          "h-8 w-8",
-                          isDragging ? "text-primary" : "text-muted-foreground",
-                        )}
-                      />
+                      {currentStep > step.id ? (
+                        <Check className="h-6 w-6" />
+                      ) : (
+                        <step.icon className="h-6 w-6" />
+                      )}
                     </div>
-                    <p className="text-foreground font-semibold">
-                      Trascina i file qui o{" "}
-                      <span className="text-primary">clicca per caricare</span>
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Puoi caricare più documenti contemporaneamente.
+                    <p
+                      className={cn(
+                        "mt-2 w-20 truncate text-sm",
+                        currentStep >= step.id
+                          ? "text-foreground font-semibold"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {step.name}
                     </p>
                   </div>
-                ) : (
-                  <ScrollArea className="h-full w-full">
-                    <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
-                      {files.map((file) => (
+                  {index < steps.length - 1 && (
+                    <div
+                      className={cn(
+                        "h-1 flex-1 transition-colors",
+                        currentStep > index + 1 ? "bg-primary" : "bg-muted",
+                      )}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* Step Content */}
+          <AnimatePresence mode="wait">{renderStepContent()}</AnimatePresence>
+
+          {/* Navigation Buttons */}
+          <div className="mt-8 flex justify-between">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+            >
+              Indietro
+            </Button>
+            {currentStep < steps.length ? (
+              <Button
+                onClick={nextStep}
+                disabled={
+                  (currentStep === 1 && selectedClients.length === 0) ||
+                  (currentStep === 2 && !isMetadataValid) ||
+                  (currentStep === 3 && files.length === 0)
+                }
+              >
+                Avanti
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      </main>
+      {/* Right Column: Summary Sidebar */}
+      <aside className="bg-sidebar-background flex flex-col p-4">
+        <div className="bg-card sticky top-6 flex h-full flex-col gap-6 rounded-xl p-6 shadow-lg">
+          <h2 className="text-xl font-semibold">Riepilogo Spedizione</h2>
+          <div className="flex-1 space-y-6">
+            <div>
+              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                <Users className="h-4 w-4" />
+                <span>Destinatari</span>
+                <Badge variant="secondary">{selectedClients.length}</Badge>
+              </h3>
+              <div className="space-y-2">
+                {selectedClients.length > 0 ? (
+                  <ScrollArea className="h-auto max-h-32">
+                    <div className="space-y-2 pr-2">
+                      {selectedClients.map((client) => (
                         <div
-                          key={file.name}
-                          className="group border-border bg-muted relative aspect-square overflow-hidden rounded-lg border"
+                          key={client.id}
+                          className="bg-muted/50 flex items-center justify-between rounded-md p-2"
                         >
-                          {file.type.startsWith("image/") ? (
-                            <Image
-                              src={file.preview}
-                              alt={file.name}
-                              fill
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full flex-col items-center justify-center gap-2 p-2">
-                              <FileIcon className="text-muted-foreground h-8 w-8" />
-                              <p className="text-muted-foreground text-center text-xs break-all">
-                                {file.name}
-                              </p>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/40 opacity-0 backdrop-blur-[2px] transition-all group-hover:opacity-100" />
-                          <div className="absolute top-1 right-1 flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="bg-background/50 hover:bg-background h-7 w-7"
-                              onClick={() => {
-                                setFileToRename(file);
-                                setNewFileName(file.name);
-                              }}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                              <span className="sr-only">Rinomina file</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              color="danger"
-                              className="h-7 w-7"
-                              onClick={() => {
-                                removeFile(file.name);
-                              }}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              <span className="sr-only">Rimuovi file</span>
-                            </Button>
-                          </div>
-                          {isPreviewable(file) && (
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                              <Button
-                                variant="outline"
-                                className="bg-background/50 hover:bg-background"
-                                onClick={() => {
-                                  setFileToPreview(file);
-                                }}
-                              >
-                                <Search className="mr-2 h-4 w-4" />
-                                Anteprima
-                              </Button>
-                            </div>
-                          )}
+                          <span className="truncate text-sm">
+                            {client.nominativo}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeClient(client.id)}
+                            aria-label={`Rimuovi ${client.nominativo}`}
+                            className="h-6 w-6 flex-shrink-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
                       ))}
                     </div>
                   </ScrollArea>
+                ) : (
+                  <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
+                    <p className="text-muted-foreground text-center text-sm">
+                      Nessun cliente.
+                    </p>
+                  </div>
                 )}
-              </Label>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column: Document Details */}
-        <div className="flex flex-col gap-6 lg:col-span-4">
-          <Card className="flex flex-1 flex-col">
-            <CardHeader>
-              <CardTitle>Dettagli Documento</CardTitle>
-              <CardDescription>
-                Seleziona una classe e compila i metadati richiesti.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-1 flex-col space-y-6">
-              <div className="grid w-full gap-2">
-                <Label htmlFor="doc-class">Classe Documentale</Label>
-                <Select onValueChange={handleDocClassChange}>
-                  <SelectTrigger id="doc-class">
-                    <SelectValue placeholder="Seleziona una classe..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {isLoading ? (
-                      <SelectItem value="loading" disabled>
-                        Caricamento...
-                      </SelectItem>
-                    ) : (
-                      documentClasses.map((dc) => (
-                        <SelectItem key={dc.id} value={dc.id.toString()}>
-                          {dc.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
               </div>
+            </div>
+            <div>
+              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                <FileText className="h-4 w-4" />
+                <span>Classe Documentale</span>
+              </h3>
               {selectedDocClass ? (
-                <ScrollArea className="flex-1">
-                  <div className="bg-muted/50 space-y-4 rounded-lg border p-4">
-                    <h4 className="text-foreground font-semibold">
-                      Metadati per {selectedDocClass.name}
-                    </h4>
-                    {renderMetadataFields()}
+                <p className="text-sm font-medium">{selectedDocClass.name}</p>
+              ) : (
+                <p className="text-muted-foreground py-2 text-center text-sm">
+                  Non selezionata.
+                </p>
+              )}
+            </div>
+            <div>
+              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                <FileUp className="h-4 w-4" />
+                <span>File</span>
+                <Badge variant="secondary">{files.length}</Badge>
+              </h3>
+              {files.length > 0 ? (
+                <ScrollArea className="h-auto max-h-48">
+                  <div className="space-y-2">
+                    {files.map((file) => (
+                      <div
+                        key={file.name}
+                        className="bg-muted/50 flex items-center gap-2 rounded-md p-2"
+                      >
+                        <FileIcon className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate text-sm">{file.name}</span>
+                      </div>
+                    ))}
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="border-border bg-muted/50 text-muted-foreground flex h-full flex-1 items-center justify-center rounded-lg border-2 border-dashed text-center text-sm">
-                  Seleziona una classe documentale
-                  <br />
-                  per compilare i metadati.
+                <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
+                  <p className="text-muted-foreground text-center text-sm">
+                    Nessun file.
+                  </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+          <div className="mt-auto">
+            <Button
+              size="lg"
+              className="w-full"
+              disabled={!isFormValid || isSubmitting}
+              onClick={handleSendDocuments}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span>Invio in corso...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Invia a {selectedClients.length} Cliente
+                  {selectedClients.length !== 1 && "i"}
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-      </main>
+      </aside>
       <CreateViewerDialog
         isOpen={isCreateViewerDialogOpen}
         onClose={() => setIsCreateViewerDialogOpen(false)}
@@ -745,7 +996,7 @@ export default function DocumentiPage() {
         open={!!fileToRename}
         onOpenChange={(open) => !open && setFileToRename(null)}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Rinomina File</DialogTitle>
           </DialogHeader>
@@ -760,9 +1011,7 @@ export default function DocumentiPage() {
             <Button variant="outline" onClick={() => setFileToRename(null)}>
               Annulla
             </Button>
-            <Button color="primary" onClick={handleRenameFile}>
-              Salva
-            </Button>
+            <Button onClick={handleRenameFile}>Salva</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

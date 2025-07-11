@@ -49,17 +49,6 @@ export default function DocumentClassPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State for filters
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [dateRange, setDateRange] = useState<DayPickerDateRange | undefined>(
-    undefined,
-  );
-  const [dateField, setDateField] = useState<string>("sent_at");
-  const [selectedViewers, setSelectedViewers] = useState<string[]>([]);
-  const [dynamicColumnFilters, setDynamicColumnFilters] = useState<
-    Record<string, string | string[] | undefined>
-  >({});
-
   const setBatches = useBatchStore((state) => state.setBatches);
 
   useEffect(() => {
@@ -172,34 +161,6 @@ export default function DocumentClassPage() {
     toast.info("Funzionalità per creare una nuova condivisione in arrivo!");
   };
 
-  const filters = useMemo(
-    () => ({
-      globalFilter,
-      dateRange,
-      dateField,
-      selectedViewers,
-      dynamicColumnFilters,
-    }),
-    [globalFilter, dateRange, dateField, selectedViewers, dynamicColumnFilters],
-  );
-
-  const setFilters = useMemo(
-    () => ({
-      setGlobalFilter,
-      setDateRange,
-      setDateField,
-      setSelectedViewers,
-      setDynamicColumnFilters,
-    }),
-    [
-      setGlobalFilter,
-      setDateRange,
-      setDateField,
-      setSelectedViewers,
-      setDynamicColumnFilters,
-    ],
-  );
-
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-4 md:p-6">
@@ -274,8 +235,7 @@ export default function DocumentClassPage() {
             <SharedDocumentsTable
               data={allDocuments}
               docClassDetails={docClassDetails}
-              filters={filters}
-              setFilters={setFilters}
+              isLoading={isLoading}
             />
           ) : (
             <div className="flex flex-col gap-4">

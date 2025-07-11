@@ -14,8 +14,15 @@ import {
   RiCheckLine,
   RiCloseLine,
   RiQuestionMark,
+  RiFileTextLine,
 } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface BatchDetailsViewProps {
   batch: EnrichedDocument;
@@ -159,18 +166,23 @@ export function BatchDetailsView({
           <RiUserLine />
           Destinatari ({batch.viewers.length})
         </h3>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {batch.viewers.map((viewer: ViewerInfo) => (
-            <div key={viewer.id} className="bg-muted/50 rounded-lg border p-3">
-              <p className="font-medium">{viewer.nominativo}</p>
-              <p className="text-muted-foreground text-sm">{viewer.email}</p>
+            <div
+              key={viewer.id}
+              className="bg-background rounded-lg border p-3"
+            >
+              <p className="font-semibold">{viewer.nominativo}</p>
+              <p className="text-muted-foreground truncate text-sm">
+                {viewer.email}
+              </p>
               {viewer.codice_fiscale && (
-                <p className="text-muted-foreground mt-1 text-xs">
+                <p className="text-muted-foreground mt-1 font-mono text-xs">
                   CF: {viewer.codice_fiscale}
                 </p>
               )}
               {viewer.partita_iva && (
-                <p className="text-muted-foreground text-xs">
+                <p className="text-muted-foreground font-mono text-xs">
                   P.IVA: {viewer.partita_iva}
                 </p>
               )}
@@ -185,8 +197,8 @@ export function BatchDetailsView({
           <RiFileList3Line />
           Documenti Inclusi ({batch.documents.length})
         </h3>
-        <div className="space-y-6">
-          {batch.documents.map((doc: DocumentWithMetadata) => {
+        <Accordion type="multiple" className="w-full">
+          {batch.documents.map((doc: DocumentWithMetadata, index: number) => {
             const metadataEntries = Object.entries(doc.metadata);
             // Optional: Sort entries based on docClassDetails.fields order
             metadataEntries.sort(([keyA], [keyB]) => {
@@ -203,56 +215,91 @@ export function BatchDetailsView({
               return indexA - indexB;
             });
 
-            return (
-              <div key={doc.id} className="bg-background rounded-lg border p-4">
-                <h4 className="mb-3 font-semibold">Metadati Documento</h4>
-                <div className="mb-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-3">
-                  {metadataEntries.map(([key, value]) => {
-                    const fieldDetails = getFieldDetails(key);
-                    return (
-                      <div key={key}>
-                        <p className="text-muted-foreground">
-                          {fieldDetails?.label ?? key}
-                        </p>
-                        <MetadataValue
-                          value={value}
-                          dataType={fieldDetails?.data_type}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+            // Find a good title for the accordion trigger
+            const titleField = docClassDetails.fields?.find(
+              (f) => "is_title" in f && f.is_title,
+            );
+            const docTitle =
+              titleField && doc.metadata[titleField.name]
+                ? String(doc.metadata[titleField.name])
+                : `Documento #${index + 1}`;
 
-                <h5 className="mb-2 text-sm font-semibold">
-                  File Allegati ({doc.files.length})
-                </h5>
-                <div className="space-y-2">
-                  {doc.files.map((file: AttachedFile) => (
-                    <div
-                      key={file.id}
-                      className="bg-muted/50 flex items-center justify-between rounded-md p-2"
-                    >
-                      <div className="flex items-center gap-3">
-                        <RiFile2Line className="text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">
-                            {file.original_filename}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {formatBytes(file.size)}
-                          </p>
-                        </div>
+            return (
+              <AccordionItem value={`doc-${doc.id}`} key={doc.id}>
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center gap-3 text-left">
+                    <RiFileTextLine className="text-muted-foreground h-5 w-5 flex-shrink-0" />
+                    <span className="font-medium">{docTitle}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-6 pt-2">
+                    <div>
+                      <h4 className="mb-3 font-semibold">Metadati Documento</h4>
+                      <div className="rounded-lg border">
+                        <dl className="divide-border divide-y">
+                          {metadataEntries.map(([key, value], idx) => {
+                            const fieldDetails = getFieldDetails(key);
+                            return (
+                              <div
+                                key={key}
+                                className="grid grid-cols-3 gap-4 px-4 py-3"
+                              >
+                                <dt className="text-muted-foreground col-span-1">
+                                  {fieldDetails?.label ?? key}
+                                </dt>
+                                <dd className="col-span-2">
+                                  <MetadataValue
+                                    value={value}
+                                    dataType={fieldDetails?.data_type}
+                                  />
+                                </dd>
+                              </div>
+                            );
+                          })}
+                        </dl>
                       </div>
-                      <Button variant="ghost" size="icon">
-                        <RiDownload2Line size={18} />
-                      </Button>
                     </div>
-                  ))}
-                </div>
-              </div>
+
+                    <div>
+                      <h5 className="mb-3 font-semibold">
+                        File Allegati ({doc.files.length})
+                      </h5>
+                      <div className="space-y-2">
+                        {doc.files.map((file: AttachedFile) => (
+                          <div
+                            key={file.id}
+                            className="bg-muted/20 hover:bg-muted/50 flex items-center justify-between rounded-md border p-2 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              <RiFile2Line className="text-muted-foreground" />
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {file.original_filename}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                  {formatBytes(file.size)}
+                                </p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon" asChild>
+                              <a
+                                href={`/api/files/${file.id}/download`}
+                                download
+                              >
+                                <RiDownload2Line size={18} />
+                              </a>
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             );
           })}
-        </div>
+        </Accordion>
       </div>
     </div>
   );

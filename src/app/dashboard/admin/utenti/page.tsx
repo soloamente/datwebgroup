@@ -5,14 +5,7 @@ import SharerTable from "@/components/dashboard/tables/admin/sharer-table";
 import { userService, type Sharer } from "@/app/api/api";
 import { toast } from "sonner";
 import { StatsGrid } from "@/components/admin/stats-grid";
-import {
-  Users,
-  UserCheck,
-  UserX,
-  FileSpreadsheet,
-  UserPlus,
-  Plus,
-} from "lucide-react";
+import { Users, UserCheck, UserX, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateUserDialog } from "@/components/create-user-dialog";
 
@@ -135,7 +128,7 @@ export default function ListaSharerPage() {
             className="bg-primary rounded-full text-white"
             onClick={handleOpenCreateDialog}
           >
-            <Plus size={20} />
+            <UserPlus className="mr-2 h-4 w-4" />
             Crea Sharer
           </Button>
         </div>

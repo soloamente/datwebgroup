@@ -1,10 +1,8 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useBatchStore } from "@/store/batch-store";
 import { BatchDetailsView } from "@/components/dashboard/detail-page-components/batch-details-view";
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -12,46 +10,36 @@ import { formatDynamicDate } from "@/lib/date-format";
 import {
   RiArrowLeftLine,
   RiErrorWarningLine,
+  RiInformationLine,
   RiUserAddLine,
 } from "@remixicon/react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Stack } from "@/components/ui/stack";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSharedBatchById, type DocumentClassDetails } from "@/app/api/api";
 import { type EnrichedDocument } from "@/components/dashboard/tables/sharer/shared-documents-table";
 import { AddViewerToBatchDialog } from "@/components/dashboard/add-viewer-to-batch-dialog";
 
-export default function BatchDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const batchId = Number(params.batchId);
-  const slug = params.slug as string;
-
-  // Attempt to get data from the store first
-  // eslint-disable-next-line
-  const storeBatch =
-    // eslint-disable-next-line
-    useBatchStore((state) => state.getBatchById(batchId)) ?? null;
-  const storeDocumentClass = useBatchStore((state) => state.documentClass);
-
-  // eslint-disable-next-line
-  const [batch, setBatch] = useState<EnrichedDocument | null>(storeBatch);
-  // eslint-disable-next-line
-  const [documentClass, setDocumentClass] =
-    useState<DocumentClassDetails | null>(storeDocumentClass);
-  const [isLoading, setIsLoading] = useState(!storeBatch);
+// Custom hook for fetching batch details
+function useBatchDetails(batchId: number) {
+  const [data, setData] = useState<{
+    batch: EnrichedDocument | null;
+    documentClass: DocumentClassDetails | null;
+  }>({ batch: null, documentClass: null });
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBatchDetails = useCallback(async () => {
-    if (!batchId) return;
+    if (!batchId) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
-      // eslint-disable-next-line
-      const data = await getSharedBatchById(batchId);
-      // eslint-disable-next-line
-      setBatch(data as unknown as EnrichedDocument);
-      // eslint-disable-next-line
-      setDocumentClass(data.document_class);
+      const result = await getSharedBatchById(batchId);
+      setData({
+        batch: result as unknown as EnrichedDocument,
+        documentClass: result.document_class,
+      });
     } catch (err) {
       setError(
         "Impossibile caricare i dettagli del batch. Potrebbe non esistere o potresti non avere i permessi per visualizzarlo.",
@@ -62,16 +50,20 @@ export default function BatchDetailPage() {
     }
   }, [batchId]);
 
-  // Handle cases where the store might not be hydrated or on page refresh
   useEffect(() => {
-    if (storeBatch && storeDocumentClass) {
-      setBatch(storeBatch);
-      setDocumentClass(storeDocumentClass);
-      setIsLoading(false);
-      return;
-    }
     void fetchBatchDetails();
-  }, [batchId, storeBatch, storeDocumentClass, fetchBatchDetails]);
+  }, [fetchBatchDetails]);
+
+  return { ...data, isLoading, error, refetch: fetchBatchDetails };
+}
+
+export default function BatchDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const batchId = Number(params.batchId);
+
+  const { batch, documentClass, isLoading, error, refetch } =
+    useBatchDetails(batchId);
 
   if (isLoading) {
     return (
@@ -131,50 +123,93 @@ export default function BatchDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
-          <RiArrowLeftLine className="mr-2" />
-          Torna alla lista
-        </Button>
-        <AddViewerToBatchDialog
-          batchId={batchId}
-          onViewerAdded={fetchBatchDetails}
-        >
-          <Button variant="default">
-            <RiUserAddLine className="mr-2" />
-            Aggiungi Destinatario
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="mb-4"
+          >
+            <RiArrowLeftLine className="mr-2" />
+            Torna alla lista
           </Button>
-        </AddViewerToBatchDialog>
-      </div>
-      <div className="bg-card text-card-foreground rounded-lg border p-6">
-        <div className="mb-6">
-          <Stack direction="row" gap={2} align="center" justify="start">
-            <h1 className="text-2xl font-medium md:text-4xl dark:text-white">
-              {documentClass.name} -
-            </h1>
-
-            {/* eslint-disable-next-line */}
-            <h2 className="text-3xl font-bold tracking-tight">
-              {/* eslint-disable-next-line */}
-              {batch.title}
-            </h2>
-          </Stack>
-          <p className="text-muted-foreground flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            {documentClass.name}:{" "}
+            <span className="text-muted-foreground">{batch.title}</span>
+          </h1>
+          <p className="text-muted-foreground">
             Dettagli del batch di condivisione inviato il{" "}
-            {/* eslint-disable-next-line */}
-            {formatDynamicDate(batch.sent_at)}.{/* eslint-disable-next-line */}
-            <Badge variant={batch.status === "sent" ? "default" : "secondary"}>
-              {/* eslint-disable-next-line */}
-              {batch.status}
-            </Badge>
+            {formatDynamicDate(batch.sent_at)}.
           </p>
         </div>
-        {/* eslint-disable-next-line */}
-        <BatchDetailsView batch={batch} docClassDetails={documentClass} />
+        <div className="flex flex-shrink-0 gap-2">
+          <AddViewerToBatchDialog batchId={batchId} onViewerAdded={refetch}>
+            <Button className="text-white">
+              <RiUserAddLine className="" />
+              Aggiungi Destinatario
+            </Button>
+          </AddViewerToBatchDialog>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Left column for details */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardContent className="p-6">
+              <BatchDetailsView batch={batch} docClassDetails={documentClass} />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right column for status and summary */}
+        <div className="space-y-6 lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Stato</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <Badge
+                  className="text-white"
+                  variant={batch.status === "sent" ? "default" : "secondary"}
+                >
+                  {batch.status}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Questo batch è stato inviato e processato.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <RiInformationLine className="mr-2" />
+                Informazioni Riepilogative
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Documenti</span>
+                <span>{batch.documents.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Destinatari</span>
+                <span>{batch.viewers.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
+                  Classe Documentale
+                </span>
+                <span className="text-right">{documentClass.name}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -70,7 +70,7 @@ const buttonVariants = cva(
         variant: "solid",
         color: "primary",
         class:
-          "bg-primary text-primary-foreground bg-gradient-to-t from-primary/90 to-primary",
+          "bg-primary text-primary-foreground bg-gradient-to-t from-primary/90 to-primary !text-white",
       },
       {
         variant: "solid",
@@ -285,11 +285,8 @@ const buttonVariants = cva(
       {
         variant: "swiss",
         color: "primary",
-        class: [
-          "bg-gradient-to-b text-primary-foreground overflow-hidden",
-          "from-[#1a1a1a] via-[#0d0d0d] to-[#000000] shadow-[inset_0_-1px_2px_0_rgba(0,0,0,0.6),inset_0_1px_1px_0_rgba(255,255,255,0.15),inset_0_0_0_1px_rgba(255,255,255,0.08)] drop-shadow-[0px_1px_3px_0_rgba(0,0,0,0.4),0px_4px_8px_-2px_rgba(0,0,0,0.25)]",
-          "dark:from-[#ffffff] dark:via-[#f5f5f5] dark:to-[#e8e8e8] dark:shadow-[inset_0_-1px_2px_0_rgba(0,0,0,0.1),inset_0_1px_1px_0_rgba(255,255,255,0.9),inset_0_0_0_1px_rgba(255,255,255,0.6)] dark:drop-shadow-[0px_1px_3px_0_rgba(0,0,0,0.15),0px_4px_8px_-2px_rgba(0,0,0,0.1)]",
-        ],
+        class:
+          "bg-primary !text-primary-foreground shadow-lg shadow-primary/40",
       },
       {
         variant: "swiss",
@@ -345,7 +342,7 @@ const buttonVariants = cva(
         class: "min-w-12 w-12 h-12",
       },
     ],
-  }
+  },
 );
 
 export { buttonVariants };

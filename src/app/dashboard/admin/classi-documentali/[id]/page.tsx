@@ -1196,13 +1196,7 @@ export default function DocumentClassDetailPage() {
                       <Command>
                         <CommandInput placeholder="Cerca sharer..." />
                         {/* Make the dropdown scrollable with the mouse wheel when there are many sharers */}
-                        <CommandList
-                          className="pointer-events-auto max-h-60 overflow-y-auto"
-                          // Fallback: force scroll on wheel event for mouse wheel compatibility
-                          onWheel={(e) => {
-                            e.currentTarget.scrollTop += e.deltaY;
-                          }}
-                        >
+                        <CommandList className="pointer-events-auto max-h-60 overflow-y-auto">
                           <CommandEmpty>Nessun sharer trovato.</CommandEmpty>
                           <CommandGroup>
                             {availableSharers.map((sharer) => (
