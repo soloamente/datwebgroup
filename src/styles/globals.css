@@ -9,7 +9,7 @@
 /* Light Theme Variables */
 :root {
   /* General */
-  --background: hsl(0 0% 100%);
+  --background: hsl(240 3.8% 95.9%);
   --foreground: hsl(240 10% 3.9%);
 
   /* Text Colors */
@@ -35,20 +35,20 @@
   --primary-foreground: hsl(0 0% 98%);
 
   /* Secondary Colors */
-  --secondary: hsl(240 4.8% 95.9%);
+  --secondary: hsl(240 4.8% 85.9%);
   --secondary-foreground: hsl(240 5.9% 10%);
 
   /* UI Colors */
-  --muted: hsl(240 4.8% 95.9%);
-  --muted-foreground: hsl(240 3.8% 46.1%);
-  --accent: hsl(240 4.8% 95.9%);
+  --muted: hsl(240 4.8% 75.9%);
+  --muted-foreground: hsl(240 3.8% 40.1%);
+  --accent: hsl(240 4.8% 95%);
   --accent-foreground: hsl(240 5.9% 10%);
   --destructive: hsl(0 84.2% 60.2%);
   --destructive-foreground: hsl(0 0% 98%);
 
   /* Border & Input */
-  --border: hsl(240 3.8% 46.1%);
-  --input: oklch(0.19 0.0051 248.1 / 50%);
+  --border: hsl(240 3.8% 85%);
+  --input: oklch(1 0 0 / 100%);
   --ring: oklch(0.51 0.1733 256.59);
 
   /* Chart Colors */
@@ -60,7 +60,7 @@
   --chart-6: hsl(240 43% 44%);
 
   /* Border Radius */
-  --radius: 0.5rem;
+  --radius: 1rem;
 
   /* Sidebar Colors */
   --sidebar-background: hsl(0 0% 98%);
@@ -96,7 +96,7 @@
 
   /* Primary Colors */
   --primary: oklch(0.51 0.1733 256.59);
-  --primary-foreground: oklch(0.21 0.0059 285.88);
+  --primary-foreground: oklch(0.98 0 0);
 
   /* Buttons */
   --secondary-button: oklch(0.24 0.0078 274.61);

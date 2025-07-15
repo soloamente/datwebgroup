@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SingleDatePicker } from "@/components/ui/single-date-picker";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
@@ -68,19 +69,19 @@ interface FileWithPreview extends File {
 }
 
 const steps = [
-  {
-    id: 1,
-    name: "Destinatari",
-    description: "Seleziona i clienti",
-    icon: Users,
-  },
+  { id: 1, name: "File", description: "Carica i documenti", icon: FileUp },
   {
     id: 2,
     name: "Dettagli",
     description: "Compila i metadati",
     icon: FileText,
   },
-  { id: 3, name: "File", description: "Carica i documenti", icon: FileUp },
+  {
+    id: 3,
+    name: "Destinatari",
+    description: "Seleziona i clienti",
+    icon: Users,
+  },
   { id: 4, name: "Riepilogo", description: "Controlla e invia", icon: Check },
 ];
 
@@ -302,12 +303,14 @@ export default function DocumentiPage() {
         );
       case "datetime":
         return (
-          <Input
-            id={field.name}
-            type="datetime-local"
-            value={(value as string) ?? ""}
-            onChange={(e) => handleMetadataChange(field.name, e.target.value)}
-            required={!!field.required}
+          <DateTimePicker
+            value={value ? new Date(value as string) : undefined}
+            onChange={(date) =>
+              handleMetadataChange(
+                field.name,
+                date ? format(date, "yyyy-MM-dd HH:mm:ss") : "",
+              )
+            }
           />
         );
       case "boolean":
@@ -361,18 +364,14 @@ export default function DocumentiPage() {
     if (!selectedDocClass) return null;
 
     return (
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
         {selectedDocClass.fields
           .sort((a, b) => a.sort_order - b.sort_order)
           .map((field) => (
             <div key={field.id} className="grid gap-2">
               <Label htmlFor={field.name}>
                 {field.label}
-                {field.required ? (
-                  <span className="text-destructive">*</span>
-                ) : (
-                  ""
-                )}
+                {field.required && <span className="text-destructive"> *</span>}
               </Label>
               {renderField(field)}
             </div>
@@ -447,151 +446,7 @@ export default function DocumentiPage() {
     };
 
     switch (currentStep) {
-      case 1: // Client Selection
-        return (
-          <motion.div {...animationProps}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Selezione Destinatari</CardTitle>
-                <CardDescription>
-                  Seleziona i clienti a cui inviare i documenti. Puoi cercarli o
-                  crearne di nuovi.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Cerca cliente..."
-                    className="rounded-full"
-                    value={clientSearch}
-                    onChange={(e) => setClientSearch(e.target.value)}
-                    startContent={<Search className="h-4 w-4" />}
-                    wrapperClassName="flex-grow"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsCreateViewerDialogOpen(true)}
-                    className="h-10 rounded-full"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    Nuovo cliente
-                  </Button>
-                </div>
-                {selectedClients.length > 0 && (
-                  <ScrollArea className="h-auto max-h-40">
-                    <div className="flex flex-wrap gap-2 rounded-lg bg-stone-100 p-2 dark:bg-stone-900">
-                      {selectedClients.map((client) => (
-                        <Badge
-                          key={client.id}
-                          variant="secondary"
-                          className="flex items-center gap-1.5 py-1 pr-1 pl-2"
-                        >
-                          <User className="h-3.5 w-3.5" />
-                          <span className="text-sm font-normal">
-                            {client.nominativo}
-                          </span>
-                          <button
-                            type="button"
-                            aria-label={`Rimuovi ${client.nominativo}`}
-                            onClick={() => removeClient(client.id)}
-                            className="text-muted-foreground hover:bg-muted-foreground/20 flex-shrink-0 rounded-full p-0.5 transition-colors"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
-                <ScrollArea className="h-96 min-h-0 shrink">
-                  <div className="space-y-1 p-1">
-                    {filteredClients.length > 0 ? (
-                      filteredClients.map((client) => (
-                        <div
-                          key={client.id}
-                          onClick={() => handleClientSelect(client)}
-                          className="hover:bg-muted flex cursor-pointer items-center justify-between rounded-full border border-transparent p-2 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full">
-                              <User className="text-muted-foreground h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-medium">
-                              {client.nominativo}
-                            </span>
-                          </div>
-                          <PlusCircle className="text-muted-foreground h-5 w-5" />
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground p-4 text-center text-sm">
-                        {clientSearch
-                          ? "Nessun risultato."
-                          : "Inizia a cercare un cliente."}
-                      </p>
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </motion.div>
-        );
-      case 2: // Document Details
-        return (
-          <motion.div {...animationProps}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Dettagli Documento</CardTitle>
-                <CardDescription>
-                  Seleziona una classe e compila i metadati richiesti.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col space-y-6">
-                <div className="grid w-full gap-2">
-                  <Label htmlFor="doc-class">Classe Documentale</Label>
-                  <Select
-                    onValueChange={handleDocClassChange}
-                    value={selectedDocClassId}
-                  >
-                    <SelectTrigger id="doc-class">
-                      <SelectValue placeholder="Seleziona una classe..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoading ? (
-                        <SelectItem value="loading" disabled>
-                          Caricamento...
-                        </SelectItem>
-                      ) : (
-                        documentClasses.map((dc) => (
-                          <SelectItem key={dc.id} value={dc.id.toString()}>
-                            {dc.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {selectedDocClass ? (
-                  <ScrollArea className="flex-1">
-                    <div className="bg-muted/50 space-y-4 rounded-lg border p-4">
-                      <h4 className="text-foreground font-semibold">
-                        Metadati per {selectedDocClass.name}
-                      </h4>
-                      {renderMetadataFields()}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="border-border bg-muted/50 text-muted-foreground flex h-full min-h-[150px] flex-1 items-center justify-center rounded-lg border-2 border-dashed text-center text-sm">
-                    Seleziona una classe documentale
-                    <br />
-                    per compilare i metadati.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        );
-      case 3: // File Upload
+      case 1: // File Upload
         return (
           <motion.div {...animationProps}>
             <Card className="flex flex-1 flex-col">
@@ -677,13 +532,14 @@ export default function DocumentiPage() {
                               </div>
                             )}
                             <div className="absolute inset-0 bg-black/40 opacity-0 backdrop-blur-[2px] transition-all group-hover:opacity-100" />
-                            <div className="absolute top-1 right-1 flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
+                            <div className="absolute top-1 right-1 z-10 flex items-center space-x-1 opacity-0 transition-opacity group-hover:opacity-100">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className="bg-background/50 hover:bg-background h-7 w-7"
                                 onClick={(e) => {
                                   e.preventDefault();
+                                  e.stopPropagation();
                                   setFileToRename(file);
                                   setNewFileName(file.name);
                                 }}
@@ -697,6 +553,7 @@ export default function DocumentiPage() {
                                 className="text-destructive hover:bg-destructive/10 hover:text-destructive h-7 w-7"
                                 onClick={(e) => {
                                   e.preventDefault();
+                                  e.stopPropagation();
                                   removeFile(file.name);
                                 }}
                               >
@@ -711,6 +568,7 @@ export default function DocumentiPage() {
                                   className="bg-background/50 hover:bg-background"
                                   onClick={(e) => {
                                     e.preventDefault();
+                                    e.stopPropagation();
                                     setFileToPreview(file);
                                   }}
                                 >
@@ -736,6 +594,150 @@ export default function DocumentiPage() {
                     </ScrollArea>
                   )}
                 </Label>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      case 2: // Document Details
+        return (
+          <motion.div {...animationProps}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Dettagli Documento</CardTitle>
+                <CardDescription>
+                  Seleziona una classe e compila i metadati richiesti.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col space-y-6">
+                <div className="grid w-full gap-2">
+                  <Label htmlFor="doc-class">Classe Documentale</Label>
+                  <Select
+                    onValueChange={handleDocClassChange}
+                    value={selectedDocClassId}
+                  >
+                    <SelectTrigger id="doc-class">
+                      <SelectValue placeholder="Seleziona una classe..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isLoading ? (
+                        <SelectItem value="loading" disabled>
+                          Caricamento...
+                        </SelectItem>
+                      ) : (
+                        documentClasses.map((dc) => (
+                          <SelectItem key={dc.id} value={dc.id.toString()}>
+                            {dc.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedDocClass ? (
+                  <div className="bg-card space-y-4 rounded-lg border p-6 shadow-sm">
+                    <h3 className="text-foreground text-lg font-medium">
+                      Metadati per {selectedDocClass.name}
+                    </h3>
+                    <div className="border-border border-t pt-6">
+                      {renderMetadataFields()}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border-border bg-muted/50 text-muted-foreground flex h-full min-h-[150px] flex-1 items-center justify-center rounded-lg border-2 border-dashed text-center text-sm">
+                    Seleziona una classe documentale
+                    <br />
+                    per compilare i metadati.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      case 3: // Client Selection
+        return (
+          <motion.div {...animationProps}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Selezione Destinatari</CardTitle>
+                <CardDescription>
+                  Seleziona i clienti a cui inviare i documenti. Puoi cercarli o
+                  crearne di nuovi.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Cerca cliente..."
+                    className="rounded-full"
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                    startContent={<Search className="h-4 w-4" />}
+                    wrapperClassName="flex-grow"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateViewerDialogOpen(true)}
+                    className="h-10 rounded-full"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Nuovo cliente
+                  </Button>
+                </div>
+                {selectedClients.length > 0 && (
+                  <ScrollArea className="h-auto max-h-40">
+                    <div className="flex flex-wrap gap-2 rounded-lg bg-stone-100 p-2 dark:bg-stone-900">
+                      {selectedClients.map((client) => (
+                        <Badge
+                          key={client.id}
+                          variant="secondary"
+                          className="flex items-center gap-1.5 py-1 pr-1 pl-2"
+                        >
+                          <User className="h-3.5 w-3.5" />
+                          <span className="text-sm font-normal">
+                            {client.nominativo}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={`Rimuovi ${client.nominativo}`}
+                            onClick={() => removeClient(client.id)}
+                            className="text-muted-foreground hover:bg-muted-foreground/20 flex-shrink-0 rounded-full p-0.5 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+                <ScrollArea className="h-96 min-h-0 shrink">
+                  <div className="space-y-1 p-1">
+                    {filteredClients.length > 0 ? (
+                      filteredClients.map((client) => (
+                        <div
+                          key={client.id}
+                          onClick={() => handleClientSelect(client)}
+                          className="hover:bg-muted flex cursor-pointer items-center justify-between rounded-full border border-transparent p-2 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full">
+                              <User className="text-muted-foreground h-4 w-4" />
+                            </div>
+                            <span className="text-sm font-medium">
+                              {client.nominativo}
+                            </span>
+                          </div>
+                          <PlusCircle className="text-muted-foreground h-5 w-5" />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground p-4 text-center text-sm">
+                        {clientSearch
+                          ? "Nessun risultato."
+                          : "Inizia a cercare un cliente."}
+                      </p>
+                    )}
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </motion.div>
@@ -836,9 +838,9 @@ export default function DocumentiPage() {
               <Button
                 onClick={nextStep}
                 disabled={
-                  (currentStep === 1 && selectedClients.length === 0) ||
+                  (currentStep === 1 && files.length === 0) ||
                   (currentStep === 2 && !isMetadataValid) ||
-                  (currentStep === 3 && files.length === 0)
+                  (currentStep === 3 && selectedClients.length === 0)
                 }
               >
                 Avanti
@@ -854,6 +856,47 @@ export default function DocumentiPage() {
           <div className="flex-1 space-y-6">
             <div>
               <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                <FileUp className="h-4 w-4" />
+                <span>File</span>
+                <Badge variant="secondary">{files.length}</Badge>
+              </h3>
+              {files.length > 0 ? (
+                <ScrollArea className="h-auto max-h-48">
+                  <div className="space-y-2">
+                    {files.map((file) => (
+                      <div
+                        key={file.name}
+                        className="bg-muted/50 flex items-center gap-2 rounded-md p-2"
+                      >
+                        <FileIcon className="h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm">{file.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
+                  <p className="text-muted-foreground text-center text-sm">
+                    Nessun file.
+                  </p>
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                <FileText className="h-4 w-4" />
+                <span>Classe Documentale</span>
+              </h3>
+              {selectedDocClass ? (
+                <p className="text-sm font-medium">{selectedDocClass.name}</p>
+              ) : (
+                <p className="text-muted-foreground py-2 text-center text-sm">
+                  Non selezionata.
+                </p>
+              )}
+            </div>
+            <div>
+              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
                 <Users className="h-4 w-4" />
                 <span>Destinatari</span>
                 <Badge variant="secondary">{selectedClients.length}</Badge>
@@ -867,9 +910,7 @@ export default function DocumentiPage() {
                           key={client.id}
                           className="bg-muted/50 flex items-center justify-between rounded-md p-2"
                         >
-                          <span className="truncate text-sm">
-                            {client.nominativo}
-                          </span>
+                          <span className="text-sm">{client.nominativo}</span>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -891,47 +932,6 @@ export default function DocumentiPage() {
                   </div>
                 )}
               </div>
-            </div>
-            <div>
-              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4" />
-                <span>Classe Documentale</span>
-              </h3>
-              {selectedDocClass ? (
-                <p className="text-sm font-medium">{selectedDocClass.name}</p>
-              ) : (
-                <p className="text-muted-foreground py-2 text-center text-sm">
-                  Non selezionata.
-                </p>
-              )}
-            </div>
-            <div>
-              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
-                <FileUp className="h-4 w-4" />
-                <span>File</span>
-                <Badge variant="secondary">{files.length}</Badge>
-              </h3>
-              {files.length > 0 ? (
-                <ScrollArea className="h-auto max-h-48">
-                  <div className="space-y-2">
-                    {files.map((file) => (
-                      <div
-                        key={file.name}
-                        className="bg-muted/50 flex items-center gap-2 rounded-md p-2"
-                      >
-                        <FileIcon className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate text-sm">{file.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
-                  <p className="text-muted-foreground text-center text-sm">
-                    Nessun file.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
           <div className="mt-auto">
@@ -980,12 +980,14 @@ export default function DocumentiPage() {
                 title="File Preview"
               />
             ) : (
-              <Image
-                src={fileToPreview?.preview ?? ""}
-                alt={fileToPreview?.name ?? ""}
-                fill
-                className="object-contain"
-              />
+              fileToPreview?.preview && (
+                <Image
+                  src={fileToPreview.preview}
+                  alt={fileToPreview.name}
+                  fill
+                  className="object-contain"
+                />
+              )
             )}
           </div>
         </DialogContent>

@@ -186,68 +186,75 @@ New requirement: Each SVG path should be treated as a different stroke and have 
 - When adding multiple SVG paths, keep each path's coordinates clear and organized for maintainability.
 - Test SVG rendering frequently to ensure paths align as intended.
 
-# Admin Login Wrapper Component Split
+# File Attachment Cards Implementation
 
 ## Background and Motivation
 
-The current admin login wrapper component contains both the left side (image) and right side (login form) in a single component. We want to separate these into distinct components for better maintainability and reusability.
+The user wants to display file attachments in a card format similar to invoice cards, where the file name (without extension) is shown as the title and the file extension is shown as the description. This provides a cleaner, more organized way to display file attachments.
 
 ## Key Challenges and Analysis
 
-1. The current component uses shared state and handlers
-2. The layout uses responsive design with different behaviors for mobile and desktop
-3. The motion animations need to be preserved
-4. The components need to maintain their current styling and functionality
+1. Creating a new component that displays files in card format
+2. Extracting file names without extensions and extensions separately
+3. Maintaining download and delete functionality
+4. Ensuring proper styling to match the reference design
 
 ## High-level Task Breakdown
 
-1. Create AdminLoginLeftSide Component
+1. Create FileAttachmentCards Component
 
-   - Move the left side image and container
-   - Success criteria: Image displays correctly and maintains responsive behavior
+   - [x] Implement card-based layout for file display
+   - [x] Add helper functions to extract file names and extensions
+   - [x] Include download and delete functionality
+   - [x] Add proper styling and responsive design
+   - Success criteria: Files display in card format with proper functionality
 
-2. Create AdminLoginRightSide Component
-
-   - Move the right side content including forms and animations
-   - Pass necessary props for state management
-   - Success criteria: All login functionality works as before
-
-3. Update AdminLoginWrapper
-   - Import and use the new components
-   - Pass necessary props
-   - Success criteria: Layout works exactly as before with separated components
+2. Update BatchDetailsView Component
+   - [x] Replace existing file display with new FileAttachmentCards component
+   - [x] Remove unused state and functions
+   - [x] Clean up imports
+   - Success criteria: File display uses new card format
 
 ## Project Status Board
 
-- [x] Create AdminLoginLeftSide component
-- [x] Create AdminLoginRightSide component
-- [x] Update AdminLoginWrapper
-- [ ] Test all functionality
-- [ ] Verify responsive behavior
+- [x] Create FileAttachmentCards component
+- [x] Update BatchDetailsView to use new component
+- [x] Clean up unused code and imports
+- [ ] Test file display functionality
+- [ ] Verify download and delete operations
 
 ## Executor's Feedback or Assistance Requests
 
 The implementation is complete. We have:
 
-1. Created AdminLoginLeftSide component for the image section
-2. Created AdminLoginRightSide component for the login form and functionality
-3. Updated AdminLoginWrapper to use the new components
-4. Maintained all existing functionality and styling
+1. Created a new FileAttachmentCards component that displays files in card format
+2. Updated BatchDetailsView to use the new component
+3. Cleaned up unused code and imports
+4. Maintained all existing functionality (download, delete)
+
+The new component displays:
+
+- File name (without extension) as the title
+- File extension as the description
+- File size as a badge
+- Download and delete buttons
 
 Next steps:
 
 1. Test the implementation to ensure everything works as expected
-2. Verify responsive behavior on different screen sizes
-3. Check for any potential performance improvements
+2. Verify that download and delete operations work correctly
+3. Check the visual appearance matches the reference design
 
 ## Lessons
 
-1. When splitting components:
-   - Keep shared state in the parent component
-   - Pass only necessary props to child components
-   - Maintain consistent styling across components
-2. For responsive design:
-   - Keep media queries consistent
+1. When creating new components:
+   - Extract helper functions for better maintainability
+   - Use proper TypeScript interfaces for props
+   - Handle state management within the component
+2. For file handling:
+   - Always validate file names and extensions
+   - Provide clear user feedback for operations
+   - Handle errors gracefully
    - Test on multiple screen sizes
    - Ensure smooth transitions between breakpoints
 3. For component organization:
@@ -1111,3 +1118,75 @@ The current document class detail page (`src/app/dashboard/admin/classi-document
 **Result**: The page now has a clean, minimal design that's easier to read and navigate while maintaining all original functionality.
 
 **Update**: Changed the page layout to use full width instead of max-width constraint as requested by the user. The page now spans the entire available width of the viewport.
+
+# Document Shipment Step Reordering
+
+## Background and Motivation
+
+L'utente ha richiesto di modificare l'ordine degli step nella pagina di nuova spedizione documenti (`src/app/dashboard/sharer/documenti/page.tsx`). L'ordine originale era:
+
+1. Destinatari (selezione clienti)
+2. Dettagli (classe documentale e metadati)
+3. File (caricamento file)
+4. Riepilogo
+
+Il nuovo ordine richiesto è:
+
+1. File (caricamento file)
+2. Dettagli (classe documentale e metadati)
+3. Destinatari (selezione clienti)
+4. Riepilogo
+
+## Key Challenges and Analysis
+
+1. Modifica dell'array `steps` per riflettere il nuovo ordine
+2. Aggiornamento del contenuto di `renderStepContent()` per fare il mapping corretto
+3. Aggiornamento della logica di validazione nei pulsanti di navigazione
+4. Riorganizzazione del riepilogo laterale per seguire il nuovo ordine
+
+## High-level Task Breakdown
+
+1. Modificare l'array steps
+
+   - Successo: L'ordine degli step riflette File → Dettagli → Destinatari → Riepilogo
+
+2. Aggiornare renderStepContent()
+
+   - Successo: Ogni case dello switch mostra il contenuto corretto per il nuovo ordine
+
+3. Aggiornare logica di validazione
+
+   - Successo: I pulsanti di navigazione validano il contenuto dello step corretto
+
+4. Riorganizzare sidebar riepilogo
+   - Successo: Il riepilogo mostra gli elementi nell'ordine logico
+
+## Project Status Board
+
+- [x] Modificare array steps
+- [x] Aggiornare renderStepContent() mapping
+- [x] Aggiornare logica validazione pulsanti
+- [x] Riorganizzare sidebar riepilogo
+- [x] Task completato
+
+## Executor's Feedback or Assistance Requests
+
+Il task è stato completato con successo. Tutte le modifiche sono state applicate:
+
+1. ✅ Array `steps` aggiornato con il nuovo ordine
+2. ✅ Contenuto di `renderStepContent()` rimappato correttamente:
+   - case 1: ora mostra caricamento file (prima era destinatari)
+   - case 2: metadati (invariato)
+   - case 3: ora mostra destinatari (prima era file)
+   - case 4: riepilogo (invariato)
+3. ✅ Logica di validazione aggiornata per il nuovo ordine degli step
+4. ✅ Sidebar del riepilogo riorganizzata: File → Classe Documentale → Destinatari
+
+Il flusso ora segue l'ordine richiesto dall'utente: prima si caricano i file, poi si compilano i metadati, infine si selezionano i destinatari.
+
+## Lessons
+
+1. Quando si riordina il flusso di step in un wizard:
+   - Aggiornare sempre sia la definizione degli step che il contenuto renderizzato
+   - Verificare che la logica di validazione segua il nuovo ordine
+   - Mantenere coerenza tra il flusso principale e le sezioni di riepilogo

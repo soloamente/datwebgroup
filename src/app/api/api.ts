@@ -932,6 +932,100 @@ export const getSharedBatchById = async (
   return response.data;
 };
 
+/**
+ * Removes a document from a shared batch.
+ * @param batchId The ID of the batch.
+ * @param fileId The ID of the document to remove.
+ * @returns A promise with a success message.
+ */
+export const removeDocumentFromBatch = async (
+  batchId: number,
+  fileId: number,
+): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>(
+    `/share-batches/${batchId}/documents/${fileId}`,
+  );
+  return response.data;
+};
+
+/**
+ * Downloads a shared file by its ID.
+ * Triggers a file download in the browser.
+ * @param fileId - The ID of the file to download.
+ * @param originalFilename - A fallback filename if Content-Disposition is not available.
+ * @returns Promise<{ success: boolean; message: string }>
+ * @throws {AxiosError} - Throws on API errors (e.g., 403, 404).
+ */
+export const downloadSharedFile = async (
+  fileId: number,
+  originalFilename: string,
+): Promise<{ success: boolean; message: string }> => {
+  const response = await api.get<Blob>(`/files/${fileId}/download`, {
+    responseType: "blob",
+    validateStatus: (status) => status < 500,
+  });
+
+  if (response.status === 200) {
+    const contentDisposition = response.headers["content-disposition"] as
+      | string
+      | undefined;
+    let filename = originalFilename;
+    if (contentDisposition) {
+      const filenameMatch = /filename="?(.+)"?/i.exec(contentDisposition);
+      if (filenameMatch?.[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    return {
+      success: true,
+      message: "Download del file avviato.",
+    };
+  } else {
+    const errorText = await response.data.text();
+    const errorJson = (() => {
+      try {
+        // Attempt to parse as JSON
+        return JSON.parse(errorText) as { message?: string; error?: string };
+      } catch {
+        // If parsing fails, return an empty object
+        return {};
+      }
+    })();
+
+    let errorMessage = "Errore durante il download del file.";
+    if (response.status === 404) {
+      errorMessage = "File non trovato o non più disponibile.";
+    } else if (response.status === 403) {
+      errorMessage = "Non hai i permessi per scaricare questo file.";
+    } else if (errorJson.message || errorJson.error) {
+      errorMessage =
+        errorJson.message ?? errorJson.error ?? "Errore sconosciuto.";
+    }
+
+    const error = new AxiosError(
+      errorMessage,
+      String(response.status), // code
+    );
+    error.response = {
+      ...response,
+      data: errorJson,
+      config: response.config,
+      headers: response.headers,
+    };
+    throw error;
+  }
+};
+
 const createSharer = async (
   data: FormData,
 ): Promise<{ message: string; sharer: Sharer }> => {

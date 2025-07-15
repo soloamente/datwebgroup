@@ -491,9 +491,14 @@ const getColumns = (
         const hiddenCount = viewers.length - visibleAvatars.length;
 
         const avatarElements = visibleAvatars.map((viewer) => (
-          <Avatar key={viewer.id} className="size-8 border-2">
+          <Avatar
+            key={viewer.id}
+            className="border-background size-9 rounded-full border-2"
+          >
             <TooltipContent>{viewer.nominativo}</TooltipContent>
-            <AvatarFallback>{getInitials(viewer.nominativo)}</AvatarFallback>
+            <AvatarFallback className="text-foreground/80 bg-muted/50 text-xs font-semibold">
+              {getInitials(viewer.nominativo)}
+            </AvatarFallback>
           </Avatar>
         ));
 
@@ -501,7 +506,7 @@ const getColumns = (
           avatarElements.push(
             <Avatar
               key="overflow"
-              className="size-8 border-2 bg-gray-200 dark:bg-gray-700"
+              className="border-background size-9 rounded-full border-2"
             >
               <TooltipContent>
                 {viewers
@@ -509,14 +514,23 @@ const getColumns = (
                   .map((v) => v.nominativo)
                   .join(", ")}
               </TooltipContent>
-              <AvatarFallback className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+              <AvatarFallback className="text-foreground/80 bg-muted/50 text-xs font-semibold">
                 +{hiddenCount}
               </AvatarFallback>
             </Avatar>,
           );
         }
 
-        return <AvatarGroup>{avatarElements}</AvatarGroup>;
+        return (
+          <AvatarGroup
+            invertOverlap
+            translate="-25%"
+            className="bg-background w-fit rounded-full py-2"
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          >
+            {avatarElements}
+          </AvatarGroup>
+        );
       },
       filterFn: "viewer",
     },
@@ -552,15 +566,6 @@ const getColumns = (
                   ? "textContains"
                   : undefined,
     })) as ColumnDef<EnrichedDocument>[]) ?? []),
-    {
-      id: "actions",
-      cell: ({ row }) => (
-        <RowActions
-          document={row.original}
-          onViewDetails={() => onViewDetails(row.original)}
-        />
-      ),
-    },
   ];
 };
 

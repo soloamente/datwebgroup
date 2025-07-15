@@ -74,7 +74,7 @@ export function Preferences() {
           </div>
           <Separator />
           <div>
-            <h1 className="text-sm">Interfaccia</h1>
+            <h1 className="text-sm">Tema</h1>
             <p className="text-[12px] opacity-40">
               Personalizza il tema della tua interfaccia
             </p>

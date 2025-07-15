@@ -44,7 +44,7 @@ export function SingleDatePicker({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="border-border bg-card w-auto rounded-xl border p-0 shadow-lg">
         <Calendar
           mode="single"
           selected={value}
