@@ -9,6 +9,12 @@ import { useDocumentClasses } from "@/hooks/use-document-classes";
 import type { LucideIcon } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SidebarCollapsibleNavProps {
   item: {
@@ -19,6 +25,8 @@ interface SidebarCollapsibleNavProps {
       | React.ComponentType<{ size?: number; className?: string }>;
     description: string;
   };
+  isCompact?: boolean;
+  onExpandFromCompact?: () => void;
 }
 
 function CollapsibleNavLink({ url, name }: { url: string; name: string }) {
@@ -41,21 +49,72 @@ function CollapsibleNavLink({ url, name }: { url: string; name: string }) {
   );
 }
 
-export function SidebarCollapsibleNav({ item }: SidebarCollapsibleNavProps) {
+export function SidebarCollapsibleNav({
+  item,
+  isCompact = false,
+  onExpandFromCompact,
+}: SidebarCollapsibleNavProps) {
   const pathname = usePathname();
   const { documentClasses, isLoading } = useDocumentClasses();
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [shouldAutoOpen, setShouldAutoOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Auto-open when expanding from compact mode
+  useEffect(() => {
+    if (!isCompact && shouldAutoOpen) {
+      setIsOpen(true);
+      setShouldAutoOpen(false);
+    }
+  }, [isCompact, shouldAutoOpen]);
 
   if (!isMounted) {
     return null;
   }
 
   const isActive = pathname.startsWith(item.url);
+
+  // In compact mode, show just the icon with tooltip and expand sidebar on click
+  if (isCompact) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isActive ? "outline" : "ghost"}
+              className={`flex h-10 w-full items-center justify-center rounded-lg p-2 shadow-none transition-all duration-200 ${
+                isActive
+                  ? "bg-accent border-accent-foreground/20"
+                  : "hover:bg-accent/50"
+              }`}
+              onClick={() => {
+                setShouldAutoOpen(true);
+                if (onExpandFromCompact) {
+                  onExpandFromCompact();
+                }
+              }}
+              aria-label={item.description}
+            >
+              <item.icon
+                size={20}
+                className={`transition-colors duration-200 ${
+                  isActive ? "text-accent-foreground" : "text-muted-foreground"
+                }`}
+                aria-hidden="true"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>{item.title}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <div>
@@ -70,7 +129,7 @@ export function SidebarCollapsibleNav({ item }: SidebarCollapsibleNavProps) {
       >
         <item.icon
           size={20}
-          className={`transition-colors duration-200 ${
+          className={`mr-2 transition-colors duration-200 ${
             isActive ? "text-accent-foreground" : "text-muted-foreground"
           }`}
           aria-hidden="true"

@@ -248,16 +248,104 @@ Next steps:
 ## Lessons
 
 1. When creating new components:
+   - Always maintain existing functionality when refactoring
+   - Use helper functions to keep code clean and readable
+   - Consider responsive design from the start
+   - Test thoroughly after making changes
+
+# Sidebar Compact Mode Enhancement
+
+## Background and Motivation
+
+When the sidebar is in compact mode and the user selects a button with sub-buttons (like the "Documenti" section), it should open the sidebar and show the sub-buttons instead of directly navigating to the main page. This provides better UX by allowing users to see and select from the available sub-options.
+
+## Key Challenges and Analysis
+
+1. Modifying the compact mode behavior for collapsible navigation items
+2. Adding callback functionality to expand the sidebar from compact mode
+3. Maintaining proper state management across components
+4. Ensuring smooth transitions and user experience
+
+## High-level Task Breakdown
+
+1. Update DashboardClient Component
+
+   - [x] Add handleExpandFromCompact function
+   - [x] Pass onExpandFromCompact prop to Sidebar
+   - Success criteria: Callback function is available and passed down
+
+2. Update Sidebar Component
+
+   - [x] Add onExpandFromCompact prop to interface
+   - [x] Pass callback to SidebarNav component
+   - Success criteria: Callback is properly passed through component hierarchy
+
+3. Update SidebarNav Component
+
+   - [x] Add onExpandFromCompact prop to interface
+   - [x] Pass callback to SidebarCollapsibleNav component
+   - Success criteria: Callback reaches the collapsible navigation component
+
+4. Update SidebarCollapsibleNav Component
+   - [x] Add onExpandFromCompact prop to interface
+   - [x] Modify compact mode behavior to expand sidebar instead of direct navigation
+   - [x] Remove Link wrapper and add onClick handler
+   - Success criteria: Clicking collapsible items in compact mode expands the sidebar
+
+## Project Status Board
+
+- [x] Update DashboardClient Component
+- [x] Update Sidebar Component
+- [x] Update SidebarNav Component
+- [x] Update SidebarCollapsibleNav Component
+- [ ] Test the functionality
+- [ ] Verify smooth transitions
+
+## Executor's Feedback or Assistance Requests
+
+The implementation is complete. We have:
+
+1. Added a callback system to expand the sidebar from compact mode
+2. Modified the SidebarCollapsibleNav component to expand the sidebar instead of directly navigating when in compact mode
+3. Updated all necessary component interfaces to support the new functionality
+4. Maintained proper TypeScript typing throughout
+5. **Fixed**: Added auto-open functionality for sub-buttons when expanding from compact mode
+
+The behavior now works as follows:
+
+- In compact mode, clicking on a collapsible navigation item (like "Documenti") will expand the sidebar
+- The sidebar will automatically open the collapsible section to show sub-buttons
+- Users can then select from the available sub-options
+
+Next steps:
+
+1. Test the functionality to ensure it works as expected
+2. Verify that the transitions are smooth
+3. Check that the behavior is intuitive for users
+
+## Lessons
+
+1. When modifying component behavior:
+
+   - Always maintain proper TypeScript interfaces
+   - Pass callbacks through the component hierarchy systematically
+   - Consider user experience when changing navigation behavior
+   - Test thoroughly after making changes
+
+2. For sidebar interactions:
+   - Compact mode should provide a way to access full functionality
+   - Transitions should be smooth and intuitive
+   - Maintain accessibility with proper ARIA labels
    - Extract helper functions for better maintainability
    - Use proper TypeScript interfaces for props
    - Handle state management within the component
-2. For file handling:
+3. For file handling:
    - Always validate file names and extensions
    - Provide clear user feedback for operations
    - Handle errors gracefully
    - Test on multiple screen sizes
    - Ensure smooth transitions between breakpoints
-3. For component organization:
+4. For component organization:
    - Use TypeScript interfaces for better type safety
    - Keep related components in the same directory
    - Document props and their purposes
@@ -1190,3 +1278,150 @@ Il flusso ora segue l'ordine richiesto dall'utente: prima si caricano i file, po
    - Aggiornare sempre sia la definizione degli step che il contenuto renderizzato
    - Verificare che la logica di validazione segua il nuovo ordine
    - Mantenere coerenza tra il flusso principale e le sezioni di riepilogo
+
+# Sidebar Compact Mode Implementation
+
+## Background and Motivation
+
+The user has requested to add a compact mode for both sidebars (admin and sharer). This will provide users with the option to reduce the sidebar width and show only icons, creating more space for the main content area.
+
+## Key Challenges and Analysis
+
+1. Adding compact mode state management for both sidebar components
+2. Creating a toggle button to switch between normal and compact modes
+3. Adjusting sidebar width and hiding text labels in compact mode
+4. Adding tooltips for compact mode to maintain usability
+5. Ensuring responsive behavior is maintained in both modes
+6. Updating both AdminSidebar and Sharer Sidebar components
+
+## High-level Task Breakdown
+
+1. Implement compact mode for AdminSidebar
+
+   - Add compact state management
+   - Add toggle button in sidebar header
+   - Adjust width and hide text in compact mode
+   - Add tooltips for navigation items
+   - Success criteria: Admin sidebar can toggle between normal and compact modes
+
+2. Implement compact mode for Sharer Sidebar
+
+   - Add compact state management
+   - Update SidebarHeader component for toggle button
+   - Update SidebarNav component for compact display
+   - Add tooltips for better UX
+   - Success criteria: Sharer sidebar can toggle between normal and compact modes
+
+3. Ensure consistent styling and behavior
+
+   - Both sidebars should behave similarly in compact mode
+   - Maintain responsive functionality
+   - Success criteria: Both sidebars have consistent compact mode behavior
+
+## Project Status Board
+
+- [x] Implement compact mode for AdminSidebar
+  - [x] Added isCompact state and toggle function
+  - [x] Updated sidebar width (300px → 80px in compact mode)
+  - [x] Added compact toggle button with icons
+  - [x] Implemented conditional text hiding
+  - [x] Added tooltips for navigation items in compact mode
+  - [x] Updated header, navigation, and footer sections
+- [x] Implement compact mode for Sharer Sidebar
+  - [x] Updated main Sidebar component with compact state
+  - [x] Modified SidebarHeader to support compact mode and toggle button
+  - [x] Updated SidebarNav and NavSection for compact display
+  - [x] Enhanced SidebarNavLink with conditional compact rendering
+  - [x] Modified SidebarCollapsibleNav for compact mode
+  - [x] Updated LogoutButton to support compact mode
+- [x] Add tooltips for compact mode
+  - [x] Added tooltips to all navigation items when in compact mode
+  - [x] Tooltips show on the right side with appropriate positioning
+  - [x] Added loading state tooltips for logout button
+- [x] Add Framer Motion animations
+  - [x] Installed framer-motion library
+  - [x] Fixed animation approach: animate content instead of containers
+  - [x] Implemented AnimatePresence for user info and section headers
+  - [x] Added hover and tap animations to navigation items
+  - [x] Enhanced transitions with spring physics
+  - [x] Removed layout animations from containers to prevent content stretching
+- [ ] Test both sidebars on different screen sizes
+- [ ] Ensure consistent styling between both modes
+
+## Executor's Feedback or Assistance Requests
+
+✅ **COMPLETED**: Compact mode successfully implemented for both Admin and Sharer sidebars.
+
+**Implementation Details:**
+
+**AdminSidebar (src/components/sidebar/AdminSidebar.tsx):**
+
+- Added `isCompact` state with toggle functionality
+- Compact mode reduces width from 300px to 80px
+- Toggle button (PanelLeftClose/PanelLeftOpen icons) in header
+- Navigation items show only icons with tooltips in compact mode
+- User info (name/role) hidden in compact mode
+- Logout button shows only icon with tooltip
+
+**Sharer Sidebar Components:**
+
+- **Main Sidebar**: Added compact state management and passed to child components
+- **SidebarHeader**: Added toggle button and conditional user info display
+- **SidebarNav**: Updated to hide section headers and pass compact prop
+- **SidebarNavLink**: Conditional rendering with tooltips for compact mode
+- **SidebarCollapsibleNav**: Simplified to direct link with tooltip in compact mode
+- **LogoutButton**: Added compact mode with tooltip support
+
+**Key Features:**
+
+- **Smooth Framer Motion animations** with spring physics for natural feel
+- **Content animations** that animate individual elements without stretching
+- **AnimatePresence** for user info and section headers with fade in/out
+- **Hover and tap animations** on navigation items (scale effects)
+- **Consistent 80px width** in compact mode for both sidebars
+- **Tooltips positioned on the right side** for better UX
+- **Mobile responsiveness maintained**
+- **Icons centered in compact mode**, text left-aligned in normal mode
+- **Toggle button only visible on desktop** (md:flex)
+
+**Next Steps:**
+
+1. Test functionality on different screen sizes
+2. Verify smooth transitions and hover states
+3. Test tooltip positioning and timing
+4. Ensure accessibility compliance
+
+## Lessons
+
+1. **Component Architecture**:
+
+   - When implementing features across composed components, update interfaces incrementally
+   - Pass props through the component hierarchy systematically
+   - Use optional props with sensible defaults for backward compatibility
+
+2. **State Management**:
+
+   - Keep compact mode state at the top level of each sidebar
+   - Pass state and handlers down to child components consistently
+   - Use conditional rendering for different modes
+
+3. **UI/UX Design**:
+
+   - Maintain consistent widths (80px compact, 300px normal) across both sidebars
+   - Use tooltips to preserve functionality when text is hidden
+   - Position tooltips on the right side to avoid overlap
+   - Keep toggle buttons only on desktop to preserve mobile UX
+
+4. **Accessibility**:
+
+   - Maintain aria-labels for all interactive elements
+   - Ensure keyboard navigation works in both modes
+   - Provide meaningful tooltip content for screen readers
+
+5. **Animation Best Practices**:
+   - Use spring physics for natural, responsive animations
+   - Animate content elements instead of containers to prevent stretching
+   - Add subtle hover/tap animations for better user feedback
+   - Use AnimatePresence for smooth enter/exit transitions
+   - Keep animations performant with proper transition timing
+   - Avoid layout animations on containers that change size

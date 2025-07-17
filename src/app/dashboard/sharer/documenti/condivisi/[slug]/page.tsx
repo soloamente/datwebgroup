@@ -84,7 +84,7 @@ export default function DocumentClassPage() {
                 documents: batch.documents,
                 // Add dummy properties to satisfy SharedDocument type
                 metadata: {},
-                files: [],
+                files: batch.documents.flatMap((doc) => doc.files || []),
               }),
             );
 
@@ -138,21 +138,22 @@ export default function DocumentClassPage() {
       };
     }
     const uniqueViewers = new Set(
-      // eslint-disable-next-line
-      allDocuments.flatMap((doc) => doc.viewers.map((v: ViewerInfo) => v.id)),
+      allDocuments.flatMap((batch) =>
+        batch.viewers.map((v: ViewerInfo) => v.id),
+      ),
     );
-    // eslint-disable-next-line
+    const totalDocs = allDocuments.reduce(
+      (acc, batch) => acc + batch.documents.length,
+      0,
+    );
     const totalFiles = allDocuments.reduce(
-      // eslint-disable-next-line
-      (acc, doc) => acc + doc.files.length,
+      (acc, batch) => acc + (batch.files?.length || 0),
       0,
     );
     return {
-      totalDocs: allDocuments.length,
-      // eslint-disable-next-line
+      totalDocs,
       totalBatches: new Set(allDocuments.map((d) => d.batchId)).size,
       totalViewers: uniqueViewers.size,
-      // eslint-disable-next-line
       totalFiles,
     };
   }, [allDocuments, isLoading, error]);

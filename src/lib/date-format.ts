@@ -40,3 +40,41 @@ export const formatDynamicDate = (
     return dateString; // Fallback to original string on error
   }
 };
+
+/**
+ * Converts a date string or Date object into a format suitable for HTML date or datetime-local input fields.
+ * Handles potential invalid date strings gracefully.
+ *
+ * @param date - The date to format (string, Date, or null/undefined).
+ * @param includeTime - If true, formats for 'datetime-local' (YYYY-MM-DDTHH:mm). Otherwise, for 'date' (YYYY-MM-DD).
+ * @returns The formatted date string, or an empty string if the input is invalid.
+ */
+export const toInputDateString = (
+  date: string | Date | null | undefined,
+  includeTime = false,
+): string => {
+  if (!date) return "";
+
+  try {
+    const d = new Date(date);
+    // Check if the date is valid
+    if (isNaN(d.getTime())) {
+      return "";
+    }
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    if (includeTime) {
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error("Error converting date to input format:", error);
+    return "";
+  }
+};

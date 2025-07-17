@@ -866,6 +866,15 @@ const downloadViewerCredentials = async (
   }
 };
 
+const sendViewerCredentialsByEmail = async (
+  viewerId: number,
+): Promise<{ message: string }> => {
+  const response = await api.get<{ message: string }>(
+    `/viewers/send-pdf-email/${viewerId}`,
+  );
+  return response.data;
+};
+
 const extractInfoFromDocument = async (
   documento_1: File,
   documento_2?: File,
@@ -1026,6 +1035,73 @@ export const downloadSharedFile = async (
   }
 };
 
+/**
+ * Response for adding files to a document.
+ */
+export interface AddFilesToDocumentResponse {
+  message: string;
+  files: AttachedFile[];
+}
+
+/**
+ * Adds one or more files to an existing document within a shared batch.
+ * @param batchId The ID of the batch.
+ * @param documentId The ID of the document.
+ * @param files The files to upload.
+ * @returns A promise with a success message and the details of the uploaded files.
+ */
+export const addFilesToDocument = async (
+  batchId: number,
+  documentId: number,
+  files: File[],
+): Promise<AddFilesToDocumentResponse> => {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files[]", file);
+  });
+
+  const response = await api.post<AddFilesToDocumentResponse>(
+    `/share-batches/${batchId}/documents/${documentId}/files`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
+/**
+ * Response for updating document metadata.
+ */
+export interface UpdateDocumentMetadataResponse {
+  message: string;
+  document: SharedDocument;
+}
+
+/**
+ * Updates the metadata for a specific document in a batch.
+ * @param batchId The ID of the batch.
+ * @param documentId The ID of the document to update.
+ * @param metadata The new metadata object.
+ * @returns Promise<UpdateDocumentMetadataResponse>
+ */
+export const updateDocumentMetadata = async (
+  batchId: number,
+  documentId: number,
+  metadata: Record<string, string | number | boolean | null>,
+): Promise<UpdateDocumentMetadataResponse> => {
+  const formData = new FormData();
+  formData.append("metadata", JSON.stringify(metadata));
+
+  const response = await api.put<UpdateDocumentMetadataResponse>(
+    `/share-batches/${batchId}/documents/${documentId}/metadata`,
+    formData,
+  );
+  return response.data;
+};
+
 const createSharer = async (
   data: FormData,
 ): Promise<{ message: string; sharer: Sharer }> => {
@@ -1123,6 +1199,7 @@ export const userService = {
   createViewer,
   resetViewerPassword,
   downloadViewerCredentials,
+  sendViewerCredentialsByEmail,
   extractInfoFromDocument,
   getUser,
   getMyDocumentClasses,
@@ -1133,6 +1210,18 @@ export const userService = {
   changePassword: (data: ChangePasswordData) =>
     api.post("/change-password", data),
   shareDocuments,
+};
+
+export const batchService = {
+  getSharedBatchesByDocumentClass,
+  getAvailableViewersForBatch,
+  attachViewerToBatch,
+  getSharedBatchById,
+  removeDocumentFromBatch,
+  downloadSharedFile,
+  addFilesToDocument,
+  shareDocuments,
+  updateDocumentMetadata,
 };
 
 export const docClassService = {

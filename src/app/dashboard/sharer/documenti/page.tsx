@@ -278,17 +278,20 @@ export default function DocumentiPage() {
           />
         );
       case "integer":
-      case "decimal":
+      case "decimal": {
+        const numericValue =
+          typeof value === "boolean" || value === 0 ? "" : value;
         return (
           <Input
             id={field.name}
             type="number"
             placeholder={`Inserisci ${field.label.toLowerCase()}`}
-            value={(value as number) ?? ""}
+            value={numericValue ?? ""}
             onChange={(e) => handleMetadataChange(field.name, e.target.value)}
             required={!!field.required}
           />
         );
+      }
       case "date":
         return (
           <SingleDatePicker
@@ -320,7 +323,7 @@ export default function DocumentiPage() {
               id={field.name}
               checked={!!value}
               onCheckedChange={(checked) =>
-                handleMetadataChange(field.name, checked)
+                handleMetadataChange(field.name, !!checked)
               }
             />
             <label
@@ -328,6 +331,11 @@ export default function DocumentiPage() {
               className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
               {field.label}
+              {field.required ? (
+                <span className="text-destructive"> *</span>
+              ) : (
+                ""
+              )}
             </label>
           </div>
         );
@@ -369,10 +377,18 @@ export default function DocumentiPage() {
           .sort((a, b) => a.sort_order - b.sort_order)
           .map((field) => (
             <div key={field.id} className="grid gap-2">
-              <Label htmlFor={field.name}>
-                {field.label}
-                {field.required && <span className="text-destructive"> *</span>}
-              </Label>
+              {field.data_type === "boolean" ? (
+                <div />
+              ) : (
+                <Label htmlFor={field.name}>
+                  {field.label}
+                  {field.required ? (
+                    <span className="text-destructive"> *</span>
+                  ) : (
+                    ""
+                  )}
+                </Label>
+              )}
               {renderField(field)}
             </div>
           ))}

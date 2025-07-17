@@ -9,6 +9,7 @@ import { DocumentIcon } from "@/components/icons/document";
 import { SidebarHeader } from "@/components/sidebar/sidebar-header";
 import { SidebarNav } from "@/components/sidebar/sidebar-nav";
 import { LogoutButton } from "@/components/sidebar/logout-button";
+import { motion } from "framer-motion";
 
 const navigationData = {
   navGeneral: [
@@ -46,9 +47,16 @@ const navigationData = {
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  isCompact?: boolean;
+  onExpandFromCompact?: () => void;
 }
 
-export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export default function Sidebar({
+  isOpen,
+  onToggle,
+  isCompact = false,
+  onExpandFromCompact,
+}: SidebarProps) {
   const [isMounted, setIsMounted] = useState(false);
   const authStore = useAuthStore();
 
@@ -71,12 +79,25 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       id="sidebar"
       className={`${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } bg-sidebar fixed z-30 m-2 flex h-[calc(100vh-1rem)] w-[300px] flex-col gap-4 rounded-2xl border p-3 transition-all duration-300 ease-in-out md:sticky md:top-4 md:m-4 md:h-[calc(100vh-2rem)] md:w-[300px] md:translate-x-0 md:p-4`}
+      } bg-sidebar fixed z-30 m-2 flex h-[calc(100vh-1rem)] ${
+        isCompact ? "w-[80px]" : "w-[300px]"
+      } flex-col gap-4 overflow-hidden rounded-2xl border p-3 transition-all duration-300 ease-in-out md:sticky md:top-4 md:m-4 md:h-[calc(100vh-2rem)] md:${
+        isCompact ? "w-[80px]" : "w-[300px]"
+      } md:translate-x-0 md:p-4`}
       aria-label="Sidebar"
     >
-      <SidebarHeader userData={userData} onToggle={onToggle} />
-      <SidebarNav navigationData={navigationData} />
-      <LogoutButton />
+      <SidebarHeader
+        userData={userData}
+        onToggle={onToggle}
+        isCompact={isCompact}
+      />
+
+      <SidebarNav
+        navigationData={navigationData}
+        isCompact={isCompact}
+        onExpandFromCompact={onExpandFromCompact}
+      />
+      <LogoutButton isCompact={isCompact} />
     </aside>
   );
 }

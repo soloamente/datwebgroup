@@ -1,34 +1,57 @@
 "use client";
 
+import { useState } from "react";
 import {
+  RiAddLine,
   RiCheckLine,
   RiCloseLine,
-  RiFileList3Line,
-  RiInformationLine,
-  RiQuestionMark,
-  RiUserLine,
+  RiDownloadLine,
   RiInbox2Line,
+  RiInformationLine,
+  RiPencilLine,
+  RiQuestionMark,
+  RiSaveLine,
+  RiUserLine,
 } from "@remixicon/react";
+import { Database, KeyRound, Paperclip, Save, X } from "lucide-react";
+import { toast } from "sonner";
 
-import { type DocumentClassDetails, type ViewerInfo } from "@/app/api/api";
+import {
+  batchService,
+  type DocumentClassDetails,
+  type ViewerInfo,
+  userService,
+} from "@/app/api/api";
 import type {
   DocumentWithMetadata,
   EnrichedDocument,
 } from "@/components/dashboard/tables/sharer/shared-documents-table";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatDynamicDate } from "@/lib/date-format";
-import { generateAvatarColor, isDateString, isURL } from "@/lib/utils";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SectionHeader } from "@/components/ui/section-header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatDynamicDate, toInputDateString } from "@/lib/date-format";
+import { generateAvatarColor, isDateString, isURL } from "@/lib/utils";
 
+import { AddFilesToDocumentDialog } from "./add-files-to-document-dialog";
 import { FileAttachmentCards } from "./file-attachment-cards";
 
 // ============================================================================
@@ -53,6 +76,14 @@ interface MetadataValueProps {
 interface MetadataDisplayProps {
   doc: DocumentWithMetadata;
   docClassDetails: DocumentClassDetails;
+}
+
+interface MetadataFormProps {
+  doc: DocumentWithMetadata;
+  docClassDetails: DocumentClassDetails;
+  batchId: number;
+  onUpdate: () => void;
+  onCancel: () => void;
 }
 
 interface DocumentContentViewProps {
@@ -196,46 +227,267 @@ const MetadataDisplay = ({ doc, docClassDetails }: MetadataDisplayProps) => {
   );
 };
 
+const MetadataForm = ({
+  doc,
+  docClassDetails,
+  batchId,
+  onUpdate,
+  onCancel,
+}: MetadataFormProps) => {
+  const [formData, setFormData] = useState<
+    Record<string, string | number | boolean | null>
+  >(doc.metadata as Record<string, string | number | boolean | null>);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleFieldChange = (
+    key: string,
+    value: string | number | boolean | null,
+  ) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const response = await batchService.updateDocumentMetadata(
+        batchId,
+        doc.id,
+        formData,
+      );
+      toast.success(response.message || "Metadati aggiornati con successo.");
+      onUpdate();
+    } catch (e: unknown) {
+      const errorMessage =
+        e instanceof Error
+          ? e.message
+          : "Errore durante l'aggiornamento dei metadati.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void handleSave();
+      }}
+      className="space-y-4"
+    >
+      <div className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border bg-zinc-50/50 p-4 sm:grid-cols-2 dark:bg-zinc-900/50">
+        {docClassDetails.fields.map((field) => {
+          const value = formData[field.name];
+          const isPrimaryKey = field.is_primary_key;
+
+          if (isPrimaryKey) {
+            return (
+              <div key={field.name} className="space-y-2">
+                <Label>{field.label ?? field.name}</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-md flex w-fit items-center gap-2 rounded-sm px-2 py-1.5 ring-1 ring-black/10">
+                        <KeyRound size={16} className="text-amber-500" />
+                        <MetadataValue
+                          value={value}
+                          dataType={field.data_type}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        Questo campo è una chiave primaria e non può essere
+                        modificato.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            );
+          }
+
+          return (
+            <div key={field.name} className="space-y-2">
+              <Label htmlFor={field.name}>
+                {field.label ?? field.name}
+                {field.required ? (
+                  <span className="text-destructive text-md font-bold"> *</span>
+                ) : (
+                  ""
+                )}
+              </Label>
+              {field.data_type === "boolean" ? (
+                <div className="flex items-center pt-2">
+                  <Switch
+                    id={field.name}
+                    className="ring-1 ring-black/10"
+                    checked={!!value}
+                    onCheckedChange={(checked) =>
+                      handleFieldChange(field.name, checked)
+                    }
+                  />
+                  <span className="ml-3 text-sm font-medium">
+                    {value ? "Sì" : "No"}
+                  </span>
+                </div>
+              ) : field.data_type === "enum" ? (
+                <Select
+                  value={String(value ?? "")}
+                  onValueChange={(newValue) =>
+                    handleFieldChange(field.name, newValue)
+                  }
+                >
+                  <SelectTrigger className="ring-1 ring-black/10">
+                    <SelectValue placeholder="Seleziona..." />
+                  </SelectTrigger>
+                  <SelectContent className="border-0 ring-1 shadow-sm ring-black/10">
+                    {field.options?.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id={field.name}
+                  className="ring-1 ring-black/10"
+                  type={
+                    field.data_type === "date"
+                      ? "date"
+                      : field.data_type === "datetime"
+                        ? "datetime-local"
+                        : ["integer", "decimal"].includes(field.data_type)
+                          ? "number"
+                          : "text"
+                  }
+                  value={
+                    field.data_type.includes("date")
+                      ? toInputDateString(
+                          value as string,
+                          field.data_type === "datetime",
+                        )
+                      : String(value ?? "")
+                  }
+                  onChange={(e) =>
+                    handleFieldChange(field.name, e.target.value)
+                  }
+                  required={!!field.required}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="h-4 w-4" />
+          Annulla
+        </Button>
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-current" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          Salva Modifiche
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 const DocumentContentView = ({
   doc,
   docClassDetails,
   batchId,
   onUpdate,
-}: DocumentContentViewProps) => (
-  <div className="space-y-6">
-    <Card>
-      <CardHeader>
-        <CardTitle>Metadati</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <MetadataDisplay doc={doc} docClassDetails={docClassDetails} />
-      </CardContent>
-    </Card>
+}: DocumentContentViewProps) => {
+  const [isAddFilesDialogOpen, setIsAddFilesDialogOpen] = useState(false);
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
 
-    <Card>
-      <CardHeader>
-        <CardTitle>File Allegati</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {doc.files && doc.files.length > 0 ? (
-          <FileAttachmentCards
-            files={doc.files}
-            batchId={batchId}
-            onUpdate={onUpdate}
-          />
-        ) : (
-          <div className="flex min-h-[150px] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-zinc-50/50 text-center dark:bg-zinc-900/50">
-            <RiInbox2Line className="text-muted-foreground mb-4 h-10 w-10" />
-            <h3 className="font-semibold">Nessun file allegato</h3>
-            <p className="text-muted-foreground text-sm">
-              Non ci sono file allegati a questo documento.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  </div>
-);
+  const handleUpdate = () => {
+    setIsEditingMetadata(false);
+    onUpdate();
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Database size={20} />
+            Metadati
+          </CardTitle>
+          {!isEditingMetadata && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditingMetadata(true)}
+            >
+              <RiPencilLine className="h-4 w-4" /> Modifica Metadati
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isEditingMetadata ? (
+            <MetadataForm
+              doc={doc}
+              docClassDetails={docClassDetails}
+              batchId={batchId}
+              onUpdate={handleUpdate}
+              onCancel={() => setIsEditingMetadata(false)}
+            />
+          ) : (
+            <MetadataDisplay doc={doc} docClassDetails={docClassDetails} />
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Paperclip size={20} />
+            File Allegati
+          </CardTitle>
+          <Button
+            variant={"outline"}
+            size="sm"
+            onClick={() => setIsAddFilesDialogOpen(true)}
+          >
+            <RiAddLine className="h-4 w-4" />
+            Aggiungi File
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {doc.files && doc.files.length > 0 ? (
+            <FileAttachmentCards
+              files={doc.files}
+              batchId={batchId}
+              onUpdate={onUpdate}
+            />
+          ) : (
+            <div className="flex min-h-[150px] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-zinc-50/50 text-center dark:bg-zinc-900/50">
+              <RiInbox2Line className="text-muted-foreground mb-4 h-10 w-10" />
+              <h3 className="font-semibold">Nessun file allegato</h3>
+              <p className="text-muted-foreground text-sm">
+                Non ci sono file allegati a questo documento.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <AddFilesToDocumentDialog
+        batchId={batchId}
+        documentId={doc.id}
+        open={isAddFilesDialogOpen}
+        onOpenChange={setIsAddFilesDialogOpen}
+        onSuccess={onUpdate}
+      />
+    </div>
+  );
+};
 
 const DocumentsSection = ({
   batch,
@@ -302,6 +554,8 @@ const DocumentsSection = ({
 // ============================================================================
 
 const ViewerCard = ({ viewer }: ViewerCardProps) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const avatarColor = generateAvatarColor(viewer.email);
   const initials = viewer.nominativo
     .split(" ")
@@ -309,6 +563,41 @@ const ViewerCard = ({ viewer }: ViewerCardProps) => {
     .join("")
     .substring(0, 2)
     .toUpperCase();
+
+  const handleDownloadCredentials = async () => {
+    setIsDownloading(true);
+    try {
+      const result = await userService.downloadViewerCredentials(
+        viewer.id,
+        viewer.nominativo,
+      );
+      toast.success(result.message);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Si è verificato un errore imprevisto.";
+      toast.error(errorMessage);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleSendCredentialsEmail = async () => {
+    setIsSendingEmail(true);
+    try {
+      const result = await userService.sendViewerCredentialsByEmail(viewer.id);
+      toast.success(result.message);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Si è verificato un errore imprevisto durante l'invio della mail.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   return (
     <div className="flex items-center gap-3">
@@ -328,6 +617,50 @@ const ViewerCard = ({ viewer }: ViewerCardProps) => {
           </p>
         )}
       </div>
+      <TooltipProvider>
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDownloadCredentials}
+                disabled={isDownloading}
+                aria-label="Scarica credenziali"
+              >
+                {isDownloading ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-b-2 border-current" />
+                ) : (
+                  <RiDownloadLine size={20} />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Scarica credenziali</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleSendCredentialsEmail}
+                disabled={isSendingEmail}
+                aria-label="Recupero credenziali"
+              >
+                {isSendingEmail ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-b-2 border-current" />
+                ) : (
+                  <KeyRound size={20} />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Recupero credenziali</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
     </div>
   );
 };
@@ -335,10 +668,13 @@ const ViewerCard = ({ viewer }: ViewerCardProps) => {
 export const ViewersSection = ({ viewers }: { viewers: ViewerInfo[] }) => (
   <Card>
     <CardHeader>
-      <SectionHeader
-        icon={RiUserLine}
-        title={`Destinatari (${viewers.length})`}
-      />
+      <div className="flex items-center gap-3">
+        <RiUserLine size={20} className="text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Destinatari</h3>
+          <Badge variant="outline">{viewers.length}</Badge>
+        </div>
+      </div>
     </CardHeader>
     <CardContent className="space-y-4">
       {viewers.length > 0 ? (

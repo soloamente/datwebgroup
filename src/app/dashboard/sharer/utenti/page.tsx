@@ -92,7 +92,7 @@ export default function ListaViewerPage() {
                   title: "Totale Viewer",
                   value: "13",
                   change: {
-                    value: "+13%",
+                    value: "13%",
                     trend: "up",
                   },
                   icon: <Users size={20} />,
@@ -101,7 +101,7 @@ export default function ListaViewerPage() {
                   title: "Attivi",
                   value: "12",
                   change: {
-                    value: "+12%",
+                    value: "12%",
                     trend: "up",
                   },
                   icon: <UserCheck size={20} />,
@@ -110,7 +110,7 @@ export default function ListaViewerPage() {
                   title: "Disattivati",
                   value: "1",
                   change: {
-                    value: "+100%",
+                    value: "100%",
                     trend: "up",
                   },
                   icon: <UserX size={20} />,
@@ -119,7 +119,7 @@ export default function ListaViewerPage() {
                   title: "Creati",
                   value: "1",
                   change: {
-                    value: "+100%",
+                    value: "100%",
                     trend: "up",
                   },
                   icon: <UserPlus size={20} />,

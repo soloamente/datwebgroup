@@ -47,7 +47,7 @@ function BatchPageHeader({
           onClick={() => router.back()}
           className="mb-4"
         >
-          <RiArrowLeftLine className="mr-2 h-4 w-4" />
+          <RiArrowLeftLine className="h-4 w-4" />
           Torna alla lista
         </Button>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
@@ -60,8 +60,8 @@ function BatchPageHeader({
       </div>
       <div className="flex flex-shrink-0 gap-2">
         <AddViewerToBatchDialog batchId={batchId} onViewerAdded={onViewerAdded}>
-          <Button>
-            <RiUserAddLine className="mr-2 h-4 w-4" />
+          <Button className="transition-all duration-300">
+            <RiUserAddLine className="h-4 w-4" />
             Aggiungi Destinatario
           </Button>
         </AddViewerToBatchDialog>
