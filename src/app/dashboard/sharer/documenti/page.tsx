@@ -683,7 +683,7 @@ export default function DocumentiPage() {
               <CardContent className="flex flex-col gap-4">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Cerca cliente..."
+                    placeholder="Cerca destinatario..."
                     className="rounded-full"
                     value={clientSearch}
                     onChange={(e) => setClientSearch(e.target.value)}
@@ -696,7 +696,7 @@ export default function DocumentiPage() {
                     className="h-10 rounded-full"
                   >
                     <UserPlus className="h-4 w-4" />
-                    Nuovo cliente
+                    Nuovo Destinatario
                   </Button>
                 </div>
                 {selectedClients.length > 0 && (
@@ -784,7 +784,7 @@ export default function DocumentiPage() {
       <main className="flex h-full flex-col">
         <header className="flex-shrink-0 border-b p-4 lg:px-8 lg:py-6">
           <h1 className="text-foreground text-2xl font-bold tracking-tight">
-            Nuova Spedizione
+            Nuova condivisione
           </h1>
           <p className="text-muted-foreground">
             Componi e invia i documenti ai tuoi clienti in un unico posto.

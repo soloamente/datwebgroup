@@ -1425,3 +1425,210 @@ The user has requested to add a compact mode for both sidebars (admin and sharer
    - Use AnimatePresence for smooth enter/exit transitions
    - Keep animations performant with proper transition timing
    - Avoid layout animations on containers that change size
+
+# AdminSidebar Modular Refactoring
+
+## Background and Motivation
+
+The user requested to refactor AdminSidebar.tsx to use the same modular structure as Sidebar.tsx. The AdminSidebar was a large monolithic component that contained all functionality inline, while the Sidebar used modular components like SidebarHeader, SidebarNav, and LogoutButton for better organization and reusability.
+
+## Key Challenges and Analysis
+
+1. The AdminSidebar component was handling all functionality inline (header, navigation, logout, mobile handling)
+2. Need to create admin-specific navigation component since the existing SidebarNav was designed for sharer roles
+3. Navigation structure differs between admin and sharer (admin has navGeneral + navAdmin, sharer has navGeneral + navSharer + navDocumenti)
+4. Multiple compact toggle buttons in AdminSidebar need to be extracted into reusable components
+5. Mobile header and overlay functionality need to be modularized
+
+## High-level Task Breakdown
+
+1. Create AdminSidebarNav component
+
+   - [x] Create new component specifically for admin navigation structure
+   - [x] Support navGeneral and navAdmin sections
+   - [x] Use existing SidebarNavLink for consistent styling
+   - Success criteria: Admin navigation rendered correctly with proper sections
+
+2. Create modular utility components
+
+   - [x] Create CompactToggle component for reusable toggle functionality
+   - [x] Create MobileHeader component for mobile header functionality
+   - [x] Create MobileOverlay component for mobile overlay
+   - Success criteria: Components are reusable and properly styled
+
+3. Refactor AdminSidebar to use modular structure
+   - [x] Replace inline header with SidebarHeader component
+   - [x] Replace inline navigation with AdminSidebarNav component
+   - [x] Replace inline logout with LogoutButton component
+   - [x] Replace compact toggles with CompactToggle component
+   - [x] Replace mobile functionality with MobileHeader and MobileOverlay
+   - [x] Remove all inline implementation code
+   - Success criteria: AdminSidebar has same structure as Sidebar.tsx
+
+## Project Status Board
+
+- [x] Create AdminSidebarNav component
+- [x] Create CompactToggle component
+- [x] Create MobileHeader component
+- [x] Create MobileOverlay component
+- [x] Refactor AdminSidebar to use modular components
+- [x] Test functionality matches original implementation
+- [x] Clean up imports and remove unused code
+
+## Executor's Feedback or Assistance Requests
+
+✅ **COMPLETED**: AdminSidebar has been successfully refactored to use the same modular structure as Sidebar.tsx.
+
+**Implementation Details:**
+
+**New Components Created:**
+
+1. **AdminSidebarNav** (`src/components/sidebar/admin-sidebar-nav.tsx`):
+
+   - Handles admin-specific navigation structure (navGeneral + navAdmin)
+   - Uses existing SidebarNavLink for consistency
+   - Supports compact mode with proper animations
+
+2. **CompactToggle** (`src/components/sidebar/compact-toggle.tsx`):
+
+   - Reusable component for compact/expand toggle functionality
+   - Supports both "sidebar" and "floating" positions
+   - Consistent styling and tooltip behavior
+
+3. **MobileHeader** (`src/components/sidebar/mobile-header.tsx`):
+
+   - Extracted mobile header functionality
+   - Shows user avatar, name, and mobile menu button
+   - Reusable across different sidebar implementations
+
+4. **MobileOverlay** (`src/components/sidebar/mobile-overlay.tsx`):
+   - Simple overlay component for mobile sidebar
+   - Handles click-to-close functionality
+
+**AdminSidebar Refactoring:**
+
+- Reduced from 528 lines to ~100 lines by using modular components
+- Same structure as Sidebar.tsx: SidebarHeader + Navigation + LogoutButton
+- Maintains all original functionality (compact mode, mobile responsiveness, navigation)
+- Uses existing SidebarHeader and LogoutButton components
+- All compact toggle buttons now use the reusable CompactToggle component
+
+**Result:**
+
+- AdminSidebar.tsx now has the same clean, modular structure as Sidebar.tsx
+- Better code organization and reusability
+- Consistent styling and behavior across both sidebar implementations
+- Easier maintenance and future enhancements
+
+## Lessons
+
+1. **Component Modularization:**
+
+   - Break large components into smaller, focused pieces
+   - Create reusable utility components for common functionality
+   - Maintain consistent interfaces and prop structures
+
+2. **Code Organization:**
+
+   - Group related components in appropriate directories
+   - Use descriptive names that indicate component purpose
+   - Keep component files focused on single responsibilities
+
+3. **Consistency Across Components:**
+   - Reuse existing components when possible (SidebarHeader, LogoutButton)
+   - Create role-specific variants when needed (AdminSidebarNav vs SidebarNav)
+   - Maintain consistent styling and behavior patterns
+
+# Lista Clienti Statistics Update
+
+## Background and Motivation
+
+The user requested to update the statistics in the lista clienti page (`src/app/dashboard/sharer/utenti/page.tsx`) to calculate real-time temporal comparisons instead of using static values:
+
+1. Replace "Attivi" and "Disattivati" statistics
+2. Add "Creati ultima settimana" with comparison to previous week
+3. Add "Creati ultimo mese" with comparison to previous month
+4. Calculate real-time values based on actual viewer creation dates
+
+## Key Challenges and Analysis
+
+1. Using the `created_at` field from the Viewer type to calculate temporal statistics
+2. Implementing date range calculations for weeks and months
+3. Calculating percentage changes between current and previous periods
+4. Handling edge cases (division by zero, no data for previous periods)
+
+## High-level Task Breakdown
+
+1. Implement date range calculation helpers
+
+   - [x] Create getWeekRange function for weekly calculations
+   - [x] Create getMonthRange function for monthly calculations
+   - [x] Use Monday as start of week for proper business week calculation
+   - Success criteria: Helper functions return correct date ranges
+
+2. Create statistics calculation function
+
+   - [x] Filter viewers by creation date for current and previous periods
+   - [x] Calculate counts for this week/month vs previous week/month
+   - [x] Calculate percentage changes with proper null handling
+   - Success criteria: Function returns accurate real-time statistics
+
+3. Update statistics display
+
+   - [x] Replace static values with dynamic calculations
+   - [x] Show percentage changes with proper trend indicators (up/down)
+   - [x] Update all statistic labels in Italian
+   - Success criteria: Statistics show live data with proper formatting
+
+## Project Status Board
+
+- [x] Implement date range calculation helpers
+- [x] Create statistics calculation function
+- [x] Update statistics display with real-time values
+- [x] Remove unused icon imports
+- [x] Add total clients calculation with comparison to last month
+- [x] Remove duplicate sign formatting to prevent ++/-- display
+- [x] **Task completed**
+
+## Executor's Feedback or Assistance Requests
+
+✅ **COMPLETED**: Successfully implemented real-time statistics calculation for the lista clienti page.
+
+**Implementation Details:**
+
+1. **Date Range Helpers**:
+
+   - `getWeekRange(weeksAgo)`: Calculates week ranges starting from Monday
+   - `getMonthRange(monthsAgo)`: Calculates month ranges for accurate comparisons
+
+2. **Statistics Calculation**:
+
+   - `calculateStats()`: Filters viewers by `created_at` date
+   - Compares total count vs last month total
+   - Compares current week vs previous week
+   - Compares current month vs previous month
+   - Handles division by zero cases properly
+
+3. **Real-time Values**:
+
+   - "Totale clienti": Total count with % change vs last month
+   - "Creati ultima settimana": Count with % change vs previous week
+   - "Creati ultimo mese": Count with % change vs previous month
+
+4. **Dynamic Updates**:
+   - Statistics update automatically when viewer data changes
+   - Proper trend indicators (up/down arrows) based on percentage change
+   - Italian localization for all labels
+
+The statistics now provide meaningful insights into client growth trends with accurate temporal comparisons.
+
+## Lessons
+
+1. When implementing temporal statistics:
+   - Use proper date range calculations with consistent start points (e.g., Monday for weeks)
+   - Handle edge cases like zero counts in previous periods
+   - Provide clear percentage indicators with trend directions
+2. For real-time calculations:
+   - Filter data based on date fields consistently
+   - Calculate percentages with proper null/zero handling
+   - Update statistics whenever the underlying data changes

@@ -556,7 +556,7 @@ export function CreateViewerDialog({
               Creando viewer...
             </>
           ) : (
-            "Crea viewer"
+            "Crea utente"
           )}
         </Button>
       </DialogFooter>
@@ -574,7 +574,7 @@ export function CreateViewerDialog({
               <UserPlus className="h-12 w-12" />
               <div className="flex flex-col items-center space-y-0.5">
                 <DialogTitle className="text-foreground text-2xl font-semibold">
-                  Crea viewer
+                  Crea utente
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-md">
                   {viewMode === "upload"

@@ -571,6 +571,31 @@ export interface GetMyDocumentClassesResponse {
   data: MyDocumentClass[];
 }
 
+// --- Interfaces for /my-file-stats ---
+export interface DailyStat {
+  label: string;
+  date: string;
+  file_count: number;
+}
+
+export interface MonthlyStat {
+  label: string;
+  period: string;
+  file_count: number;
+}
+
+export interface FileStatsData {
+  last_7_days: DailyStat[];
+  last_30_days: DailyStat[];
+  last_365_days: MonthlyStat[];
+}
+
+export interface GetMyFileStatsResponse {
+  message: string;
+  data: FileStatsData;
+}
+// --- End Interfaces for /my-file-stats ---
+
 // --- Nuove interfacce per recovery-username-request ---
 export interface RecoveryUsernameRequestData {
   ragione_sociale: string;
@@ -692,6 +717,16 @@ const createDocumentClass = async (
       message: "An unexpected error occurred.",
     };
   }
+};
+
+/**
+ * Retrieves file sharing statistics for the authenticated sharer.
+ * Endpoint: GET /my-file-stats
+ * @returns {Promise<GetMyFileStatsResponse>}
+ */
+const getMyFileStats = async (): Promise<GetMyFileStatsResponse> => {
+  const response = await api.get<GetMyFileStatsResponse>("/my-file-stats");
+  return response.data;
 };
 
 const createViewer = async (
@@ -1207,6 +1242,7 @@ export const userService = {
   recoveryUsernameRequest,
   updateDocumentClass,
   createDocumentClass,
+  getMyFileStats,
   changePassword: (data: ChangePasswordData) =>
     api.post("/change-password", data),
   shareDocuments,
