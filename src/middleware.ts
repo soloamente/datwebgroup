@@ -26,108 +26,85 @@ interface AuthState {
   };
 }
 
+function getDashboardUrl(role?: string): string {
+  switch (role) {
+    case "admin":
+      return "/dashboard/admin";
+    case "sharer":
+      return "/dashboard/sharer";
+    case "viewer":
+      return "/dashboard/viewer";
+    default:
+      return "/login";
+  }
+}
+
 export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
   const sessionCookie = req.cookies.get("auth-storage");
 
-  const res = NextResponse.next();
-
-  let userData: AuthState | null = null;
+  let user: User | null = null;
   if (sessionCookie?.value) {
     try {
-      userData = JSON.parse(sessionCookie.value) as AuthState;
+      const parsedData = JSON.parse(sessionCookie.value) as AuthState;
+      if (parsedData.state.user) {
+        user = parsedData.state.user;
+      }
     } catch (e) {
       console.error("Failed to parse session cookie:", e);
     }
   }
 
-  const isLoggedIn = !!sessionCookie && userData?.state?.user !== null;
-  const userRole = userData?.state?.user?.role;
-  const isOnAuthRoute =
-    nextUrl.pathname.startsWith("/login") ||
-    (nextUrl.pathname === "/change-password" &&
-      userData?.state?.user?.must_change_password !== 1);
-  const isOnAdminRoute = nextUrl.pathname.startsWith("/dashboard/admin");
-  const isOnSharerRoute = nextUrl.pathname.startsWith("/dashboard/sharer");
-  const isOnViewerRoute = nextUrl.pathname.startsWith("/dashboard/viewer");
-  const isOnChangePasswordRoute =
-    nextUrl.pathname.startsWith("/change-password");
-  const mustChangePassword = userData?.state?.user?.must_change_password;
+  const isLoggedIn = !!user;
+  const userRole = user?.role;
+  const mustChangePassword = user?.must_change_password === 1;
+  const { pathname } = nextUrl;
 
-  const isOnOtpPhase = sessionCookie?.value;
-  console.log("Current session cookie value for isOnOtpPhase:", isOnOtpPhase);
+  const isAuthPage =
+    pathname.startsWith("/login") || pathname.startsWith("/register");
+  const isChangePasswordPage = pathname.startsWith("/change-password");
 
   // --- Debugging Logs Start ---
-  console.log(
-    "Middleware userData:",
-    JSON.stringify(userData?.state?.user, null, 2),
-  );
-  console.log("Middleware isLoggedIn:", isLoggedIn);
-  console.log("Middleware mustChangePassword value:", mustChangePassword);
-  console.log("Middleware mustChangePassword type:", typeof mustChangePassword);
+  console.log("--- Middleware Check ---");
+  console.log("Path:", pathname);
+  console.log("User Role:", userRole);
+  console.log("Is Logged In:", isLoggedIn);
+  console.log("Must Change Password:", mustChangePassword);
   // --- Debugging Logs End ---
 
-  // if (isLoggedIn && mustChangePassword === 0) {
-  //   if (nextUrl.pathname === "/change-password") {
-  //     console.log(
-  //       "User must change password, redirecting to /login/change-password",
-  //     );
-  //     return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
-  //   }
-  // }
-
-  if (!isLoggedIn && isOnChangePasswordRoute) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
-  }
-
-  // Handle must_change_password redirect first
-  if (isLoggedIn && mustChangePassword === 1) {
-    if (nextUrl.pathname !== "/change-password") {
-      console.log(
-        "User must change password, redirecting to /login/change-password",
-      );
-      return NextResponse.redirect(new URL("/change-password", nextUrl));
+  if (isLoggedIn && mustChangePassword) {
+    if (!isChangePasswordPage) {
+      return NextResponse.redirect(new URL("/change-password", nextUrl.origin));
     }
-    // If user must change password AND is already on the change password page, allow them to stay.
-    console.log(
-      "User must change password and is on /login/change-password page. Allowing to stay.",
-    );
-    return res; // Allow request to proceed to /login/change-password
+    return NextResponse.next();
   }
 
-  // --- End of must_change_password specific logic ---
-
-  if (isOnAdminRoute && (!isLoggedIn || userRole !== "admin")) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
+  if (isLoggedIn && !mustChangePassword && isChangePasswordPage) {
+    const dashboardUrl = getDashboardUrl(userRole);
+    return NextResponse.redirect(new URL(dashboardUrl, nextUrl.origin));
   }
 
-  if (isOnSharerRoute && (!isLoggedIn || userRole !== "sharer")) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
+  if (isLoggedIn && isAuthPage) {
+    const dashboardUrl = getDashboardUrl(userRole);
+    return NextResponse.redirect(new URL(dashboardUrl, nextUrl.origin));
   }
 
-  if (isOnViewerRoute && (!isLoggedIn || userRole !== "viewer")) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
+  const isProtectedRoute = pathname.startsWith("/dashboard");
+  if (isProtectedRoute && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/login", nextUrl.origin));
   }
 
-  if (isOnAuthRoute && isLoggedIn) {
-    // At this point, if mustChangePassword was 1, we've already handled it.
-    // So, if they are on an auth route and logged in (and don't need to change password),
-    // redirect to their dashboard.
-    console.log(
-      "User is logged in and on an auth route (and doesn't need to change password), redirecting to dashboard.",
-    );
-    // Redirect to appropriate dashboard based on role
-    if (userRole === "admin") {
-      return NextResponse.redirect(new URL("/dashboard/admin", nextUrl));
-    } else if (userRole === "sharer") {
-      return NextResponse.redirect(new URL("/dashboard/sharer", nextUrl));
-    } else if (userRole === "viewer") {
-      return NextResponse.redirect(new URL("/dashboard/viewer", nextUrl));
+  if (isLoggedIn && isProtectedRoute) {
+    const requiredRole = pathname.split("/")[2];
+    if (requiredRole && userRole !== requiredRole) {
+      const dashboardUrl = getDashboardUrl(userRole);
+      return NextResponse.redirect(new URL(dashboardUrl, nextUrl.origin));
     }
   }
 
-  return res;
+  return NextResponse.next();
 }
+
 // Configure which routes the middleware should run on
 export const config = {
   matcher: [

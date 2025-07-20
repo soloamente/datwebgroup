@@ -45,14 +45,28 @@ interface VerifyOtpResponse {
 // Helper function to get max-age from Set-Cookie header
 const getMaxAgeFromResponse = (response: ApiResponse<unknown>): number => {
   const setCookieHeader = response.headers?.["set-cookie"]?.[0];
-  if (!setCookieHeader) return 7; // Default to 7 days if no header found
+  if (!setCookieHeader) return 30; // Default to 30 days if no header found
 
   const maxAgeMatch = /Max-Age=(\d+)/.exec(setCookieHeader);
   if (maxAgeMatch?.[1]) {
     // Convert seconds to days
-    return Math.floor(parseInt(maxAgeMatch[1], 10) / (24 * 60 * 60));
+    const maxAgeInDays = Math.floor(
+      parseInt(maxAgeMatch[1], 10) / (24 * 60 * 60),
+    );
+    // Ensure minimum of 7 days and maximum of 30 days
+    return Math.max(7, Math.min(30, maxAgeInDays));
   }
-  return 7; // Default to 7 days if no max-age found
+  return 30; // Default to 30 days if no max-age found
+};
+
+// Helper function to set cookie with consistent settings
+const setAuthCookie = (cookieData: CookieStorage, expiresInDays = 30) => {
+  Cookies.set("auth-storage", JSON.stringify(cookieData), {
+    path: "/",
+    expires: expiresInDays,
+    secure: process.env.NODE_ENV === "production", // Secure in production
+    sameSite: "lax", // Protect against CSRF
+  });
 };
 
 interface User {
@@ -113,10 +127,7 @@ const useAuthStore = create<AuthStore>()(
             user: user as User,
           },
         };
-        Cookies.set("auth-storage", JSON.stringify(cookieData), {
-          path: "/",
-          expires: 7,
-        });
+        setAuthCookie(cookieData, 30); // Set to 30 days
         set({ user, error: null, isLoading: false });
       },
       clearAuth: () => {
@@ -212,10 +223,7 @@ const useAuthStore = create<AuthStore>()(
                 user: userData,
               },
             };
-            Cookies.set("auth-storage", JSON.stringify(cookieData), {
-              path: "/",
-              expires: maxAge,
-            });
+            setAuthCookie(cookieData, maxAge);
             set({ user: userData, error: null, isLoading: false });
             return { success: true };
           } else {
@@ -265,7 +273,8 @@ const useAuthStore = create<AuthStore>()(
           console.log("Admin Login response:", verifyResponse.data);
 
           // eslint-disable-next-line
-          const userData = verifyResponse.data?.user || verifyResponse.data;
+          const userData = (verifyResponse.data?.user ||
+            verifyResponse.data) as User;
 
           // eslint-disable-next-line
           if (userData && typeof userData === "object" && userData.id) {
@@ -277,6 +286,15 @@ const useAuthStore = create<AuthStore>()(
               set({ user: null, error: message, isLoading: false });
               return { success: false, message };
             }
+
+            // Set auth cookie for admin login
+            const cookieData: CookieStorage = {
+              state: {
+                user: userData,
+              },
+            };
+            setAuthCookie(cookieData, 30);
+
             // Set auth state if login is successful and user is admin
             // eslint-disable-next-line
             set({ user: userData, error: null, isLoading: false });
@@ -333,24 +351,13 @@ const useAuthStore = create<AuthStore>()(
       storage: createJSONStorage(() => ({
         getItem: (name) => Cookies.get(name) ?? null,
         setItem: (name, value) => {
-          // Get the current cookie expiration from the API response if available
-          const currentCookie = Cookies.get(name);
-          if (currentCookie) {
-            try {
-              const parsed = JSON.parse(currentCookie) as CookieStorage;
-              if (parsed.state.user) {
-                Cookies.set(name, value, {
-                  path: "/",
-                  expires: 7,
-                });
-                return;
-              }
-            } catch (e) {
-              console.error("Error parsing cookie:", e);
-            }
+          // Always use consistent cookie settings
+          try {
+            const parsedValue = JSON.parse(value) as CookieStorage;
+            setAuthCookie(parsedValue, 30);
+          } catch (e) {
+            console.error("Error parsing cookie value:", e);
           }
-          // Default to 7 days if no expiration is set
-          Cookies.set(name, value, { path: "/", expires: 7 });
         },
         removeItem: (name) => Cookies.remove(name, { path: "/" }),
       })),

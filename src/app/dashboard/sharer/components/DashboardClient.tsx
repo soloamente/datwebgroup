@@ -60,10 +60,14 @@ export default function DashboardClient({
         onExpandFromCompact={handleExpandFromCompact}
       />
 
-      {/* Compact Toggle Button - Between Sidebar and Content */}
+      {/* Compact Toggle Button - Fixed between sidebar and content */}
       {!isMobile && (
-        <div className="relative">
-          <div className="absolute top-1/2 left-0 z-20 -translate-x-1/2 -translate-y-1/2">
+        <div
+          className={`pointer-events-none fixed top-1/2 z-20 -translate-y-1/2 transition-all duration-300 ${
+            isCompact ? "left-[calc(80px+1rem)]" : "left-[calc(300px+1rem)]"
+          }`}
+        >
+          <div className="pointer-events-auto">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

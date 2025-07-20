@@ -64,6 +64,71 @@ Next steps:
    - Keep navigation data close to where it's used
    - Use TypeScript interfaces for better type safety
 
+# Dashboard Loading Implementation
+
+## Background and Motivation
+
+The dashboard page needed an efficient loading state following Next.js App Router best practices. The current implementation was using client-side loading states, but we wanted to leverage Next.js's built-in loading.tsx convention for better performance and user experience.
+
+## Key Challenges and Analysis
+
+1. Creating a loading component that matches the exact structure of the dashboard page
+2. Using skeleton components for better perceived performance
+3. Maintaining consistent styling with the dark theme
+4. Following the existing loading patterns in the codebase
+
+## High-level Task Breakdown
+
+1. Create loading.tsx file in the sharer dashboard directory
+
+   - [x] Implement skeleton structure matching the dashboard layout
+   - [x] Use consistent styling with bg-neutral-700 for skeletons
+   - [x] Maintain the same card structure and spacing
+   - Success criteria: Loading component renders correctly and matches dashboard structure
+
+2. Implement skeleton components for all dashboard sections
+
+   - [x] Statistics chart skeleton with tabs
+   - [x] Statistics cards skeleton (4 cards)
+   - [x] Recent shares section skeleton
+   - Success criteria: All sections have appropriate skeleton placeholders
+
+3. Ensure consistent styling and behavior
+   - [x] Use same color scheme as existing loading patterns
+   - [x] Maintain responsive design
+   - [x] Use proper Italian text for loading messages
+   - Success criteria: Loading component looks consistent with the rest of the app
+
+## Project Status Board
+
+- [x] Create loading.tsx file
+- [x] Implement skeleton structure
+- [x] Add proper styling and colors
+- [x] Test loading behavior
+
+## Executor's Feedback or Assistance Requests
+
+The loading implementation is complete and follows Next.js App Router best practices:
+
+1. Created `loading.tsx` in the correct directory (`src/app/dashboard/sharer/`)
+2. Used skeleton components for better perceived performance
+3. Maintained consistent styling with the dark theme
+4. Followed existing loading patterns in the codebase
+
+The loading component will automatically be shown by Next.js while the dashboard page is loading, providing a smooth user experience.
+
+## Lessons
+
+1. Next.js App Router loading.tsx:
+   - Place loading.tsx in the same directory as page.tsx
+   - Next.js automatically shows this component during page loading
+   - Use skeleton components for better perceived performance
+2. Loading component best practices:
+   - Match the exact structure of the actual page
+   - Use consistent styling and colors
+   - Provide meaningful loading messages
+   - Use skeleton components instead of spinners for better UX
+
 # QR Code Login Implementation
 
 ## Background and Motivation
@@ -185,6 +250,66 @@ New requirement: Each SVG path should be treated as a different stroke and have 
 
 - When adding multiple SVG paths, keep each path's coordinates clear and organized for maintainability.
 - Test SVG rendering frequently to ensure paths align as intended.
+
+# Session Cookie Duration Fix
+
+## Background and Motivation
+
+The user reported that their login session cookies expire too quickly, requiring them to log in again after just a few hours. The session should last longer to provide a better user experience.
+
+## Key Challenges and Analysis
+
+1. Inconsistent cookie expiration settings across different authentication methods
+2. Missing secure cookie configuration (secure, sameSite attributes)
+3. Potential cookie parsing issues in middleware
+4. Storage configuration conflicts in Zustand persist
+
+## High-level Task Breakdown
+
+1. [x] Standardize cookie expiration settings
+
+   - Success Criteria: All authentication methods use consistent 30-day expiration
+   - Implementation: Updated `setAuthCookie` helper function with 30-day default
+
+2. [x] Add secure cookie configuration
+
+   - Success Criteria: Cookies have proper security attributes
+   - Implementation: Added `secure` and `sameSite` attributes
+
+3. [x] Improve max-age parsing from API responses
+
+   - Success Criteria: Better handling of server-set cookie expiration
+   - Implementation: Enhanced `getMaxAgeFromResponse` function with bounds checking
+
+4. [x] Fix storage configuration conflicts
+   - Success Criteria: Zustand storage uses consistent cookie settings
+   - Implementation: Updated storage configuration to use `setAuthCookie` helper
+
+## Project Status Board
+
+- [x] Standardize cookie expiration settings
+- [x] Add secure cookie configuration
+- [x] Improve max-age parsing from API responses
+- [x] Fix storage configuration conflicts
+
+## Executor's Feedback or Assistance Requests
+
+The session cookie configuration has been fixed with the following improvements:
+
+1. **Extended session duration**: Changed from 7 days to 30 days default
+2. **Consistent cookie settings**: All authentication methods now use the same `setAuthCookie` helper
+3. **Enhanced security**: Added `secure` and `sameSite` attributes for production
+4. **Better API integration**: Improved parsing of server-set cookie expiration times
+5. **Fixed TypeScript errors**: Added proper type checking for cookie data
+
+The session should now last much longer (30 days instead of 7 days) and be more secure.
+
+## Lessons
+
+1. **Cookie security**: Always use `secure: true` in production and `sameSite: "lax"` for CSRF protection
+2. **Consistent configuration**: Use helper functions to ensure all cookie operations use the same settings
+3. **Type safety**: Always validate cookie data with proper TypeScript types
+4. **API integration**: Parse server-set cookie expiration times but provide sensible defaults
 
 # File Attachment Cards Implementation
 
