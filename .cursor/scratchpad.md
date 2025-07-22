@@ -301,8 +301,10 @@ The session cookie configuration has been fixed with the following improvements:
 3. **Enhanced security**: Added `secure` and `sameSite` attributes for production
 4. **Better API integration**: Improved parsing of server-set cookie expiration times
 5. **Fixed TypeScript errors**: Added proper type checking for cookie data
+6. **Separated authentication API**: Created `authApi` instance without `withCredentials` to prevent server session cookies from interfering
+7. **Added comprehensive debugging**: Added logging to track cookie behavior and persistence
 
-The session should now last much longer (30 days instead of 7 days) and be more secure.
+The session should now last much longer (30 days instead of 7 days) and be more secure. The main issue was that server-side session cookies were overriding our client-side authentication cookies due to `withCredentials: true`.
 
 ## Lessons
 
