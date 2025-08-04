@@ -42,7 +42,7 @@ import {
 export function RecentSharesGrid() {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 6; // Changed from 5 to 6 (3 columns × 2 rows)
   const { recentShares, documentClasses, isLoading, error } =
     useRecentShares(selectedClassId);
 
@@ -85,13 +85,18 @@ export function RecentSharesGrid() {
   };
 
   return (
-    <Card className="border-neutral-800 bg-neutral-900/50 text-white">
+    <Card className="h-full flex-1 bg-neutral-900/50 text-white">
       <CardHeader className="mb-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-semibold tracking-tight">
-            Condivisioni Recenti
-          </CardTitle>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-2">
+            <CardTitle className="text-2xl font-semibold tracking-tight">
+              Condivisioni Recenti
+            </CardTitle>
+            <CardDescription className="text-neutral-400">
+              Visualizza le tue condivisioni più recenti da {selectedClassName}.
+            </CardDescription>
+          </div>
+          <div className="flex flex-col items-end gap-4">
             <Select onValueChange={handleClassChange} defaultValue="all">
               <SelectTrigger className="w-[200px] border-neutral-700 bg-neutral-800/80 backdrop-blur-sm">
                 <SelectValue placeholder="Filtra per classe" />
@@ -105,61 +110,60 @@ export function RecentSharesGrid() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="text-sm text-neutral-400">
-              {startIndex + 1}-{Math.min(endIndex, recentShares.length)} di{" "}
-              {recentShares.length}
-            </div>
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700/80 disabled:opacity-50"
-                onClick={handlePreviousPage}
-                disabled={currentPage === 1}
-                aria-label="Pagina precedente"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-neutral-400">
+                {startIndex + 1}-{Math.min(endIndex, recentShares.length)} di{" "}
+                {recentShares.length}
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700/80 disabled:opacity-50"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  aria-label="Pagina precedente"
                 >
-                  <path d="m15 18-6-6 6-6" />
-                </svg>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700/80 disabled:opacity-50"
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-                aria-label="Pagina successiva"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700/80 disabled:opacity-50"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  aria-label="Pagina successiva"
                 >
-                  <path d="m9 18 6-6-6-6" />
-                </svg>
-              </Button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-        <CardDescription className="text-neutral-400">
-          Visualizza le tue condivisioni più recenti da {selectedClassName}.
-        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading && (
@@ -176,7 +180,7 @@ export function RecentSharesGrid() {
           </div>
         )}
         {!isLoading && !error && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="wait">
               {currentShares.map((share, index) => (
                 <motion.div

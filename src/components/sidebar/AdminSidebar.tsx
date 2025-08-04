@@ -6,18 +6,25 @@ import { navigationData } from "@/app/dashboard/admin/navigation";
 import { SidebarHeader } from "@/components/sidebar/sidebar-header";
 import { AdminSidebarNav } from "@/components/sidebar/admin-sidebar-nav";
 import { LogoutButton } from "@/components/sidebar/logout-button";
-import { CompactToggle } from "@/components/sidebar/compact-toggle";
 import { MobileHeader } from "@/components/sidebar/mobile-header";
 import { MobileOverlay } from "@/components/sidebar/mobile-overlay";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function AdminDashboardClient({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isCompact, setIsCompact] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [mounted, setMounted] = useState(false);
   const authStore = useAuthStore();
 
@@ -26,9 +33,7 @@ export function AdminDashboardClient({
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (!mobile) {
-        setSidebarOpen(true);
-      }
+      setSidebarOpen(!mobile);
     };
 
     handleResize();
@@ -47,15 +52,23 @@ export function AdminDashboardClient({
   };
 
   const handleSidebarToggle = () => {
+    setIsTransitioning(true);
     setSidebarOpen(!sidebarOpen);
+    setTimeout(() => setIsTransitioning(false), 200);
   };
 
   const handleCompactToggle = () => {
     setIsCompact(!isCompact);
   };
 
+  const handleExpandFromCompact = () => {
+    if (isCompact) {
+      setIsCompact(false);
+    }
+  };
+
   return (
-    <main className="flex min-h-screen transition-all duration-300">
+    <main className="flex min-h-screen transition-all duration-700">
       {/* Sidebar */}
       <aside
         className={`${
@@ -73,57 +86,77 @@ export function AdminDashboardClient({
           isCompact={isCompact}
         />
 
-        {/* Compact Toggle Button - Outside Header */}
-        {!isMobile && (
-          <div className="mb-4 flex justify-center">
-            <CompactToggle
-              isCompact={isCompact}
-              onToggle={handleCompactToggle}
-              position="sidebar"
-            />
-          </div>
-        )}
-
         <AdminSidebarNav
           navigationData={navigationData}
           isCompact={isCompact}
+          onExpandFromCompact={handleExpandFromCompact}
         />
 
         <LogoutButton isCompact={isCompact} />
       </aside>
 
-      {/* Compact Toggle Button - Between Sidebar and Content */}
+      {/* Compact Toggle Button - Fixed between sidebar and content */}
       {!isMobile && (
-        <div className="relative">
-          <div className="absolute top-1/2 left-0 z-20 -translate-x-1/2 -translate-y-1/2">
-            <CompactToggle
-              isCompact={isCompact}
-              onToggle={handleCompactToggle}
-              position="floating"
-            />
+        <div
+          className={`pointer-events-none fixed top-1/2 z-20 -translate-y-1/2 transition-all duration-300 ${
+            isCompact ? "left-[calc(80px+1rem)]" : "left-[calc(300px+1rem)]"
+          }`}
+        >
+          <div className="pointer-events-auto">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCompactToggle}
+                    aria-label={
+                      isCompact ? "Espandi sidebar" : "Comprimi sidebar"
+                    }
+                    className="!hover:bg-transparent !focus:bg-transparent !active:bg-transparent h-8 w-8 rounded-full hover:!bg-transparent focus:!bg-transparent active:!bg-transparent"
+                  >
+                    <div className="bg-secondary h-24 w-1.5 rounded-lg" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>{isCompact ? "Espandi sidebar" : "Comprimi sidebar"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <section className="flex w-full flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4">
+      <section
+        id="content"
+        className="flex w-full flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4"
+      >
         {/* Mobile Header */}
         {isMobile && (
-          <MobileHeader
-            userData={userData}
-            onToggle={handleSidebarToggle}
-            sidebarOpen={sidebarOpen}
-          />
+          <div className="mb-4 flex items-center gap-3 md:hidden">
+            <MobileHeader
+              userData={userData}
+              onToggle={handleSidebarToggle}
+              sidebarOpen={sidebarOpen}
+            />
+          </div>
         )}
 
-        <div className="flex-1">{children}</div>
+        <div
+          className={`flex flex-grow flex-col transition-opacity duration-200 ${isTransitioning ? "opacity-50" : "opacity-100"}`}
+        >
+          {children}
+        </div>
       </section>
 
       {/* Mobile Overlay */}
-      <MobileOverlay
-        isVisible={isMobile && sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      {isMobile && (
+        <MobileOverlay
+          isVisible={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      )}
     </main>
   );
 }

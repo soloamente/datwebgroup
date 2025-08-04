@@ -20,14 +20,22 @@ interface SidebarNavLinkProps {
     description: string;
   };
   isCompact?: boolean;
+  onExpandFromCompact?: () => void;
 }
 
 export function SidebarNavLink({
   item,
   isCompact = false,
+  onExpandFromCompact,
 }: SidebarNavLinkProps) {
   const pathname = usePathname();
   const isActive = pathname === item.url;
+
+  const handleClick = () => {
+    if (isCompact && onExpandFromCompact) {
+      onExpandFromCompact();
+    }
+  };
 
   if (isCompact) {
     return (
@@ -43,6 +51,7 @@ export function SidebarNavLink({
                   stiffness: 400,
                   damping: 25,
                 }}
+                onClick={handleClick}
               >
                 <Button
                   variant={isActive ? "outline" : "ghost"}

@@ -631,7 +631,18 @@ export interface GetMyFileStatsResponse {
   message: string;
   data: FileStatsData;
 }
-// --- End Interfaces for /my-file-stats ---
+
+// --- Interfaces for /my-docs-stats-by-class ---
+export interface DocumentClassStats {
+  class_name: string;
+  document_count: number;
+}
+
+export interface GetMyDocsStatsByClassResponse {
+  message: string;
+  data: DocumentClassStats[];
+}
+// --- End Interfaces for /my-docs-stats-by-class ---
 
 // --- Nuove interfacce per recovery-username-request ---
 export interface RecoveryUsernameRequestData {
@@ -765,6 +776,19 @@ const getMyFileStats = async (): Promise<GetMyFileStatsResponse> => {
   const response = await api.get<GetMyFileStatsResponse>("/my-file-stats");
   return response.data;
 };
+
+/**
+ * Retrieves document statistics by class for the authenticated sharer.
+ * Endpoint: GET /my-docs-stats-by-class
+ * @returns {Promise<GetMyDocsStatsByClassResponse>}
+ */
+const getMyDocsStatsByClass =
+  async (): Promise<GetMyDocsStatsByClassResponse> => {
+    const response = await api.get<GetMyDocsStatsByClassResponse>(
+      "/my-docs-stats-by-class",
+    );
+    return response.data;
+  };
 
 const createViewer = async (
   data: CreateViewerData,
@@ -1280,6 +1304,7 @@ export const userService = {
   updateDocumentClass,
   createDocumentClass,
   getMyFileStats,
+  getMyDocsStatsByClass,
   changePassword: (data: ChangePasswordData) =>
     api.post("/change-password", data),
   shareDocuments,

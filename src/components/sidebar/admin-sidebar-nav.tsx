@@ -27,10 +27,12 @@ function NavSection({
   title,
   items,
   isCompact = false,
+  onExpandFromCompact,
 }: {
   title: string;
   items: NavItem[];
   isCompact?: boolean;
+  onExpandFromCompact?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -53,7 +55,12 @@ function NavSection({
         {title}
       </motion.h3>
       {items.map((item) => (
-        <SidebarNavLink key={item.title} item={item} isCompact={isCompact} />
+        <SidebarNavLink
+          key={item.title}
+          item={item}
+          isCompact={isCompact}
+          onExpandFromCompact={onExpandFromCompact}
+        />
       ))}
     </div>
   );
@@ -76,6 +83,7 @@ export function AdminSidebarNav({
         title="Generale"
         items={navigationData.navGeneral}
         isCompact={isCompact}
+        onExpandFromCompact={onExpandFromCompact}
       />
 
       {authStore.isAdmin() && (
@@ -83,6 +91,7 @@ export function AdminSidebarNav({
           title="Amministrazione"
           items={navigationData.navAdmin}
           isCompact={isCompact}
+          onExpandFromCompact={onExpandFromCompact}
         />
       )}
     </nav>

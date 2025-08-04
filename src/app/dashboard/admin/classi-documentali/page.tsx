@@ -256,7 +256,7 @@ export default function ClassiDocumentali() {
           className="bg-primary rounded-full text-white"
           onClick={handleOpenCreateDialog}
         >
-          <FilePlus className="mr-2 h-4 w-4" />
+          <FilePlus className="h-4 w-4" />
           Crea Classe Documentale
         </Button>
       </div>

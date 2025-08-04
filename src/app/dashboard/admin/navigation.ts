@@ -20,7 +20,7 @@ export const navigationData = {
       description: "Visualizza e gestisci gli sharer",
     },
     {
-      title: "Gestione Classi Documentali",
+      title: "Classi Documentali",
       url: "/dashboard/admin/classi-documentali",
       icon: DocumentIcon,
       description: "Visualizza e gestisci le classi documentali",

@@ -32,6 +32,7 @@ import {
   getPeriodDescription,
 } from "@/lib/stats-calculator";
 import { RecentSharesGrid } from "@/components/dashboard/recent-shares-grid";
+import { ChartPieDonutText } from "@/components/dashboard/chart-pie-donut";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ChartData =
@@ -88,7 +89,7 @@ const DashboardSkeleton = () => (
       <Card className="mb-6 w-full border-neutral-800 bg-neutral-900/50 text-white">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="grid gap-1.5">
-            <CardTitle className="text-2xl">Record massimi</CardTitle>
+            <CardTitle className="text-2xl">Statistiche</CardTitle>
             <CardDescription className="text-neutral-400">
               <Skeleton className="h-4 w-48 bg-neutral-700" />
             </CardDescription>
@@ -96,7 +97,7 @@ const DashboardSkeleton = () => (
           <Skeleton className="h-6 w-16 bg-neutral-700" />
         </CardHeader>
         <CardContent className="px-4">
-          <Tabs value="year" className="w-full">
+          <Tabs value={""} className="w-full">
             <div className="px-0">
               <TabsList className="grid w-auto grid-cols-3 rounded-lg bg-neutral-800/60 p-1">
                 <TabsTrigger value="week" disabled>
@@ -117,15 +118,6 @@ const DashboardSkeleton = () => (
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="flex items-end justify-between">
-          <div>
-            <Skeleton className="h-8 w-20 bg-neutral-700" />
-          </div>
-          <div className="text-right text-sm text-neutral-400">
-            <p>Ultimo aggiornamento</p>
-            <p>Oggi, --:--</p>
-          </div>
-        </CardFooter>
       </Card>
 
       {/* Additional Statistics Cards Skeleton */}
@@ -148,26 +140,83 @@ const DashboardSkeleton = () => (
         ))}
       </div>
 
-      {/* Recent Users Section Skeleton */}
+      {/* Recent Shares Section Skeleton - Updated to match grid card design */}
       <div className="grid grid-cols-1 gap-6">
         <Card className="border-neutral-800 bg-neutral-900/50 text-white">
-          <CardHeader>
-            <CardTitle className="text-xl">Condivisioni recenti</CardTitle>
+          <CardHeader className="mb-6">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl font-semibold tracking-tight">
+                Condivisioni Recenti
+              </CardTitle>
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-10 w-[200px] rounded-md bg-neutral-700" />
+                <Skeleton className="h-4 w-24 bg-neutral-700" />
+                <div className="flex gap-1">
+                  <Skeleton className="h-8 w-8 rounded-md bg-neutral-700" />
+                  <Skeleton className="h-8 w-8 rounded-md bg-neutral-700" />
+                </div>
+              </div>
+            </div>
             <CardDescription className="text-neutral-400">
-              Le tue ultime condivisioni di documenti
+              <Skeleton className="h-4 w-64 bg-neutral-700" />
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="flex items-center space-x-4">
-                  <Skeleton className="h-12 w-12 rounded-full bg-neutral-700" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4 bg-neutral-700" />
-                    <Skeleton className="h-3 w-1/2 bg-neutral-700" />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <Card
+                  key={index}
+                  className="group relative h-full cursor-pointer overflow-hidden rounded-xl border-neutral-800/50 bg-neutral-900/90 backdrop-blur-sm"
+                >
+                  {/* Status indicator skeleton */}
+                  <div className="absolute top-3 right-3 z-40">
+                    <Skeleton className="h-6 w-6 rounded-full bg-neutral-700" />
                   </div>
-                  <Skeleton className="h-6 w-20 bg-neutral-700" />
-                </div>
+
+                  <CardHeader className="mb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-4 bg-neutral-700" />
+                        <Skeleton className="h-4 w-24 bg-neutral-700" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-6 w-20 rounded-md bg-neutral-700" />
+                  </CardHeader>
+
+                  <CardContent className="space-y-4 pb-4">
+                    {/* Recipients count skeleton */}
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-12 w-12 rounded-lg bg-neutral-700" />
+                      <div>
+                        <Skeleton className="mb-1 h-8 w-8 bg-neutral-700" />
+                        <Skeleton className="h-4 w-16 bg-neutral-700" />
+                      </div>
+                    </div>
+
+                    {/* Files count skeleton */}
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-md bg-neutral-700" />
+                      <Skeleton className="h-4 w-12 bg-neutral-700" />
+                    </div>
+
+                    {/* Recipients avatars skeleton */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="flex -space-x-2">
+                          {Array.from({ length: 3 }).map((_, avatarIndex) => (
+                            <Skeleton
+                              key={avatarIndex}
+                              className="h-8 w-8 rounded-full border-2 border-neutral-800 bg-neutral-700"
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Arrow indicator skeleton */}
+                      <Skeleton className="h-8 w-8 rounded-full bg-neutral-700" />
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </CardContent>
@@ -269,7 +318,7 @@ export default function DashboardPage() {
         <Card className="mb-6 w-full border-neutral-800 bg-neutral-900/50 text-white">
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div className="grid gap-1.5">
-              <CardTitle className="text-2xl">Record massimi</CardTitle>
+              <CardTitle className="text-2xl">Statistiche</CardTitle>
               <CardDescription className="text-neutral-400">
                 {statsCalculations ? (
                   <>
@@ -281,13 +330,13 @@ export default function DashboardPage() {
                 )}
               </CardDescription>
             </div>
-            {statsCalculations && (
+            {/* {statsCalculations && (
               <p
                 className={`font-semibold ${statsCalculations.percentageChange >= 0 ? "text-green-500" : "text-red-500"}`}
               >
                 {formatPercentage(statsCalculations.percentageChange)}
               </p>
-            )}
+            )} */}
           </CardHeader>
           <CardContent className="px-4">
             <Tabs
@@ -329,7 +378,7 @@ export default function DashboardPage() {
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
-                        tickFormatter={(value: string) => value.slice(0, 6)}
+                        tickFormatter={(value: string) => value}
                       />
                       <YAxis tickLine={false} axisLine={false} tickMargin={8} />
                       <ChartTooltip
@@ -345,14 +394,14 @@ export default function DashboardPage() {
                           y2="1"
                         >
                           <stop
-                            offset="5%"
-                            stopColor="var(--color-desktop)"
-                            stopOpacity={0.8}
+                            offset="30%"
+                            stopColor="oklch(0.51 0.1733 256.59)"
+                            stopOpacity={1}
                           />
                           <stop
-                            offset="95%"
-                            stopColor="var(--color-desktop)"
-                            stopOpacity={0.1}
+                            offset="100%"
+                            stopColor="oklch(0.51 0.1733 256.59)"
+                            stopOpacity={0}
                           />
                         </linearGradient>
                       </defs>
@@ -367,21 +416,6 @@ export default function DashboardPage() {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex items-end justify-between">
-            <div>
-              {statsCalculations ? (
-                <p className="text-3xl leading-none font-bold">
-                  {formatPercentage(statsCalculations.percentageChange)}
-                </p>
-              ) : (
-                <p className="text-3xl leading-none font-bold">--</p>
-              )}
-            </div>
-            <div className="text-right text-sm text-neutral-400">
-              <p>Ultimo aggiornamento</p>
-              <p>Oggi, {lastUpdate}</p>
-            </div>
-          </CardFooter>
         </Card>
 
         {/* Additional Statistics Cards */}
@@ -445,9 +479,14 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Recent Users Section */}
-        <div className="grid grid-cols-1 gap-6">
-          <RecentSharesGrid />
+        {/* Recent Shares Section with Pie Chart */}
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex-1">
+            <RecentSharesGrid />
+          </div>
+          <div className="flex-shrink-0">
+            <ChartPieDonutText />
+          </div>
         </div>
       </div>
     </div>

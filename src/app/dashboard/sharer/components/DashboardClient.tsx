@@ -61,7 +61,7 @@ export default function DashboardClient({
       />
 
       {/* Compact Toggle Button - Fixed between sidebar and content */}
-      {!isMobile && (
+      {!isMobile && sidebarOpen && (
         <div
           className={`pointer-events-none fixed top-1/2 z-20 -translate-y-1/2 transition-all duration-300 ${
             isCompact ? "left-[calc(80px+1rem)]" : "left-[calc(300px+1rem)]"
