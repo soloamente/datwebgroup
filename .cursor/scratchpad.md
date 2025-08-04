@@ -1759,3 +1759,72 @@ The statistics now provide meaningful insights into client growth trends with ac
    - Filter data based on date fields consistently
    - Calculate percentages with proper null/zero handling
    - Update statistics whenever the underlying data changes
+
+# Authentication 401 Error Fix
+
+## Background and Motivation
+
+The user reported getting a 401 error when accessing the sharer dashboard after logging in. The issue was that the API requests were not properly authenticated because the system was trying to use server-side session cookies that didn't exist, while the authentication was stored in client-side cookies.
+
+## Key Challenges and Analysis
+
+1. The API was configured with `withCredentials: true` expecting server-side session cookies
+2. Authentication was stored in client-side cookies (`auth-storage`) that the server didn't recognize
+3. The request interceptor wasn't adding proper authentication headers
+4. The server was rejecting requests due to missing authentication
+
+## High-level Task Breakdown
+
+1. [x] Fix API request interceptor to include Authorization header
+
+   - [x] Get user from auth store
+   - [x] Add Bearer token with user ID to Authorization header
+   - Success criteria: API requests include proper authentication headers
+
+2. [x] Remove withCredentials from API configuration
+
+   - [x] Remove `withCredentials: true` from axios configuration
+   - Success criteria: API uses Authorization headers instead of cookies
+
+3. [ ] Test authentication flow
+   - [ ] Verify login works correctly
+   - [ ] Verify dashboard loads without 401 errors
+   - [ ] Verify API calls work properly
+   - Success criteria: No more 401 errors on dashboard access
+
+## Project Status Board
+
+- [x] Fix API request interceptor
+- [x] Remove withCredentials configuration
+- [ ] Test authentication flow
+
+## Executor's Feedback or Assistance Requests
+
+The authentication issue is still persisting. After investigation, I found that:
+
+1. **Server Expects Session Cookies**: The server is using `better-auth` and expects session-based authentication, not Bearer tokens
+2. **Reverted to Session Authentication**: Changed back to using `withCredentials: true` for session cookies
+3. **Added Debugging**: Added comprehensive logging to understand what's happening with authentication
+
+The current approach:
+
+- Uses `withCredentials: true` to send session cookies with requests
+- Added debugging to see what cookies are being sent and what the server responds with
+- Will analyze the server's authentication expectations
+
+**Next Steps**: Please test the login flow again and check the browser console for the debugging information. This will help us understand:
+
+- What cookies are being sent with requests
+- What the server is responding with on 401 errors
+- Whether the session cookies are being set properly during login
+
+## Lessons
+
+1. When debugging authentication issues:
+   - Check what authentication method the server expects (session vs token)
+   - Add comprehensive logging to understand the flow
+   - Verify that cookies are being set and sent properly
+2. For session-based authentication:
+   - Use `withCredentials: true` to send cookies with requests
+   - Ensure session cookies are being set during login
+   - Check server response headers for session information

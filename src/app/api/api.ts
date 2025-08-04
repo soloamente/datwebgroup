@@ -13,21 +13,58 @@ const api = axios.create({
 // Add request interceptor to include auth token
 api.interceptors.request.use((config) => {
   const authStore = useAuthStore.getState();
+  console.log(
+    "API Request Interceptor - Auth Store State:",
+    authStore.isAuthenticated(),
+  );
+  console.log("API Request Interceptor - User:", authStore.user);
+  console.log("API Request Interceptor - Cookies:", document.cookie);
+
   if (authStore.isAuthenticated()) {
-    // The token is automatically included in cookies due to withCredentials: true
+    // The session cookies are automatically included due to withCredentials: true
+    console.log(
+      "API Request Interceptor - User is authenticated, proceeding with request",
+    );
     return config;
   }
+  console.log("API Request Interceptor - User is not authenticated");
   return config;
 });
 
 // Add response interceptor to handle 401 errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(
+      "API Response Interceptor - Success:",
+      response.status,
+      response.config.url,
+    );
+    return response;
+  },
   async (error: unknown) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      const authStore = useAuthStore.getState();
-      // Clear auth state and redirect to login
-      authStore.clearAuth();
+    if (axios.isAxiosError(error)) {
+      console.log(
+        "API Response Interceptor - Error:",
+        error.response?.status,
+        error.config?.url,
+      );
+      console.log(
+        "API Response Interceptor - Error Data:",
+        error.response?.data,
+      );
+      console.log(
+        "API Response Interceptor - Error Headers:",
+        error.response?.headers,
+      );
+
+      if (error.response?.status === 401) {
+        console.log(
+          "API Response Interceptor - 401 Unauthorized, clearing auth",
+        );
+        const authStore = useAuthStore.getState();
+        // Clear auth state and redirect to login
+        authStore.clearAuth();
+      }
     }
     return Promise.reject(
       error instanceof Error ? error : new Error(String(error)),

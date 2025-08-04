@@ -13,17 +13,6 @@ const api = axios.create({
   },
 });
 
-// Create a separate axios instance for authentication that doesn't use withCredentials
-// This prevents server session cookies from interfering with our client-side auth
-const authApi = axios.create({
-  baseURL: "https://sviluppo.datasystemgroup.it/api",
-  withCredentials: false, // Don't send/receive server session cookies
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
-
 interface ApiResponse<T> {
   data: T;
   headers: {
@@ -72,63 +61,12 @@ const getMaxAgeFromResponse = (response: ApiResponse<unknown>): number => {
 
 // Helper function to set cookie with consistent settings
 const setAuthCookie = (cookieData: CookieStorage, expiresInDays = 30) => {
-  console.log(`Setting auth cookie with expiration: ${expiresInDays} days`);
-  console.log("Cookie data:", JSON.stringify(cookieData, null, 2));
-
   Cookies.set("auth-storage", JSON.stringify(cookieData), {
     path: "/",
     expires: expiresInDays,
     secure: process.env.NODE_ENV === "production", // Secure in production
     sameSite: "lax", // Protect against CSRF
   });
-
-  // Verify the cookie was set
-  const savedCookie = Cookies.get("auth-storage");
-  console.log("Saved cookie:", savedCookie);
-};
-
-// Helper function to check all cookies
-const logAllCookies = () => {
-  console.log("=== All Cookies ===");
-  const allCookies = document.cookie;
-  console.log("Document cookies:", allCookies);
-
-  // Check our specific cookie
-  const authCookie = Cookies.get("auth-storage");
-  console.log("Auth storage cookie:", authCookie);
-
-  // Check if there are any other session-related cookies
-  const allCookieNames = document.cookie
-    .split(";")
-    .map((c) => c.trim().split("=")[0]);
-  console.log("All cookie names:", allCookieNames);
-};
-
-// Helper function to validate cookie persistence
-const validateCookiePersistence = () => {
-  console.log("=== Cookie Persistence Validation ===");
-
-  // Check if our cookie exists
-  const authCookie = Cookies.get("auth-storage");
-  console.log("Auth cookie exists:", !!authCookie);
-
-  if (authCookie) {
-    try {
-      const parsed = JSON.parse(authCookie) as CookieStorage;
-      console.log("Cookie data valid:", !!parsed.state?.user);
-      console.log("User in cookie:", parsed.state?.user?.username);
-
-      // Check cookie expiration
-      const cookieExpiry = Cookies.get("auth-storage");
-      console.log("Cookie value:", cookieExpiry);
-    } catch (e) {
-      console.error("Error parsing cookie:", e);
-    }
-  }
-
-  // Check all cookies
-  const allCookies = document.cookie;
-  console.log("All cookies:", allCookies);
 };
 
 interface User {
@@ -190,8 +128,6 @@ const useAuthStore = create<AuthStore>()(
           },
         };
         setAuthCookie(cookieData, 30); // Set to 30 days
-        logAllCookies(); // Log all cookies after setting
-        validateCookiePersistence(); // Validate cookie persistence
         set({ user, error: null, isLoading: false });
       },
       clearAuth: () => {
@@ -202,15 +138,11 @@ const useAuthStore = create<AuthStore>()(
       setLoading: (loading) => set({ isLoading: loading }),
       isAuthenticated: () => {
         const cookie = Cookies.get("auth-storage");
-        console.log("Checking authentication, cookie:", cookie);
         if (!cookie) return false;
         try {
           const data = JSON.parse(cookie) as CookieStorage;
-          const isAuth = !!data.state?.user;
-          console.log("Authentication result:", isAuth);
-          return isAuth;
-        } catch (e) {
-          console.error("Error parsing auth cookie:", e);
+          return !!data.state?.user;
+        } catch {
           return false;
         }
       },
@@ -218,7 +150,7 @@ const useAuthStore = create<AuthStore>()(
       prelogin: async (email: string, username: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authApi.post("/prelogin", {
+          const response = await api.post("/prelogin", {
             email: email.trim(),
             username: username.trim(),
             password: password.trim(),
@@ -270,23 +202,17 @@ const useAuthStore = create<AuthStore>()(
       verifyOtp: async (email, otp, username, password) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authApi.post<VerifyOtpResponse>(
-            "/verify-otp",
-            {
-              email: email.trim(),
-              otp: otp.trim(),
-              username: username.trim(),
-              password: password.trim(),
-            },
-          );
+          const response = await api.post<VerifyOtpResponse>("/verify-otp", {
+            email: email.trim(),
+            otp: otp.trim(),
+            username: username.trim(),
+            password: password.trim(),
+          });
 
           console.log("Verify OTP response:", response.data);
-          console.log("Response headers:", response.headers);
-          console.log("Set-Cookie headers:", response.headers["set-cookie"]);
 
           // Get max-age from response headers
           const maxAge = getMaxAgeFromResponse(response);
-          console.log("Calculated max age from response:", maxAge, "days");
 
           // Update cookie expiration based on API response
           const userData = response.data.user;
@@ -298,8 +224,6 @@ const useAuthStore = create<AuthStore>()(
               },
             };
             setAuthCookie(cookieData, maxAge);
-            logAllCookies(); // Log all cookies after setting
-            validateCookiePersistence(); // Validate cookie persistence
             set({ user: userData, error: null, isLoading: false });
             return { success: true };
           } else {
@@ -327,7 +251,7 @@ const useAuthStore = create<AuthStore>()(
         set({ isLoading: true, error: null });
         try {
           // First, start the authentication process with prelogin
-          const preloginResponse = await authApi.post("/prelogin", {
+          const preloginResponse = await api.post("/prelogin", {
             email: username.trim(),
             username: username.trim(),
             password: password.trim(),
@@ -339,7 +263,7 @@ const useAuthStore = create<AuthStore>()(
           }
 
           // Then verify with OTP
-          const verifyResponse = await authApi.post("/verify-otp", {
+          const verifyResponse = await api.post("/verify-otp", {
             username: username.trim(),
             email: username.trim(),
             password: password.trim(),
@@ -370,8 +294,6 @@ const useAuthStore = create<AuthStore>()(
               },
             };
             setAuthCookie(cookieData, 30);
-            logAllCookies(); // Log all cookies after setting
-            validateCookiePersistence(); // Validate cookie persistence
 
             // Set auth state if login is successful and user is admin
             // eslint-disable-next-line
@@ -401,7 +323,7 @@ const useAuthStore = create<AuthStore>()(
       logout: async () => {
         set({ isLoading: true });
         try {
-          await authApi.post("/logout");
+          await api.post("/logout");
           // Clear user state regardless of API success/failure on logout
           set({ user: null, error: null, isLoading: false });
           // Also clear the cookie explicitly
