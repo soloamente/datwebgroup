@@ -39,18 +39,39 @@ function getDashboardUrl(role?: string): string {
   }
 }
 
+function isProtectedRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/change-password") ||
+    pathname.startsWith("/profile")
+  );
+}
+
+function isAuthPage(pathname: string): boolean {
+  return (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register") ||
+    pathname.startsWith("/login_token")
+  );
+}
+
 export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
   const sessionCookie = req.cookies.get("auth-storage");
 
   let user: User | null = null;
+  let isAuthenticated = false;
+
+  // Check for valid session cookie
   if (sessionCookie?.value) {
     try {
       console.log("Raw session cookie value:", sessionCookie.value);
       const parsedData = JSON.parse(sessionCookie.value) as AuthState;
       console.log("Parsed session data:", JSON.stringify(parsedData, null, 2));
+
       if (parsedData.state.user) {
         user = parsedData.state.user;
+        isAuthenticated = true;
         console.log("User found in session:", user);
       } else {
         console.log("No user found in session data");
@@ -62,52 +83,76 @@ export async function middleware(req: NextRequest) {
     console.log("No auth-storage cookie found");
   }
 
-  const isLoggedIn = !!user;
   const userRole = user?.role;
   const mustChangePassword = user?.must_change_password === 1;
   const { pathname } = nextUrl;
 
-  const isAuthPage =
-    pathname.startsWith("/login") || pathname.startsWith("/register");
+  const isAuthPageRoute = isAuthPage(pathname);
   const isChangePasswordPage = pathname.startsWith("/change-password");
+  const isProtectedRoutePath = isProtectedRoute(pathname);
 
   // --- Debugging Logs Start ---
   console.log("--- Middleware Check ---");
   console.log("Path:", pathname);
   console.log("User Role:", userRole);
-  console.log("Is Logged In:", isLoggedIn);
+  console.log("Is Authenticated:", isAuthenticated);
   console.log("Must Change Password:", mustChangePassword);
-  console.log("All cookies:", req.cookies.getAll());
+  console.log("Is Auth Page:", isAuthPageRoute);
+  console.log("Is Protected Route:", isProtectedRoutePath);
   // --- Debugging Logs End ---
 
-  if (isLoggedIn && mustChangePassword) {
+  // Case 1: User is authenticated but must change password
+  if (isAuthenticated && mustChangePassword) {
     if (!isChangePasswordPage) {
+      console.log("Redirecting to change password page");
       return NextResponse.redirect(new URL("/change-password", nextUrl.origin));
     }
     return NextResponse.next();
   }
 
-  if (isLoggedIn && !mustChangePassword && isChangePasswordPage) {
+  // Case 2: User is authenticated, doesn't need to change password, but is on change password page
+  if (isAuthenticated && !mustChangePassword && isChangePasswordPage) {
     const dashboardUrl = getDashboardUrl(userRole);
+    console.log("Redirecting to dashboard:", dashboardUrl);
     return NextResponse.redirect(new URL(dashboardUrl, nextUrl.origin));
   }
 
-  if (isLoggedIn && isAuthPage) {
+  // Case 3: User is authenticated and trying to access auth pages
+  if (isAuthenticated && isAuthPageRoute) {
     const dashboardUrl = getDashboardUrl(userRole);
+    console.log("Redirecting authenticated user to dashboard:", dashboardUrl);
     return NextResponse.redirect(new URL(dashboardUrl, nextUrl.origin));
   }
 
-  const isProtectedRoute = pathname.startsWith("/dashboard");
-  if (isProtectedRoute && !isLoggedIn) {
+  // Case 4: User is not authenticated and trying to access protected routes
+  if (!isAuthenticated && isProtectedRoutePath) {
+    console.log("Redirecting unauthenticated user to login");
     return NextResponse.redirect(new URL("/login", nextUrl.origin));
   }
 
-  if (isLoggedIn && isProtectedRoute) {
-    const requiredRole = pathname.split("/")[2];
+  // Case 5: User is authenticated and accessing protected routes - check role permissions
+  if (isAuthenticated && isProtectedRoutePath) {
+    const pathSegments = pathname.split("/");
+    const requiredRole = pathSegments[2]; // /dashboard/[role]/...
+
     if (requiredRole && userRole !== requiredRole) {
       const dashboardUrl = getDashboardUrl(userRole);
+      console.log(
+        `User role ${userRole} doesn't match required role ${requiredRole}, redirecting to:`,
+        dashboardUrl,
+      );
       return NextResponse.redirect(new URL(dashboardUrl, nextUrl.origin));
     }
+  }
+
+  // Case 6: User is not authenticated and accessing public routes - allow
+  if (!isAuthenticated && !isProtectedRoutePath) {
+    return NextResponse.next();
+  }
+
+  // Case 7: User is authenticated and accessing allowed routes - allow
+  if (isAuthenticated && !isAuthPageRoute) {
+    return NextResponse.next();
   }
 
   return NextResponse.next();
