@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import axios, { AxiosResponse } from "axios";
@@ -338,8 +340,10 @@ const useAuthStore = create<AuthStore>()(
 
           console.log("Prelogin by token response:", response.data);
 
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           if (response.data?.success === false) {
             set({
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
               error: response.data?.message || "Token non valido",
               isLoading: false,
             });
