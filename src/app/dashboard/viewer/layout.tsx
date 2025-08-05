@@ -50,6 +50,7 @@ export default function ViewerLayout({ children }: ViewerLayoutProps) {
   }, [authStore, router]);
 
   const handleLogout = () => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     authStore.logout();
     void router.push("/login");
   };
