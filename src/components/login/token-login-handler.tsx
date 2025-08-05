@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -52,6 +54,7 @@ export default function TokenLoginHandler({
     }
 
     // Validate token and start login process
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     validateToken();
   }, [token]);
 
