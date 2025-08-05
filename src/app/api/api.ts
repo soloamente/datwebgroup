@@ -1276,6 +1276,70 @@ const shareDocuments = async (
   }
 };
 
+// --- Token-based login interfaces and functions ---
+
+export interface PreloginByTokenResponse {
+  success: boolean;
+  message: string;
+  username?: string;
+}
+
+export interface VerifyOtpByTokenRequest {
+  username: string;
+  otp: string;
+}
+
+export interface VerifyOtpByTokenResponse {
+  success: boolean;
+  message: string;
+  user?: {
+    id: number;
+    username: string;
+    nominativo: string;
+    email: string;
+    codice_fiscale: string | null;
+    partita_iva: string | null;
+    role: string;
+    active: number;
+    sharer_id: number | null;
+    created_at: string;
+    updated_at: string;
+    must_change_password: number;
+    avatar?: string;
+  };
+}
+
+/**
+ * Initiates login process using a permanent token.
+ * Validates the token and sends OTP to the user's email.
+ * Endpoint: GET /api/prelogin-by-token
+ */
+const preloginByToken = async (
+  token: string,
+): Promise<PreloginByTokenResponse> => {
+  const response = await api.get<PreloginByTokenResponse>(
+    "/prelogin-by-token",
+    {
+      params: { token },
+    },
+  );
+  return response.data;
+};
+
+/**
+ * Verifies OTP and completes authentication using token-based login.
+ * Endpoint: POST /api/verify-otp-by-token
+ */
+const verifyOtpByToken = async (
+  data: VerifyOtpByTokenRequest,
+): Promise<VerifyOtpByTokenResponse> => {
+  const response = await api.post<VerifyOtpByTokenResponse>(
+    "/verify-otp-by-token",
+    data,
+  );
+  return response.data;
+};
+
 export const userService = {
   getSharers,
   toggleSharerStatus,
@@ -1308,6 +1372,9 @@ export const userService = {
   changePassword: (data: ChangePasswordData) =>
     api.post("/change-password", data),
   shareDocuments,
+  // Add token-based login functions
+  preloginByToken,
+  verifyOtpByToken,
 };
 
 export const batchService = {

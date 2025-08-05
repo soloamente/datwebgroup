@@ -110,6 +110,14 @@ interface AuthStore {
     password: string,
     otp: string,
   ) => Promise<{ success: boolean; message?: string }>;
+  // Token-based authentication methods
+  preloginByToken: (
+    token: string,
+  ) => Promise<{ success: boolean; message?: string; username?: string }>;
+  verifyOtpByToken: (
+    username: string,
+    otp: string,
+  ) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   hasRole: (role: string) => boolean;
@@ -315,6 +323,90 @@ const useAuthStore = create<AuthStore>()(
             message = error.response?.data?.message || message;
           }
           console.error("Admin Login error:", error);
+          set({ user: null, error: message, isLoading: false });
+          return { success: false, message };
+        }
+      },
+
+      // Token-based authentication methods
+      preloginByToken: async (token: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await api.get("/prelogin-by-token", {
+            params: { token },
+          });
+
+          console.log("Prelogin by token response:", response.data);
+
+          if (response.data?.success === false) {
+            set({
+              error: response.data?.message || "Token non valido",
+              isLoading: false,
+            });
+            return {
+              success: false,
+              message: response.data?.message || "Token non valido",
+            };
+          }
+
+          set({ isLoading: false });
+          return {
+            success: true,
+            message: response.data?.message,
+            username: response.data?.username,
+          };
+        } catch (error) {
+          let message = "Errore durante la validazione del token.";
+          if (axios.isAxiosError(error)) {
+            message = error.response?.data?.message || message;
+          }
+          console.error("Prelogin by token error:", error);
+          set({ error: message, isLoading: false });
+          return { success: false, message };
+        }
+      },
+
+      verifyOtpByToken: async (username: string, otp: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await api.post("/verify-otp-by-token", {
+            username: username.trim(),
+            otp: otp.trim(),
+          });
+
+          console.log("Verify OTP by token response:", response.data);
+
+          // Get max-age from response headers
+          const maxAge = getMaxAgeFromResponse(response);
+
+          // Update cookie expiration based on API response
+          const userData = response.data.user;
+          if (userData && typeof userData === "object" && "id" in userData) {
+            // Set auth cookie with max-age from API
+            const cookieData: CookieStorage = {
+              state: {
+                user: userData,
+              },
+            };
+            setAuthCookie(cookieData, maxAge);
+            set({ user: userData, error: null, isLoading: false });
+            return { success: true };
+          } else {
+            console.error(
+              "Verify OTP by token: User data missing in response",
+              response.data,
+            );
+            const message = "Dati utente non ricevuti dopo la verifica OTP.";
+            set({ user: null, error: message, isLoading: false });
+            return { success: false, message };
+          }
+        } catch (error) {
+          let message = "Errore durante la verifica OTP.";
+          if (axios.isAxiosError(error) && error.response?.data) {
+            const errorData = error.response.data as ApiErrorResponse;
+            message = errorData.message || message;
+          }
+          console.error("Verify OTP by token error:", error);
           set({ user: null, error: message, isLoading: false });
           return { success: false, message };
         }
