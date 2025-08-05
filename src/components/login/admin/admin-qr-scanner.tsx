@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader } from "@zxing/browser";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface AdminQrScannerProps {
   onScan: (data: string) => void;
@@ -23,7 +24,55 @@ export default function AdminQrScanner({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const animationFrameId: number | null = null;
+  const router = useRouter();
+
+  // Function to extract token from URL
+  const extractTokenFromUrl = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.searchParams.get("token");
+    } catch {
+      return null;
+    }
+  };
+
+  // Function to handle QR scan result
+  const handleQrScan = async (qrText: string) => {
+    if (isProcessing) return; // Prevent multiple processing
+
+    setIsProcessing(true);
+
+    try {
+      // Check if the QR code contains a URL
+      if (qrText.startsWith("http://") || qrText.startsWith("https://")) {
+        const token = extractTokenFromUrl(qrText);
+
+        if (token) {
+          // Valid URL with token found
+          toast.success("QR Code valido rilevato! Reindirizzamento...");
+
+          // Redirect to login page with token
+          router.push(`/login?token=${encodeURIComponent(token)}`);
+        } else {
+          // URL without token
+          toast.error("QR Code non valido: token mancante nell'URL");
+          onError("QR Code non valido: token mancante nell'URL");
+        }
+      } else {
+        // Direct token or other format
+        toast.error("QR Code non valido: formato non supportato");
+        onError("QR Code non valido: formato non supportato");
+      }
+    } catch (error) {
+      console.error("Error processing QR code:", error);
+      toast.error("Errore durante l'elaborazione del QR Code");
+      onError("Errore durante l'elaborazione del QR Code");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     if (disabled) return; // Do not start scanning if disabled
@@ -50,7 +99,8 @@ export default function AdminQrScanner({
           (result, err) => {
             if (result) {
               const qrText = result.getText();
-              onScan(qrText);
+              // Use our custom handler instead of the original onScan
+              void handleQrScan(qrText);
               drawBox(result.getResultPoints());
             }
             // Do NOT set error for normal scan misses!
@@ -78,7 +128,7 @@ export default function AdminQrScanner({
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [onScan, disabled]); // Remove onError from dependencies since we're not using it anymore
+  }, [disabled]); // Remove onScan and onError from dependencies since we're handling it internally
   // eslint-disable-next-line
   function drawBox(points?: any[]) {
     const canvas = canvasRef.current;
@@ -178,6 +228,16 @@ export default function AdminQrScanner({
         {/* Canvas for optional QR box (kept for future, but hidden for minimalism) */}
         <canvas ref={canvasRef} className="hidden" />
       </div>
+
+      {/* Processing indicator */}
+      {isProcessing && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50">
+          <div className="flex flex-col items-center gap-2 rounded-lg bg-white/90 p-4">
+            <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+            <p className="text-sm font-medium">Elaborazione QR Code...</p>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
