@@ -55,11 +55,28 @@ export default function AdminOtpForm({
       );
 
       if (result.success) {
-        if (authStore.user?.must_change_password === 1) {
-          router.push("/change-password");
-        } else {
-          router.push("/dashboard/admin");
-        }
+        console.log("OTP verification successful");
+        console.log("Auth store user:", authStore.user);
+        console.log("Auth store isAuthenticated:", authStore.isAuthenticated());
+
+        // Check session status
+        const sessionStatus = authStore.checkSessionStatus();
+        console.log("Session status check:", sessionStatus);
+
+        // Wait a moment for state to update
+        setTimeout(() => {
+          console.log("After timeout - Auth store user:", authStore.user);
+          console.log(
+            "After timeout - Auth store isAuthenticated:",
+            authStore.isAuthenticated(),
+          );
+
+          if (authStore.user?.must_change_password === 1) {
+            router.push("/change-password");
+          } else {
+            router.push("/dashboard/admin");
+          }
+        }, 100);
       } else {
         setError(
           result.message ??

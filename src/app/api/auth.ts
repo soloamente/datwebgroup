@@ -72,11 +72,20 @@ const isMobileDevice = (): boolean => {
 // Helper function to set cookie with consistent settings
 const setAuthCookie = (cookieData: CookieStorage, expiresInDays = 30) => {
   const isMobile = isMobileDevice();
+  const isHttps =
+    typeof window !== "undefined" && window.location.protocol === "https:";
+
+  console.log("Setting cookie with settings:", {
+    isMobile,
+    isHttps,
+    protocol:
+      typeof window !== "undefined" ? window.location.protocol : "unknown",
+  });
 
   Cookies.set("auth-storage", JSON.stringify(cookieData), {
     path: "/",
     expires: expiresInDays,
-    secure: true, // Always secure for better mobile compatibility
+    secure: isHttps, // Only secure if HTTPS
     sameSite: isMobile ? "lax" : "strict", // Use "lax" for mobile to avoid issues
   });
 };
@@ -134,6 +143,7 @@ interface AuthStore {
   isAdmin: () => boolean;
   hasRole: (role: string) => boolean;
   verifyAndRestoreSession: () => boolean;
+  checkSessionStatus: () => boolean;
 }
 
 const useAuthStore = create<AuthStore>()(
@@ -231,12 +241,16 @@ const useAuthStore = create<AuthStore>()(
           });
 
           console.log("Verify OTP response:", response.data);
+          console.log("Verify OTP response headers:", response.headers);
 
           // Get max-age from response headers
           const maxAge = getMaxAgeFromResponse(response);
+          console.log("Max age from response:", maxAge);
 
           // Update cookie expiration based on API response
           const userData = response.data.user;
+          console.log("User data from response:", userData);
+
           if (userData && typeof userData === "object" && "id" in userData) {
             // Set auth cookie with max-age from API
             const cookieData: CookieStorage = {
@@ -244,8 +258,15 @@ const useAuthStore = create<AuthStore>()(
                 user: userData,
               },
             };
+            console.log("Setting auth cookie with data:", cookieData);
             setAuthCookie(cookieData, maxAge);
+
+            // Verify cookie was set
+            const verifyCookie = Cookies.get("auth-storage");
+            console.log("Cookie after setting:", verifyCookie);
+
             set({ user: userData, error: null, isLoading: false });
+            console.log("Auth state updated, user:", userData);
             return { success: true };
           } else {
             console.error(
@@ -467,6 +488,24 @@ const useAuthStore = create<AuthStore>()(
           }
         } catch (e) {
           console.error("Failed to restore session from cookie:", e);
+        }
+        return false;
+      },
+
+      // Method to check current session status
+      checkSessionStatus: () => {
+        const cookie = Cookies.get("auth-storage");
+        console.log("Current auth-storage cookie:", cookie);
+
+        if (cookie) {
+          try {
+            const data = JSON.parse(cookie) as CookieStorage;
+            console.log("Parsed cookie data:", data);
+            console.log("User in cookie:", data.state?.user);
+            return !!data.state?.user;
+          } catch (e) {
+            console.error("Failed to parse current cookie:", e);
+          }
         }
         return false;
       },

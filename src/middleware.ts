@@ -59,6 +59,14 @@ export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
   const sessionCookie = req.cookies.get("auth-storage");
 
+  console.log("=== MIDDLEWARE DEBUG ===");
+  console.log("Request URL:", req.url);
+  console.log("All cookies:", req.cookies.getAll());
+  console.log("Session cookie found:", !!sessionCookie);
+  if (sessionCookie) {
+    console.log("Session cookie value length:", sessionCookie.value.length);
+  }
+
   let user: User | null = null;
   let isAuthenticated = false;
 
@@ -78,6 +86,7 @@ export async function middleware(req: NextRequest) {
       }
     } catch (e) {
       console.error("Failed to parse session cookie:", e);
+      console.error("Cookie value that failed to parse:", sessionCookie.value);
     }
   } else {
     console.log("No auth-storage cookie found");
@@ -152,9 +161,14 @@ export async function middleware(req: NextRequest) {
 
   // Case 7: User is authenticated and accessing allowed routes - allow
   if (isAuthenticated && !isAuthPageRoute) {
+    console.log(
+      "User is authenticated and accessing allowed route - allowing access",
+    );
     return NextResponse.next();
   }
 
+  // Default case - allow
+  console.log("Default case - allowing access");
   return NextResponse.next();
 }
 
