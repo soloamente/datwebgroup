@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 import TokenOtpForm from "./token-otp-form";
 import Aurora from "@/components/backgrounds/aurora";
+import type useAuthStore from "@/app/api/auth";
 
 type TokenLoginStep = "validating" | "otpInput";
 
@@ -24,7 +25,7 @@ interface TokenLoginRightSideProps {
   isLoading: boolean;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   onOtpSuccess: (data: { success: boolean; message?: string }) => void;
-  authStore: any;
+  authStore: ReturnType<typeof useAuthStore>;
   token: string | null;
 }
 

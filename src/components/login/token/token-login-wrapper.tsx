@@ -45,6 +45,7 @@ export default function TokenLoginWrapper() {
     }
 
     // Validate token and start login process
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     validateToken();
   }, [token]);
 
@@ -77,6 +78,7 @@ export default function TokenLoginWrapper() {
       // Authentication successful, redirect will be handled by useEffect
       setError(null);
     } else {
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       setError(data.message || "Verifica OTP fallita");
     }
   };
