@@ -2019,11 +2019,11 @@ The QR scanner camera feed should now display properly. The fixes ensure:
 
 ## Current Status
 
-User reports "now no cookie is saved" after recent changes to handle Laravel session cookies.
+The `auth-storage` cookie is now being saved correctly, but the Laravel backend is not setting the required `laravel_session` and `XSRF-TOKEN` cookies. This causes the backend to return 401 "Unauthenticated" even though the frontend has valid user data.
 
 ## Problem Analysis
 
-The issue appears to be in the cookie saving mechanism. Recent changes to handle Laravel session cookies may have inadvertently broken the basic cookie saving functionality.
+The issue is that the Laravel backend requires `laravel_session` and `XSRF-TOKEN` cookies to recognize the user as authenticated, but these cookies are not being set by the backend during the login process.
 
 ## Debugging Approach
 
@@ -2098,3 +2098,24 @@ The main issue was that Zustand persist's `setItem` function was looking for use
 ## Status: FIXED
 
 The cookie saving mechanism should now work correctly. The user should test login again to confirm the fix.
+
+## Current Status Update
+
+The `auth-storage` cookie is now being saved correctly, but the Laravel backend is not setting the required `laravel_session` and `XSRF-TOKEN` cookies. This causes the backend to return 401 "Unauthenticated" even though the frontend has valid user data.
+
+### Current Issue:
+
+- ✅ `auth-storage` cookie is being set and maintained
+- ❌ `laravel_session` cookie is missing (backend not setting it)
+- ❌ `XSRF-TOKEN` cookie is missing (backend not setting it)
+- ❌ Backend returns 401 "Unauthenticated" because it requires these cookies
+
+### Workaround Attempted:
+
+Added code to manually set `laravel_session` and `XSRF-TOKEN` cookies on the frontend when they're missing. This is not ideal but might work as a temporary solution.
+
+### Next Steps:
+
+1. Test if the manual cookie setting resolves the 401 errors
+2. If not, investigate if the backend is using a different authentication mechanism
+3. Consider modifying the backend to properly set Laravel session cookies

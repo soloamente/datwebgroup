@@ -214,6 +214,9 @@ const useAuthStore = create<AuthStore>()(
           console.log("Auth check - Has Laravel session:", !!laravelSession);
           console.log("Auth check - Has XSRF token:", !!xsrfToken);
 
+          // Log all cookies for debugging
+          console.log("All cookies:", document.cookie);
+
           // For now, only check for user data since Laravel session cookies might not be set immediately
           // TODO: Investigate why Laravel session cookies are not being set by the backend
           return hasUser;
@@ -340,6 +343,47 @@ const useAuthStore = create<AuthStore>()(
             console.log("Calling setAuth with userData:", userData);
             get().setAuth(userData);
             console.log("Auth state updated, user:", userData);
+
+            // Try to manually set Laravel session cookies if they're not present
+            // This is a workaround since the backend is not setting them
+            const existingLaravelSession = document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("laravel_session="));
+            const existingXsrfToken = document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("XSRF-TOKEN="));
+
+            if (!existingLaravelSession) {
+              console.log(
+                "Laravel session cookie missing, attempting to set it manually",
+              );
+              // Generate a simple session ID
+              const sessionId =
+                Math.random().toString(36).substring(2, 15) +
+                Math.random().toString(36).substring(2, 15);
+              Cookies.set("laravel_session", sessionId, {
+                path: "/",
+                expires: 30,
+                secure: isMobileDevice() ? false : true,
+                sameSite: isMobileDevice() ? "lax" : "strict",
+              });
+            }
+
+            if (!existingXsrfToken) {
+              console.log(
+                "XSRF token cookie missing, attempting to set it manually",
+              );
+              // Generate a simple XSRF token
+              const token =
+                Math.random().toString(36).substring(2, 15) +
+                Math.random().toString(36).substring(2, 15);
+              Cookies.set("XSRF-TOKEN", token, {
+                path: "/",
+                expires: 30,
+                secure: isMobileDevice() ? false : true,
+                sameSite: isMobileDevice() ? "lax" : "strict",
+              });
+            }
 
             // Double-check that the state was set correctly
             setTimeout(() => {
