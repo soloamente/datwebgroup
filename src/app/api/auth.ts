@@ -214,7 +214,9 @@ const useAuthStore = create<AuthStore>()(
           console.log("Auth check - Has Laravel session:", !!laravelSession);
           console.log("Auth check - Has XSRF token:", !!xsrfToken);
 
-          return hasUser && !!laravelSession;
+          // For now, only check for user data since Laravel session cookies might not be set immediately
+          // TODO: Investigate why Laravel session cookies are not being set by the backend
+          return hasUser;
         } catch {
           return false;
         }
@@ -640,11 +642,13 @@ const useAuthStore = create<AuthStore>()(
             console.log("Parsed value in setItem:", parsedValue);
 
             // Only set cookie if we have valid user data
-            if (parsedValue.user?.id) {
-              console.log("Valid user data found, setting auth cookie");
+            if (parsedValue.state?.user?.id) {
+              console.log(
+                "Valid user data found in setItem, setting auth cookie",
+              );
               const cookieData: CookieStorage = {
                 state: {
-                  user: parsedValue.user,
+                  user: parsedValue.state.user,
                 },
               };
               setAuthCookie(cookieData, 30);
