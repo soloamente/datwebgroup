@@ -153,7 +153,7 @@ const useAuthStore = create<AuthStore>()(
       error: null,
       isLoading: false,
       setAuth: (user) => {
-        if (user && user.id) {
+        if (user?.id) {
           const cookieData: CookieStorage = {
             state: {
               user: user as User,
@@ -536,7 +536,7 @@ const useAuthStore = create<AuthStore>()(
           try {
             const parsedValue = JSON.parse(value);
             // Only persist if we have actual user data, not null
-            if (parsedValue.user && parsedValue.user.id) {
+            if (parsedValue.user?.id) {
               const cookieData: CookieStorage = {
                 state: {
                   user: parsedValue.user,
