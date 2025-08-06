@@ -21,11 +21,33 @@ api.interceptors.request.use((config) => {
   console.log("API Request Interceptor - User:", authStore.user);
   console.log("API Request Interceptor - Cookies:", document.cookie);
 
+  // Check for Laravel session cookies
+  const laravelSession = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("laravel_session="));
+  const xsrfToken = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("XSRF-TOKEN="));
+
+  console.log("API Request Interceptor - Laravel Session:", !!laravelSession);
+  console.log("API Request Interceptor - XSRF Token:", !!xsrfToken);
+
   if (authStore.isAuthenticated()) {
     // The session cookies are automatically included due to withCredentials: true
     console.log(
       "API Request Interceptor - User is authenticated, proceeding with request",
     );
+
+    // Add XSRF token to headers if available
+    if (xsrfToken) {
+      const tokenValue = xsrfToken.split("=")[1];
+      if (tokenValue) {
+        const token = decodeURIComponent(tokenValue);
+        config.headers["X-XSRF-TOKEN"] = token;
+        console.log("API Request Interceptor - Added XSRF token to headers");
+      }
+    }
+
     return config;
   }
   console.log("API Request Interceptor - User is not authenticated");

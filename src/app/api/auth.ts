@@ -144,6 +144,12 @@ interface AuthStore {
   hasRole: (role: string) => boolean;
   verifyAndRestoreSession: () => boolean;
   checkSessionStatus: () => boolean;
+  checkLaravelSession: () => {
+    hasLaravelSession: boolean;
+    hasXSRFToken: boolean;
+    laravelSession: string | undefined;
+    xsrfToken: string | undefined;
+  };
 }
 
 const useAuthStore = create<AuthStore>()(
@@ -178,7 +184,21 @@ const useAuthStore = create<AuthStore>()(
         if (!cookie) return false;
         try {
           const data = JSON.parse(cookie) as CookieStorage;
-          return !!data.state?.user;
+          const hasUser = !!data.state?.user;
+
+          // Also check for Laravel session cookies
+          const laravelSession = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("laravel_session="));
+          const xsrfToken = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("XSRF-TOKEN="));
+
+          console.log("Auth check - Has user:", hasUser);
+          console.log("Auth check - Has Laravel session:", !!laravelSession);
+          console.log("Auth check - Has XSRF token:", !!xsrfToken);
+
+          return hasUser && !!laravelSession;
         } catch {
           return false;
         }
@@ -249,6 +269,22 @@ const useAuthStore = create<AuthStore>()(
           console.log("Verify OTP response:", response.data);
           console.log("Verify OTP response headers:", response.headers);
 
+          // Check for Laravel session cookies in response headers
+          const setCookieHeaders = response.headers["set-cookie"];
+          if (setCookieHeaders) {
+            console.log("Set-Cookie headers from response:", setCookieHeaders);
+
+            // Parse and log Laravel session cookies
+            setCookieHeaders.forEach((cookieHeader) => {
+              if (cookieHeader.includes("laravel_session")) {
+                console.log("Laravel session cookie found:", cookieHeader);
+              }
+              if (cookieHeader.includes("XSRF-TOKEN")) {
+                console.log("XSRF token cookie found:", cookieHeader);
+              }
+            });
+          }
+
           // Get max-age from response headers
           const maxAge = getMaxAgeFromResponse(response);
           console.log("Max age from response:", maxAge);
@@ -270,6 +306,17 @@ const useAuthStore = create<AuthStore>()(
             // Verify cookie was set
             const verifyCookie = Cookies.get("auth-storage");
             console.log("Cookie after setting:", verifyCookie);
+
+            // Check Laravel session cookies after login
+            const laravelSession = document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("laravel_session="));
+            const xsrfToken = document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("XSRF-TOKEN="));
+
+            console.log("Laravel session after login:", !!laravelSession);
+            console.log("XSRF token after login:", !!xsrfToken);
 
             set({ user: userData, error: null, isLoading: false });
             console.log("Auth state updated, user:", userData);
@@ -519,12 +566,48 @@ const useAuthStore = create<AuthStore>()(
             const data = JSON.parse(cookie) as CookieStorage;
             console.log("Parsed cookie data:", data);
             console.log("User in cookie:", data.state?.user);
-            return !!data.state?.user;
+
+            // Check Laravel session cookies
+            const laravelSession = document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("laravel_session="));
+            const xsrfToken = document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("XSRF-TOKEN="));
+
+            console.log("Laravel session cookie:", !!laravelSession);
+            console.log("XSRF token cookie:", !!xsrfToken);
+
+            return !!data.state?.user && !!laravelSession;
           } catch (e) {
             console.error("Failed to parse current cookie:", e);
           }
         }
         return false;
+      },
+
+      // Method to check Laravel session cookies specifically
+      checkLaravelSession: () => {
+        const laravelSession = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("laravel_session="));
+        const xsrfToken = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("XSRF-TOKEN="));
+
+        console.log("Laravel session check:", {
+          hasLaravelSession: !!laravelSession,
+          hasXSRFToken: !!xsrfToken,
+          laravelSession: laravelSession,
+          xsrfToken: xsrfToken,
+        });
+
+        return {
+          hasLaravelSession: !!laravelSession,
+          hasXSRFToken: !!xsrfToken,
+          laravelSession,
+          xsrfToken,
+        };
       },
     }),
     {

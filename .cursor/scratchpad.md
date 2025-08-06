@@ -10,6 +10,7 @@ The user reported that login sessions are not maintained on mobile devices, whil
 2. SameSite attribute was too restrictive for mobile browsers
 3. Secure flag was only enabled in production, causing issues in development
 4. No mobile-specific session management
+5. **NEW**: Laravel backend requires `laravel_session` and `XSRF-TOKEN` cookies for proper authentication
 
 ## High-level Task Breakdown
 
@@ -18,53 +19,62 @@ The user reported that login sessions are not maintained on mobile devices, whil
    - [x] Set `secure: true` for all environments (not just production)
    - [x] Use `sameSite: "lax"` for mobile devices and `"strict"` for desktop
    - [x] Add mobile device detection
-   - Success criteria: Cookies work consistently across all devices
+   - Success criteria: Cookies work properly on mobile devices
 
-2. [x] Add mobile session management
+2. [x] Add Laravel session cookie management
 
-   - [x] Create `useMobileSession` hook for mobile-specific session handling
-   - [x] Add `verifyAndRestoreSession` method to auth store
-   - [x] Implement periodic session checks for mobile devices
-   - Success criteria: Mobile sessions persist and restore correctly
+   - [x] Update request interceptor to check for Laravel session cookies
+   - [x] Add XSRF token to request headers automatically
+   - [x] Update `isAuthenticated` to require both our cookie and Laravel session
+   - [x] Add debugging for Laravel session cookies
+   - Success criteria: Both our auth cookie and Laravel session cookies are maintained
 
-3. [x] Add visibility change handling
-
-   - [x] Detect when app becomes visible again on mobile
-   - [x] Restore session when app comes back to foreground
-   - Success criteria: Session is maintained when switching between apps
-
-4. [x] Integrate mobile session provider
-   - [x] Create `MobileSessionProvider` component
-   - [x] Add to main layout for automatic mobile session management
-   - Success criteria: Mobile session management is automatic and transparent
+3. [x] Fix infinite loading issue
+   - [x] Remove MobileSessionProvider from layout
+   - [x] Fix useMobileSession hook initialization
+   - Success criteria: Site loads normally without infinite loading
 
 ## Project Status Board
 
-- [x] Fix cookie settings for mobile compatibility
-- [x] Add mobile session management
-- [x] Add visibility change handling
-- [x] Integrate mobile session provider
+- [x] Fix cookie settings for mobile devices
+- [x] Add Laravel session cookie handling
+- [x] Fix infinite loading issue
+- [ ] Test login flow on mobile devices
+- [ ] Verify session persistence across page refreshes
+- [ ] Test logout functionality
+
+## Current Status / Progress Tracking
+
+**Latest Update**: Added Laravel session cookie management to ensure proper authentication with Laravel backend.
+
+**Key Changes Made**:
+
+1. Updated request interceptor to check for `laravel_session` and `XSRF-TOKEN` cookies
+2. Modified `isAuthenticated` function to require both our auth cookie and Laravel session
+3. Added automatic XSRF token inclusion in request headers
+4. Enhanced debugging to track Laravel session cookies
+
+**Next Steps**: Test the login flow to ensure Laravel session cookies are properly maintained.
 
 ## Executor's Feedback or Assistance Requests
 
-The mobile session persistence issue has been fixed with the following improvements:
+The user reported that the site was loading infinitely after the initial fixes. This was resolved by removing the MobileSessionProvider from the layout.
 
-1. **Cookie Security**: Set `secure: true` for all environments to ensure HTTPS-only cookies
-2. **SameSite Optimization**: Use `"lax"` for mobile devices to avoid browser restrictions
-3. **Mobile Detection**: Added device detection to apply mobile-specific settings
-4. **Session Restoration**: Added `verifyAndRestoreSession` method to restore sessions from cookies
-5. **Periodic Checks**: Implemented 30-second interval checks for mobile session validity
-6. **Visibility Handling**: Added event listener for when app becomes visible again
-7. **Provider Integration**: Created `MobileSessionProvider` for automatic session management
+Now the user has reported that while the `auth-storage` cookie is maintained, the Laravel backend requires `laravel_session` and `XSRF-TOKEN` cookies for proper authentication. The latest changes address this by:
 
-The main issue was that cookies weren't being set with proper security flags for mobile devices, and there was no mechanism to restore sessions when they were lost.
+1. Checking for Laravel session cookies in the request interceptor
+2. Adding XSRF tokens to request headers automatically
+3. Requiring both our auth cookie and Laravel session for authentication
+4. Adding comprehensive debugging for Laravel session cookies
+
+Ready for testing to verify that Laravel session cookies are properly maintained.
 
 ## Lessons
 
-1. **Mobile Cookie Handling**: Always use `secure: true` for authentication cookies, even in development
-2. **SameSite Strategy**: Use `"lax"` for mobile devices to avoid browser restrictions while maintaining security
-3. **Session Persistence**: Implement periodic checks and restoration mechanisms for mobile devices
-4. **Visibility API**: Use the Page Visibility API to handle app switching on mobile devices
+- Mobile devices require different cookie settings (sameSite: "lax" vs "strict")
+- Laravel backends require both session cookies and XSRF tokens for authentication
+- Zustand persist can conflict with manual cookie management
+- Infinite loading can be caused by providers that don't initialize properly
 
 # Layout Component Split Plan
 
