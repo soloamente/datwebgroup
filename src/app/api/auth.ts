@@ -75,19 +75,29 @@ const setAuthCookie = (cookieData: CookieStorage, expiresInDays = 30) => {
   const isHttps =
     typeof window !== "undefined" && window.location.protocol === "https:";
 
-  console.log("Setting cookie with settings:", {
+  console.log("setAuthCookie called with:", {
+    cookieData,
+    expiresInDays,
     isMobile,
     isHttps,
     protocol:
       typeof window !== "undefined" ? window.location.protocol : "unknown",
   });
 
-  Cookies.set("auth-storage", JSON.stringify(cookieData), {
-    path: "/",
-    expires: expiresInDays,
-    secure: isHttps, // Only secure if HTTPS
-    sameSite: isMobile ? "lax" : "strict", // Use "lax" for mobile to avoid issues
-  });
+  try {
+    Cookies.set("auth-storage", JSON.stringify(cookieData), {
+      path: "/",
+      expires: expiresInDays,
+      secure: isHttps, // Only secure if HTTPS
+      sameSite: isMobile ? "lax" : "strict", // Use "lax" for mobile to avoid issues
+    });
+
+    // Verify the cookie was set
+    const verifyCookie = Cookies.get("auth-storage");
+    console.log("Cookie set successfully:", verifyCookie);
+  } catch (error) {
+    console.error("Error setting auth cookie:", error);
+  }
 };
 
 interface User {
@@ -159,12 +169,18 @@ const useAuthStore = create<AuthStore>()(
       error: null,
       isLoading: false,
       setAuth: (user) => {
+        console.log("setAuth called with user:", user);
+
         if (user?.id) {
           const cookieData: CookieStorage = {
             state: {
               user: user as User,
             },
           };
+          console.log(
+            "Setting auth cookie from setAuth with data:",
+            cookieData,
+          );
           setAuthCookie(cookieData, 30); // Set to 30 days
           set({ user, error: null, isLoading: false });
           console.log("Auth set successfully with user:", user);
@@ -318,7 +334,9 @@ const useAuthStore = create<AuthStore>()(
             console.log("Laravel session after login:", !!laravelSession);
             console.log("XSRF token after login:", !!xsrfToken);
 
-            set({ user: userData, error: null, isLoading: false });
+            // Use setAuth to ensure proper cookie handling
+            console.log("Calling setAuth with userData:", userData);
+            get().setAuth(userData);
             console.log("Auth state updated, user:", userData);
 
             // Double-check that the state was set correctly
@@ -615,20 +633,30 @@ const useAuthStore = create<AuthStore>()(
       storage: createJSONStorage(() => ({
         getItem: (name) => Cookies.get(name) ?? null,
         setItem: (name, value) => {
-          // Only set cookie if we have valid user data
+          console.log("Zustand persist setItem called with:", { name, value });
+
           try {
             const parsedValue = JSON.parse(value);
-            // Only persist if we have actual user data, not null
+            console.log("Parsed value in setItem:", parsedValue);
+
+            // Only set cookie if we have valid user data
             if (parsedValue.user?.id) {
+              console.log("Valid user data found, setting auth cookie");
               const cookieData: CookieStorage = {
                 state: {
                   user: parsedValue.user,
                 },
               };
               setAuthCookie(cookieData, 30);
+
+              // Verify the cookie was set
+              const verifyCookie = Cookies.get("auth-storage");
+              console.log("Cookie after setItem:", verifyCookie);
+            } else {
+              console.log("No valid user data in setItem, not setting cookie");
             }
           } catch (e) {
-            console.error("Error parsing cookie value:", e);
+            console.error("Error in setItem:", e);
           }
         },
         removeItem: (name) => Cookies.remove(name, { path: "/" }),

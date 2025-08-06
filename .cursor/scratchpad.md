@@ -2014,3 +2014,57 @@ The QR scanner camera feed should now display properly. The fixes ensure:
 - Canvas overlay for QR detection works correctly
 
 **Next Steps**: Please test the QR scanner modal to verify the camera feed is now visible and the QR scanning works properly.
+
+# Mobile Session Persistence Issue - Debugging
+
+## Current Status
+
+User reports "now no cookie is saved" after recent changes to handle Laravel session cookies.
+
+## Problem Analysis
+
+The issue appears to be in the cookie saving mechanism. Recent changes to handle Laravel session cookies may have inadvertently broken the basic cookie saving functionality.
+
+## Debugging Approach
+
+Added extensive console.log statements to track:
+
+1. **Zustand persist setItem**: Track when and what data is being passed to the persist middleware
+2. **setAuthCookie function**: Track when it's called and what data it receives
+3. **setAuth function**: Track when it's called and with what user data
+4. **verifyOtp function**: Track the flow from API response to cookie setting
+
+## Key Changes Made
+
+1. **Enhanced setItem debugging**: Added logging to see what data Zustand persist is trying to save
+2. **Enhanced setAuthCookie debugging**: Added try-catch and verification logging
+3. **Enhanced setAuth debugging**: Added logging to track when and how setAuth is called
+4. **Modified verifyOtp**: Changed to use `get().setAuth(userData)` instead of direct `set()` to ensure proper cookie handling
+
+## Expected Debug Output
+
+When user attempts login, we should see:
+
+- "setAuth called with user: [user data]"
+- "Setting auth cookie from setAuth with data: [cookie data]"
+- "setAuthCookie called with: [settings]"
+- "Cookie set successfully: [cookie value]"
+- "Zustand persist setItem called with: [name, value]"
+
+## Next Steps
+
+1. User should attempt login and provide console logs
+2. Check if any of the debug messages appear
+3. Identify where in the chain the cookie saving is failing
+4. Fix the specific issue preventing cookie saving
+
+## Previous Issues Resolved
+
+- ✅ Mobile session persistence (cookie settings for mobile vs desktop)
+- ✅ Infinite loading issue (removed MobileSessionProvider)
+- ✅ Session not maintained after OTP (fixed Zustand persist logic)
+- ✅ Laravel session cookie integration (added XSRF token handling)
+
+## Current Focus
+
+Debugging why "no cookie is saved" - need to identify the exact point where cookie saving is failing.
