@@ -77,7 +77,7 @@ export default function TokenLoginRightSide({
           <>
             <div className="mb-8 md:mb-10">
               <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
-                Benvenuto {username}
+                Benvenuto su NotarShareDoc!
               </h1>
               <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 {`Inserisci qui sotto il codice OTP inviato alla tua email.`}

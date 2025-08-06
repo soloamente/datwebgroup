@@ -8,7 +8,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp/input-otp";
 import { Separator } from "@/components/ui/separator";
-import { userService } from "@/app/api/api";
+import useAuthStore from "@/app/api/auth";
 import { toast } from "sonner";
 
 interface TokenOtpFormProps {
@@ -27,6 +27,7 @@ export default function TokenOtpForm({
   const [error, setError] = useState("");
   const [otpCountdown, setOtpCountdown] = useState(60); // 1 minute in seconds
   const [otpResendAvailable, setOtpResendAvailable] = useState(false);
+  const authStore = useAuthStore();
 
   useEffect(() => {
     startOtpCountdown();
@@ -44,15 +45,17 @@ export default function TokenOtpForm({
     }
 
     try {
-      const result = await userService.verifyOtpByToken({ username, otp });
+      const result = await authStore.verifyOtpByToken(username, otp);
 
       if (result.success) {
         toast.success("Login completato con successo");
         onSuccess({ success: true, message: "Login completato con successo" });
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/prefer-nullish-coalescing
         setError(result.message || "Codice OTP non valido");
         onSuccess({
           success: false,
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
           message: result.message || "Codice OTP non valido",
         });
       }
@@ -75,13 +78,14 @@ export default function TokenOtpForm({
 
     try {
       setLoading(true);
-      const result = await userService.preloginByToken(token);
+      const result = await authStore.preloginByToken(token);
 
       if (result.success) {
         toast.success("Nuovo codice OTP inviato alla tua email");
         startOtpCountdown();
         setError("");
       } else {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         setError(result.message || "Errore durante l'invio del nuovo OTP");
       }
     } catch (error) {

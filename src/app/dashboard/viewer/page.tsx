@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-/* eslint-disable react/jsx-no-comment-textnodes */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -12,59 +10,142 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, FileText, Users, Eye, Download, Share2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import {
+  Calendar,
+  FileText,
+  Users,
+  Eye,
+  Download,
+  Share2,
+  Upload,
+  Folder,
+  File,
+  MoreVertical,
+  Search,
+  Grid3X3,
+  Bell,
+} from "lucide-react";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 
-interface ViewerStats {
-  totalDocuments: number;
-  sharedDocuments: number;
-  downloadedDocuments: number;
-  lastAccess: string;
+interface DocumentCategory {
+  id: string;
+  name: string;
+  date: string;
+  count: number;
+  collaborators: Array<{
+    id: string;
+    name: string;
+    avatar?: string;
+  }>;
+}
+
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  date: string;
+  note?: string;
+  isFolder?: boolean;
 }
 
 export default function ViewerDashboard() {
-  const [stats, setStats] = useState<ViewerStats>({
-    totalDocuments: 0,
-    sharedDocuments: 0,
-    downloadedDocuments: 0,
-    lastAccess: new Date().toLocaleDateString("it-IT"),
-  });
+  const [categories, setCategories] = useState<DocumentCategory[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const authStore = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated and is a viewer
     if (!authStore.isAuthenticated()) {
       router.push("/login");
       return;
     }
 
     if (authStore.user?.role !== "viewer") {
-      router.push("/dashboard/admin"); // Redirect to appropriate dashboard
+      router.push("/dashboard/admin");
       return;
     }
 
-    // Load viewer data
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    loadViewerData();
+    void loadViewerData();
   }, [authStore, router]);
 
   const loadViewerData = async () => {
     try {
       setIsLoading(true);
-      // TODO: Implement API call to get viewer data
-      // const response = await api.get("/viewer/dashboard");
-      // setStats(response.data);
 
-      // Mock data for now
-      setStats({
-        totalDocuments: 12,
-        sharedDocuments: 8,
-        downloadedDocuments: 5,
-        lastAccess: new Date().toLocaleDateString("it-IT"),
-      });
+      // Mock data for categories
+      setCategories([
+        {
+          id: "1",
+          name: "Medical",
+          date: "May 12, 2021",
+          count: 2,
+          collaborators: [
+            { id: "1", name: "JC", avatar: "/avatars/user-placeholder.png" },
+            { id: "2", name: "AD", avatar: "/avatars/user-placeholder.png" },
+          ],
+        },
+        {
+          id: "2",
+          name: "HR",
+          date: "April 28, 2021",
+          count: 1,
+          collaborators: [
+            { id: "3", name: "HR", avatar: "/avatars/user-placeholder.png" },
+            { id: "4", name: "AD", avatar: "/avatars/user-placeholder.png" },
+          ],
+        },
+        {
+          id: "3",
+          name: "Administrator",
+          date: "September 24, 2021",
+          count: 3,
+          collaborators: [
+            { id: "5", name: "AD", avatar: "/avatars/user-placeholder.png" },
+          ],
+        },
+      ]);
+
+      // Mock data for documents
+      setDocuments([
+        {
+          id: "1",
+          name: "Presentation",
+          type: "DOC",
+          size: "1.2Mb",
+          date: "Mar 20, 2021 23:14",
+          note: "Important...info.pdf",
+        },
+        {
+          id: "2",
+          name: "Faucibus accumsan odio",
+          type: "FOLDER",
+          size: "2 docs",
+          date: "Dec 30, 2021 07:52",
+          note: "Est sit aliqua dolor do amet sint.",
+          isFolder: true,
+        },
+        {
+          id: "3",
+          name: "curae donec pharetra",
+          type: "PDF",
+          size: "2.7Mb",
+          date: "Dec 4, 2021 21:42",
+          note: "curae ... pharetra.png",
+        },
+        {
+          id: "4",
+          name: "document_1.pdf",
+          type: "PDF",
+          size: "0.3Mb",
+          date: "Dec 7 2021 23:26",
+          note: "Important info pdf",
+        },
+      ]);
     } catch (error) {
       console.error("Error loading viewer data:", error);
     } finally {
@@ -84,168 +165,164 @@ export default function ViewerDashboard() {
   }
 
   return (
-    <div className="container mx-auto space-y-6 p-6">
-      {/* Header */}
+    <div className="space-y-6">
+      {/* Header with user info and notifications */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard Viewer</h1>
-          <p className="text-muted-foreground">
-            // eslint-disable-next-line
-            @typescript-eslint/prefer-nullish-coalescing,
-            @typescript-eslint/prefer-nullish-coalescing,
-            @typescript-eslint/prefer-nullish-coalescing Benvenuto,{" "}
-            {authStore.user?.nominativo || "Viewer"}
-          </p>
+        <div className="flex items-center space-x-4">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={authStore.user?.avatar} />
+            <AvatarFallback>
+              {authStore.user?.nominativo?.charAt(0) ?? "V"}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-bold">Documenti Viewer</h1>
+            <p className="text-muted-foreground">
+              Benvenuto, {authStore.user?.nominativo ?? "Viewer"}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Badge variant="secondary">Viewer</Badge>
-          <Button variant="outline" size="sm">
-            <Calendar className="mr-2 h-4 w-4" />
-            Ultimo accesso: {stats.lastAccess}
+
+        <div className="flex items-center space-x-3">
+          <Button variant="ghost" size="sm">
+            <Grid3X3 className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="sm" className="relative">
+            <Bell className="h-5 w-5" />
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
+              3
+            </Badge>
           </Button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Documenti Totali
-            </CardTitle>
-            <FileText className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalDocuments}</div>
-            <p className="text-muted-foreground text-xs">
-              Documenti disponibili per la visualizzazione
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Documenti Condivisi
-            </CardTitle>
-            <Share2 className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.sharedDocuments}</div>
-            <p className="text-muted-foreground text-xs">
-              Documenti condivisi con te
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Documenti Scaricati
-            </CardTitle>
-            <Download className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.downloadedDocuments}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              Documenti scaricati localmente
-            </p>
-          </CardContent>
-        </Card>
+      {/* Document Categories */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {categories.map((category) => (
+          <Card
+            key={category.id}
+            className="cursor-pointer transition-shadow hover:shadow-md"
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <Badge variant="secondary" className="text-xs">
+                  {category.count}
+                </Badge>
+                <Button variant="ghost" size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="mt-2">
+                <h3 className="text-lg font-semibold">{category.name}</h3>
+                <p className="text-muted-foreground text-sm">{category.date}</p>
+              </div>
+              <div className="mt-3 flex items-center space-x-1">
+                {category.collaborators.slice(0, 3).map((collaborator) => (
+                  <Avatar key={collaborator.id} className="h-6 w-6">
+                    <AvatarImage src={collaborator.avatar} />
+                    <AvatarFallback className="text-xs">
+                      {collaborator.name}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {category.collaborators.length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{category.collaborators.length - 3}
+                  </Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Azioni Rapide</CardTitle>
-          <CardDescription>
-            Accedi rapidamente alle funzionalità principali
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Button className="flex h-20 flex-col items-center justify-center space-y-2">
-              <Eye className="h-6 w-6" />
-              <span>Visualizza Documenti</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="flex h-20 flex-col items-center justify-center space-y-2"
-            >
-              <Download className="h-6 w-6" />
-              <span>Scarica Documenti</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="flex h-20 flex-col items-center justify-center space-y-2"
-            >
-              <Users className="h-6 w-6" />
-              <span>Profilo Utente</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="flex h-20 flex-col items-center justify-center space-y-2"
-            >
-              <FileText className="h-6 w-6" />
-              <span>Cronologia</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Attività Recenti</CardTitle>
-          <CardDescription>
-            Le tue ultime attività sui documenti
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4 rounded-lg border p-4">
-              <div className="rounded-full bg-blue-100 p-2">
-                <Eye className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">
-                  Documento &quot;Report_2024.pdf&quot; visualizzato
+      {/* Main Content Area */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        {/* File Upload Area */}
+        <div className="lg:col-span-1">
+          <Card className="h-96">
+            <CardContent className="h-full p-6">
+              <div className="flex h-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-gray-400">
+                <Upload className="mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-medium">Drop files here</h3>
+                <p className="text-muted-foreground mb-4 text-sm">
+                  PDF, DOC, XLSX, image, movie, etc.
                 </p>
-                <p className="text-muted-foreground text-sm">2 ore fa</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4 rounded-lg border p-4">
-              <div className="rounded-full bg-green-100 p-2">
-                <Download className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">
-                  Documento &quot;Presentazione.pptx&quot; scaricato
+                <p className="text-muted-foreground text-xs">
+                  files with max size of 15 MB.
                 </p>
-                <p className="text-muted-foreground text-sm">1 giorno fa</p>
+                <Button className="mt-4" variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Files
+                </Button>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="flex items-center space-x-4 rounded-lg border p-4">
-              <div className="rounded-full bg-purple-100 p-2">
-                <Share2 className="h-4 w-4 text-purple-600" />
+        {/* Documents List */}
+        <div className="lg:col-span-3">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Documenti</CardTitle>
+                  <CardDescription>I tuoi documenti e cartelle</CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="relative">
+                    <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+                    <Input
+                      placeholder="Cerca documenti..."
+                      className="w-64 pl-10"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="font-medium">
-                  Nuovo documento condiviso: &quot;Contratto.pdf&quot;
-                </p>
-                <p className="text-muted-foreground text-sm">3 giorni fa</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex cursor-pointer items-center space-x-4 rounded-lg border p-4 transition-colors hover:bg-gray-50"
+                  >
+                    <div className="flex-shrink-0">
+                      {doc.isFolder ? (
+                        <Folder className="h-8 w-8 text-blue-500" />
+                      ) : (
+                        <File className="h-8 w-8 text-gray-500" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="truncate font-medium">{doc.name}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {doc.type}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground truncate text-sm">
+                        {doc.note}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <p className="text-muted-foreground text-sm">
+                        {doc.size}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {doc.date}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

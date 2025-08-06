@@ -77,9 +77,25 @@ export default function TokenLoginWrapper() {
     if (data.success) {
       // Authentication successful, redirect will be handled by useEffect
       setError(null);
+
+      // Force a redirect after a short delay to ensure authStore is updated
+      setTimeout(() => {
+        if (authStore.isAuthenticated()) {
+          if (authStore.user?.must_change_password) {
+            router.push("/change-password");
+          } else if (authStore.isAdmin()) {
+            router.push("/dashboard/admin");
+          } else if (authStore.user?.role === "sharer") {
+            router.push("/dashboard/sharer");
+          } else if (authStore.user?.role === "viewer") {
+            router.push("/dashboard/viewer");
+          } else {
+            router.push("/dashboard/clienti");
+          }
+        }
+      }, 500);
     } else {
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-      setError(data.message || "Verifica OTP fallita");
+      setError(data.message ?? "Verifica OTP fallita");
     }
   };
 
