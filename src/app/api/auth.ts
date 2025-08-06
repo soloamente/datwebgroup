@@ -344,45 +344,102 @@ const useAuthStore = create<AuthStore>()(
             get().setAuth(userData);
             console.log("Auth state updated, user:", userData);
 
-            // Try to manually set Laravel session cookies if they're not present
-            // This is a workaround since the backend is not setting them
-            const existingLaravelSession = document.cookie
-              .split("; ")
-              .find((row) => row.startsWith("laravel_session="));
-            const existingXsrfToken = document.cookie
-              .split("; ")
-              .find((row) => row.startsWith("XSRF-TOKEN="));
-
-            if (!existingLaravelSession) {
+            // Try to get proper Laravel session cookies from the backend
+            // First, try to make a request to get the CSRF token
+            try {
               console.log(
-                "Laravel session cookie missing, attempting to set it manually",
+                "Attempting to get proper Laravel session cookies from backend",
               );
-              // Generate a simple session ID
-              const sessionId =
-                Math.random().toString(36).substring(2, 15) +
-                Math.random().toString(36).substring(2, 15);
-              Cookies.set("laravel_session", sessionId, {
-                path: "/",
-                expires: 30,
-                secure: isMobileDevice() ? false : true,
-                sameSite: isMobileDevice() ? "lax" : "strict",
-              });
-            }
 
-            if (!existingXsrfToken) {
+              // Make a request to get the CSRF token (this should set the XSRF-TOKEN cookie)
+              const csrfResponse = await api.get("/csrf-token");
+              console.log("CSRF token response:", csrfResponse.data);
+
+              // Check if the cookies were set by the backend
+              const backendLaravelSession = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("laravel_session="));
+              const backendXsrfToken = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("XSRF-TOKEN="));
+
               console.log(
-                "XSRF token cookie missing, attempting to set it manually",
+                "Backend set Laravel session:",
+                !!backendLaravelSession,
               );
-              // Generate a simple XSRF token
-              const token =
-                Math.random().toString(36).substring(2, 15) +
-                Math.random().toString(36).substring(2, 15);
-              Cookies.set("XSRF-TOKEN", token, {
-                path: "/",
-                expires: 30,
-                secure: isMobileDevice() ? false : true,
-                sameSite: isMobileDevice() ? "lax" : "strict",
-              });
+              console.log("Backend set XSRF token:", !!backendXsrfToken);
+
+              // If backend didn't set them, try manual approach as fallback
+              if (!backendLaravelSession || !backendXsrfToken) {
+                console.log(
+                  "Backend didn't set cookies, using manual fallback",
+                );
+
+                if (!backendLaravelSession) {
+                  console.log("Setting Laravel session cookie manually");
+                  const sessionId =
+                    Math.random().toString(36).substring(2, 15) +
+                    Math.random().toString(36).substring(2, 15);
+                  Cookies.set("laravel_session", sessionId, {
+                    path: "/",
+                    expires: 30,
+                    secure: isMobileDevice() ? false : true,
+                    sameSite: isMobileDevice() ? "lax" : "strict",
+                  });
+                }
+
+                if (!backendXsrfToken) {
+                  console.log("Setting XSRF token cookie manually");
+                  const token =
+                    Math.random().toString(36).substring(2, 15) +
+                    Math.random().toString(36).substring(2, 15);
+                  Cookies.set("XSRF-TOKEN", token, {
+                    path: "/",
+                    expires: 30,
+                    secure: isMobileDevice() ? false : true,
+                    sameSite: isMobileDevice() ? "lax" : "strict",
+                  });
+                }
+              }
+            } catch (csrfError) {
+              console.log(
+                "CSRF token request failed, using manual cookies:",
+                csrfError,
+              );
+
+              // Fallback to manual cookie setting
+              const existingLaravelSession = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("laravel_session="));
+              const existingXsrfToken = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("XSRF-TOKEN="));
+
+              if (!existingLaravelSession) {
+                console.log("Laravel session cookie missing, setting manually");
+                const sessionId =
+                  Math.random().toString(36).substring(2, 15) +
+                  Math.random().toString(36).substring(2, 15);
+                Cookies.set("laravel_session", sessionId, {
+                  path: "/",
+                  expires: 30,
+                  secure: isMobileDevice() ? false : true,
+                  sameSite: isMobileDevice() ? "lax" : "strict",
+                });
+              }
+
+              if (!existingXsrfToken) {
+                console.log("XSRF token cookie missing, setting manually");
+                const token =
+                  Math.random().toString(36).substring(2, 15) +
+                  Math.random().toString(36).substring(2, 15);
+                Cookies.set("XSRF-TOKEN", token, {
+                  path: "/",
+                  expires: 30,
+                  secure: isMobileDevice() ? false : true,
+                  sameSite: isMobileDevice() ? "lax" : "strict",
+                });
+              }
             }
 
             // Double-check that the state was set correctly

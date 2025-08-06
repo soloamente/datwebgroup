@@ -48,6 +48,16 @@ api.interceptors.request.use((config) => {
       }
     }
 
+    // Add additional headers that Laravel might expect
+    config.headers.Accept = "application/json";
+    config.headers["X-Requested-With"] = "XMLHttpRequest";
+
+    // Add Authorization header if we have user data
+    if (authStore.user?.id) {
+      config.headers.Authorization = `Bearer ${authStore.user.id}`;
+      console.log("API Request Interceptor - Added Authorization header");
+    }
+
     return config;
   }
   console.log("API Request Interceptor - User is not authenticated");
