@@ -60,11 +60,29 @@ api.interceptors.response.use(
 
       if (error.response?.status === 401) {
         console.log(
-          "API Response Interceptor - 401 Unauthorized, clearing auth",
+          "API Response Interceptor - 401 Unauthorized, checking auth state",
         );
         const authStore = useAuthStore.getState();
-        // Clear auth state and redirect to login
-        authStore.clearAuth();
+
+        // Check if we actually have a valid session
+        const isAuthenticated = authStore.isAuthenticated();
+        const hasUser = !!authStore.user;
+
+        console.log("Auth state check:", {
+          isAuthenticated,
+          hasUser,
+          user: authStore.user,
+        });
+
+        // Only clear auth if we don't have a valid session
+        if (!isAuthenticated || !hasUser) {
+          console.log("Clearing auth due to 401 and no valid session");
+          authStore.clearAuth();
+        } else {
+          console.log(
+            "401 received but user appears to be authenticated, not clearing auth",
+          );
+        }
       }
     }
     return Promise.reject(

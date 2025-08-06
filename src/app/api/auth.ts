@@ -153,13 +153,19 @@ const useAuthStore = create<AuthStore>()(
       error: null,
       isLoading: false,
       setAuth: (user) => {
-        const cookieData: CookieStorage = {
-          state: {
-            user: user as User,
-          },
-        };
-        setAuthCookie(cookieData, 30); // Set to 30 days
-        set({ user, error: null, isLoading: false });
+        if (user && user.id) {
+          const cookieData: CookieStorage = {
+            state: {
+              user: user as User,
+            },
+          };
+          setAuthCookie(cookieData, 30); // Set to 30 days
+          set({ user, error: null, isLoading: false });
+          console.log("Auth set successfully with user:", user);
+        } else {
+          console.log("setAuth called with invalid user data:", user);
+          set({ user: null, error: null, isLoading: false });
+        }
       },
       clearAuth: () => {
         Cookies.remove("auth-storage", { path: "/" });
@@ -267,6 +273,17 @@ const useAuthStore = create<AuthStore>()(
 
             set({ user: userData, error: null, isLoading: false });
             console.log("Auth state updated, user:", userData);
+
+            // Double-check that the state was set correctly
+            setTimeout(() => {
+              const currentUser = get().user;
+              console.log("Current user state after set:", currentUser);
+              console.log(
+                "Current cookie after set:",
+                Cookies.get("auth-storage"),
+              );
+            }, 100);
+
             return { success: true };
           } else {
             console.error(
@@ -515,10 +532,18 @@ const useAuthStore = create<AuthStore>()(
       storage: createJSONStorage(() => ({
         getItem: (name) => Cookies.get(name) ?? null,
         setItem: (name, value) => {
-          // Always use consistent cookie settings
+          // Only set cookie if we have valid user data
           try {
-            const parsedValue = JSON.parse(value) as CookieStorage;
-            setAuthCookie(parsedValue, 30);
+            const parsedValue = JSON.parse(value);
+            // Only persist if we have actual user data, not null
+            if (parsedValue.user && parsedValue.user.id) {
+              const cookieData: CookieStorage = {
+                state: {
+                  user: parsedValue.user,
+                },
+              };
+              setAuthCookie(cookieData, 30);
+            }
           } catch (e) {
             console.error("Error parsing cookie value:", e);
           }
