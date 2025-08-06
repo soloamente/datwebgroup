@@ -23,7 +23,7 @@ export default function BatchDetailsLoading() {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
               <div className="space-y-4 lg:col-span-3">
                 <Skeleton className="h-6 w-32" />
-                <div className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border bg-zinc-50/50 p-4 sm:grid-cols-2 dark:bg-zinc-900/50">
+                <div className="bg-muted/50 grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border p-4 sm:grid-cols-2">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="space-y-2">
                       <Skeleton className="h-4 w-24" />

@@ -8,6 +8,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface UserData {
   name: string;
@@ -45,14 +46,13 @@ export function SidebarHeader({
             }}
             className="flex-shrink-0"
           >
-            <Image
-              src={userData.avatar}
-              alt={`Avatar di ${userData.name}`}
-              width={42}
-              height={42}
-              className="ring-border/50 h-full w-full rounded-lg object-cover ring-1 transition-all duration-200"
-              priority
-            />
+            <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1 transition-all duration-200">
+              <AvatarImage
+                src={userData.avatar}
+                alt={`Avatar di ${userData.name}`}
+              />
+              <AvatarFallback name={userData.name} size={42} variant="beam" />
+            </Avatar>
           </motion.div>
         </div>
       ) : (
@@ -89,14 +89,13 @@ export function SidebarHeader({
               }}
               className="flex-shrink-0"
             >
-              <Image
-                src={userData.avatar}
-                alt={`Avatar di ${userData.name}`}
-                width={42}
-                height={42}
-                className="ring-border/50 h-full w-full rounded-lg object-cover ring-1 transition-all duration-200"
-                priority
-              />
+              <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1 transition-all duration-200">
+                <AvatarImage
+                  src={userData.avatar}
+                  alt={`Avatar di ${userData.name}`}
+                />
+                <AvatarFallback name={userData.name} size={42} variant="beam" />
+              </Avatar>
             </motion.div>
 
             {/* User Info - Smooth and clean animations */}

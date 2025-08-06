@@ -291,7 +291,11 @@ export function RecentSharesGrid() {
                                     src={`https://ui-avatars.com/api/?name=${viewer.nominativo.replace(/ /g, "+")}&background=random&color=fff&size=32`}
                                     alt={viewer.nominativo}
                                   />
-                                  <AvatarFallback className="bg-neutral-700 text-xs font-medium text-white">
+                                  <AvatarFallback
+                                    name={viewer.nominativo}
+                                    size={32}
+                                    className="bg-neutral-700 text-xs font-medium text-white"
+                                  >
                                     {viewer.nominativo
                                       .split(" ")
                                       .map((n) => n[0])

@@ -44,7 +44,11 @@ export function SharerAvatarGroup({ sharers }: { sharers: Sharer[] }) {
               className="size-7 border-2 border-neutral-200/80 shadow-sm dark:border-neutral-800/80"
             >
               <AvatarImage src={sharer.logo_url} alt={sharer.nominativo} />
-              <AvatarFallback className="text-foreground/90 bg-neutral-100 text-[10px] font-semibold dark:bg-neutral-700">
+              <AvatarFallback
+                name={sharer.nominativo}
+                size={28}
+                className="text-foreground/90 bg-neutral-100 text-[10px] font-semibold dark:bg-neutral-700"
+              >
                 {getInitials(sharer.nominativo)}
               </AvatarFallback>
               <AvatarGroupTooltip>

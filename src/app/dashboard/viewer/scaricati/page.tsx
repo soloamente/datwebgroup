@@ -187,7 +187,7 @@ export default function DownloadedDocuments() {
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
+                className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4"
               >
                 <div className="flex items-center space-x-4">
                   <div className="rounded-full bg-green-100 p-2">

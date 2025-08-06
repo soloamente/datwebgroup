@@ -127,7 +127,10 @@ export function AddViewerToBatchDialog({
                 <div className="flex items-center gap-2">
                   {selectedViewer ? (
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback
+                        className="text-xs"
+                        name={selectedViewer.nominativo}
+                      >
                         {selectedViewer.nominativo.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
@@ -178,7 +181,7 @@ export function AddViewerToBatchDialog({
                           className="flex items-center gap-3"
                         >
                           <Avatar className="h-8 w-8">
-                            <AvatarFallback>
+                            <AvatarFallback name={viewer.nominativo}>
                               {viewer.nominativo.charAt(0)}
                             </AvatarFallback>
                           </Avatar>

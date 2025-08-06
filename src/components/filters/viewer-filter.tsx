@@ -191,7 +191,10 @@ export function ViewerFilter({
                           className="size-4"
                         />
                         <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-xs">
+                          <AvatarFallback
+                            className="text-xs"
+                            name={viewer.nominativo}
+                          >
                             {viewer.nominativo.charAt(0)}
                           </AvatarFallback>
                         </Avatar>

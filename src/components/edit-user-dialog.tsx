@@ -536,7 +536,7 @@ export function EditUserDialog({
             </div>
           </div>
 
-          <div className="flex items-center justify-center bg-gray-50 p-8 dark:bg-gray-900/40">
+          <div className="bg-muted/50 flex items-center justify-center p-8">
             <div className="relative inline-flex flex-col items-center">
               <Label
                 htmlFor="logo-upload-edit"

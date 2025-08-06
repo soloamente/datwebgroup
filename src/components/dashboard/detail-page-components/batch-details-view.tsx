@@ -198,7 +198,7 @@ const MetadataDisplay = ({ doc, docClassDetails }: MetadataDisplayProps) => {
 
   if (metadataEntries.length === 0) {
     return (
-      <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-zinc-50/50 p-8 text-center dark:bg-zinc-900/50">
+      <div className="bg-muted/50 flex min-h-[200px] flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center">
         <RiInbox2Line className="text-muted-foreground mb-4 h-10 w-10" />
         <h3 className="font-semibold">Nessun metadato</h3>
         <p className="text-muted-foreground text-sm">
@@ -209,7 +209,7 @@ const MetadataDisplay = ({ doc, docClassDetails }: MetadataDisplayProps) => {
   }
 
   return (
-    <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border bg-zinc-50/50 p-4 sm:grid-cols-2 dark:bg-zinc-900/50">
+    <dl className="bg-muted/50 grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border p-4 sm:grid-cols-2">
       {metadataEntries.map(([key, value]) => {
         const fieldDetails = getFieldDetails(key);
         return (
@@ -275,7 +275,7 @@ const MetadataForm = ({
       }}
       className="space-y-4"
     >
-      <div className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border bg-zinc-50/50 p-4 sm:grid-cols-2 dark:bg-zinc-900/50">
+      <div className="bg-muted/50 grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border p-4 sm:grid-cols-2">
         {docClassDetails.fields.map((field) => {
           const value = formData[field.name];
           const isPrimaryKey = field.is_primary_key;
@@ -503,7 +503,7 @@ const DocumentsSection = ({
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed bg-gray-50/50 p-8 dark:bg-gray-900/50">
+          <div className="bg-muted/50 flex min-h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed p-8">
             <RiInbox2Line className="text-muted-foreground mb-4 h-10 w-10" />
             <h3 className="font-semibold">Nessun Documento</h3>
             <p className="text-muted-foreground text-sm">

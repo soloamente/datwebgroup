@@ -14,7 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Users, Settings, LogOut } from "lucide-react";
+import { Users, Settings } from "lucide-react";
+import { IoExitOutline } from "react-icons/io5";
 
 interface ViewerLayoutProps {
   children: React.ReactNode;
@@ -45,17 +46,14 @@ export default function ViewerLayout({ children }: ViewerLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+      <div className="border-border bg-background sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
         <div className="flex flex-1 items-center justify-between">
           <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-foreground text-xl font-semibold">
               Viewer Dashboard
             </h1>
-            <Badge variant="secondary" className="ml-3">
-              Viewer
-            </Badge>
           </div>
 
           <div className="flex items-center gap-x-4 lg:gap-x-6">
@@ -75,28 +73,22 @@ export default function ViewerLayout({ children }: ViewerLayoutProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
+                  <div className="flex flex-col space-y-1.5">
                     <p className="text-sm leading-none font-medium">
                       {authStore.user?.nominativo}
                     </p>
-                    <p className="text-muted-foreground text-xs leading-none">
+                    <p className="text-muted-foreground/30 text-xs leading-none">
                       {authStore.user?.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Users className="mr-2 h-4 w-4" />
-                  <span>Profilo</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Impostazioni</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer"
+                >
+                  <IoExitOutline className="h-5 w-5" />
+                  <span>Esci</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

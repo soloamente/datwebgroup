@@ -193,7 +193,10 @@ export function SharerFilter({
                         />
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={sharer.logo_url} />
-                          <AvatarFallback className="text-xs">
+                          <AvatarFallback
+                            className="text-xs"
+                            name={sharer.nominativo}
+                          >
                             {sharer.nominativo.charAt(0)}
                           </AvatarFallback>
                         </Avatar>

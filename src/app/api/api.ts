@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import axios, { AxiosError } from "axios";
 import useAuthStore from "./auth";
 
@@ -1309,6 +1310,64 @@ export interface VerifyOtpByTokenResponse {
   };
 }
 
+// Viewer Dashboard Interfaces
+export interface ViewerFile {
+  id: number;
+  storage_path: string;
+  original_filename: string;
+  mime_type: string;
+  size: number;
+  md5: string;
+  uploaded_by: number;
+  pivot: {
+    document_id: number;
+    file_id: number;
+    label: string;
+  };
+}
+
+export interface ViewerDocument {
+  id: number;
+  document_class_id: number;
+  pk_hash: string;
+  created_at: string;
+  updated_at: string;
+  files: ViewerFile[];
+}
+
+export interface ViewerSharer {
+  id: number;
+  nominativo: string;
+  email: string;
+  role: string;
+}
+
+export interface ViewerBatchViewer {
+  id: number;
+  nominativo: string;
+  email: string;
+  role: string;
+  pivot: {
+    share_batch_id: number;
+    viewer_id: number;
+    read_at: string | null;
+    has_downloaded: boolean;
+  };
+}
+
+export interface ViewerSharedBatch {
+  id: number;
+  sharer_id: number;
+  title: string;
+  status: string;
+  sent_at: string;
+  created_at: string;
+  updated_at: string;
+  sharer: ViewerSharer;
+  documents: ViewerDocument[];
+  viewers: ViewerBatchViewer[];
+}
+
 /**
  * Initiates login process using a permanent token.
  * Validates the token and sends OTP to the user's email.
@@ -1338,6 +1397,70 @@ const verifyOtpByToken = async (
     data,
   );
   return response.data;
+};
+
+/**
+ * Recupera i batch condivisi con il viewer autenticato.
+ * Endpoint: GET /viewer/batches
+ * @returns Promise<ViewerSharedBatch[]>
+ */
+const getViewerSharedBatches = async (): Promise<ViewerSharedBatch[]> => {
+  const response = await api.get<ViewerSharedBatch[]>("/viewer/batches");
+  return response.data;
+};
+
+/**
+ * Recupera tutti i batch condivisi con il viewer autenticato, inclusi i documenti, file allegati,
+ * valori dei campi, classe documentale con metadati e informazioni dello sharer.
+ * Endpoint: GET /viewer/batches
+ * @returns Promise<ViewerSharedBatchWithDetails[]>
+ */
+const getViewerSharedBatchesWithDetails = async (): Promise<
+  ViewerSharedBatchWithDetails[]
+> => {
+  const response =
+    await api.get<ViewerSharedBatchWithDetails[]>("/viewer/batches");
+  return response.data;
+};
+
+// File Viewing and Download Interfaces
+export interface FileViewUrlResponse {
+  view_url: string;
+  expires_at: string;
+  file_info: {
+    id: number;
+    original_filename: string;
+    mime_type: string;
+    size: number;
+  };
+}
+
+export interface FileDownloadResponse {
+  success: boolean;
+  message: string;
+}
+
+// File viewing and download functions
+const getFileViewUrl = async (fileId: number): Promise<FileViewUrlResponse> => {
+  try {
+    const response = await api.get(`/viewer/file/${fileId}/view-url`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting file view URL:", error);
+    throw error;
+  }
+};
+
+const downloadFile = async (fileId: number): Promise<Blob> => {
+  try {
+    const response = await api.get(`/viewer/file/${fileId}/download`, {
+      responseType: "blob",
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    throw error;
+  }
 };
 
 export const userService = {
@@ -1375,6 +1498,13 @@ export const userService = {
   // Add token-based login functions
   preloginByToken,
   verifyOtpByToken,
+  // Add viewer functions
+  getViewerSharedBatches,
+  getViewerSharedBatchesWithDetails,
+  downloadSharedFile,
+  // Add file viewing and download functions
+  getFileViewUrl,
+  downloadFile,
 };
 
 export const batchService = {
@@ -1562,3 +1692,74 @@ export const docClassService = {
   },
   shareDocuments,
 };
+
+// --- Viewer Dashboard Interfaces with Document Class Information ---
+export interface ViewerDocumentClassField {
+  id: number;
+  document_class_id: number;
+  name: string;
+  label: string;
+  data_type: string;
+  required: number;
+  is_primary_key: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  options: { id?: number; value: string; label: string }[];
+}
+
+export interface ViewerDocumentClass {
+  id: number;
+  name: string;
+  description: string | null;
+  logo_path: string | null;
+  json_schema: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  logo_url: string;
+  fields: ViewerDocumentClassField[];
+}
+
+export interface ViewerDocumentValue {
+  id: number;
+  document_id: number;
+  field_id: number;
+  value_bool: boolean | null;
+  value_int: number | null;
+  value_dec: number | null;
+  value_text: string | null;
+  value_date: string | null;
+  value_datetime: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  field: ViewerDocumentClassField;
+}
+
+export interface ViewerDocumentWithClass extends ViewerDocument {
+  values: ViewerDocumentValue[];
+  class: ViewerDocumentClass;
+}
+
+export interface ViewerSharerWithDetails {
+  id: number;
+  username: string;
+  nominativo: string;
+  codice_fiscale: string | null;
+  partita_iva: string | null;
+  role: string;
+  active: number;
+  email: string;
+  logo_path: string | null;
+  sharer_id: number | null;
+  created_at: string;
+  updated_at: string;
+  must_change_password: number;
+  logo_url: string;
+}
+
+export interface ViewerSharedBatchWithDetails extends ViewerSharedBatch {
+  document_class: ViewerDocumentClass;
+  sharer: ViewerSharerWithDetails;
+  documents: ViewerDocumentWithClass[];
+}
