@@ -44,7 +44,7 @@ export default function TokenOtpForm({
     }
 
     try {
-      const result = await userService.verifyOtpByToken(username, otp);
+      const result = await userService.verifyOtpByToken({ username, otp });
 
       if (result.success) {
         toast.success("Login completato con successo");
