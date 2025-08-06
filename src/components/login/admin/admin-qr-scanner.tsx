@@ -90,6 +90,8 @@ export default function AdminQrScanner({
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          // Ensure video plays automatically
+          videoRef.current.play().catch(console.error);
         }
 
         // Explicitly ignore the returned promise to satisfy the linter
@@ -202,16 +204,14 @@ export default function AdminQrScanner({
       animate={{ opacity: 1 }}
       className="relative mx-auto flex w-full max-w-xs flex-col items-center"
     >
-      {/* Animated gradient background for visual interest, reused from QR modal. Purely decorative. */}
-      <div
-        className="pointer-events-none absolute -inset-1 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm"
-        aria-hidden="true"
-      />
-      {/* Video preview with minimal border and shadow */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-gray-200 shadow-lg">
+      {/* Video preview with proper styling to ensure visibility */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl border-2 border-blue-300 shadow-lg">
         <video
           ref={videoRef}
-          className="h-full w-full rounded-xl object-cover"
+          className="h-full w-full object-cover"
+          autoPlay
+          playsInline
+          muted
           onLoadedMetadata={() => {
             if (canvasRef.current && videoRef.current) {
               canvasRef.current.width = videoRef.current.clientWidth;
@@ -220,13 +220,16 @@ export default function AdminQrScanner({
           }}
           aria-label="Anteprima fotocamera per scansione QR"
         />
-        {/* Minimal scan guide overlay */}
+        {/* Scan guide overlay */}
         <div
           className="border-primary/60 pointer-events-none absolute inset-0 rounded-xl border-4"
           aria-hidden="true"
         />
-        {/* Canvas for optional QR box (kept for future, but hidden for minimalism) */}
-        <canvas ref={canvasRef} className="hidden" />
+        {/* Canvas for QR box detection */}
+        <canvas
+          ref={canvasRef}
+          className="pointer-events-none absolute inset-0"
+        />
       </div>
 
       {/* Processing indicator */}

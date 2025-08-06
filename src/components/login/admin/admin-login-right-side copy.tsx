@@ -486,7 +486,7 @@ export default function AdminLoginRightSide({
                   {/* Scanner area with extra margin and padding for separation */}
                   <div className="relative mt-4 mb-4 flex w-full justify-center">
                     <div className="absolute -inset-1 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm" />
-                    <div className="relative z-10 w-full max-w-xs rounded-2xl border border-blue-300/60 bg-white/80 p-2 shadow-lg dark:bg-slate-800/80">
+                    <div className="relative z-10 w-full max-w-xs rounded-2xl border border-blue-300/60 bg-transparent p-2 shadow-lg">
                       <AdminQrScanner
                         onScan={() => {
                           // QR scanner handles scanning internally

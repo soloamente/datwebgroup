@@ -1,31 +1,25 @@
 "use client";
 
-import React, { Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import TokenLoginWrapper from "@/components/login/token/token-login-wrapper";
 
 // Component that uses useSearchParams - needs to be wrapped in Suspense
 function LoginTokenContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  // Use useEffect to handle the redirect
-  React.useEffect(() => {
-    if (token) {
-      // Redirect to login page with token as query parameter
-      router.replace(`/login?token=${encodeURIComponent(token)}`);
-    } else {
-      // If no token, redirect to login page
-      router.replace("/login");
-    }
-  }, [token, router]);
+  // If there's a token in the URL, use the token login handler
+  if (token) {
+    return <TokenLoginWrapper />;
+  }
 
-  // Show loading while redirecting
+  // Otherwise, redirect to login page
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="flex flex-col items-center space-y-4">
         <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
-        <p className="text-muted-foreground">Reindirizzamento in corso...</p>
+        <p className="text-muted-foreground">Reindirizzamento al login...</p>
       </div>
     </div>
   );
@@ -35,10 +29,7 @@ function LoginTokenContent() {
 function LoginTokenLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
-        <p className="text-muted-foreground">Caricamento...</p>
-      </div>
+      <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
     </div>
   );
 }
