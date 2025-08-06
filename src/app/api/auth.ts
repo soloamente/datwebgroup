@@ -61,13 +61,23 @@ const getMaxAgeFromResponse = (response: ApiResponse<unknown>): number => {
   return 30; // Default to 30 days if no max-age found
 };
 
+// Helper function to detect mobile devices
+const isMobileDevice = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  );
+};
+
 // Helper function to set cookie with consistent settings
 const setAuthCookie = (cookieData: CookieStorage, expiresInDays = 30) => {
+  const isMobile = isMobileDevice();
+
   Cookies.set("auth-storage", JSON.stringify(cookieData), {
     path: "/",
     expires: expiresInDays,
-    secure: process.env.NODE_ENV === "production", // Secure in production
-    sameSite: "lax", // Protect against CSRF
+    secure: true, // Always secure for better mobile compatibility
+    sameSite: isMobile ? "lax" : "strict", // Use "lax" for mobile to avoid issues
   });
 };
 
@@ -123,6 +133,7 @@ interface AuthStore {
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   hasRole: (role: string) => boolean;
+  verifyAndRestoreSession: () => boolean;
 }
 
 const useAuthStore = create<AuthStore>()(
@@ -441,6 +452,24 @@ const useAuthStore = create<AuthStore>()(
       // Keep helper functions
       isAdmin: () => get().user?.role === "admin",
       hasRole: (role: string) => get().user?.role === role,
+
+      // Method to verify and restore session from cookies
+      verifyAndRestoreSession: () => {
+        const cookie = Cookies.get("auth-storage");
+        if (!cookie) return false;
+
+        try {
+          const data = JSON.parse(cookie) as CookieStorage;
+          if (data.state?.user) {
+            set({ user: data.state.user, error: null, isLoading: false });
+            console.log("Session restored from cookie:", data.state.user);
+            return true;
+          }
+        } catch (e) {
+          console.error("Failed to restore session from cookie:", e);
+        }
+        return false;
+      },
     }),
     {
       name: "auth-storage",

@@ -1,3 +1,71 @@
+# Mobile Session Persistence Fix
+
+## Background and Motivation
+
+The user reported that login sessions are not maintained on mobile devices, while they work correctly on desktop. This is a critical issue for mobile users who need to log in repeatedly.
+
+## Key Challenges and Analysis
+
+1. Cookie settings were not optimized for mobile devices
+2. SameSite attribute was too restrictive for mobile browsers
+3. Secure flag was only enabled in production, causing issues in development
+4. No mobile-specific session management
+
+## High-level Task Breakdown
+
+1. [x] Fix cookie settings for mobile compatibility
+
+   - [x] Set `secure: true` for all environments (not just production)
+   - [x] Use `sameSite: "lax"` for mobile devices and `"strict"` for desktop
+   - [x] Add mobile device detection
+   - Success criteria: Cookies work consistently across all devices
+
+2. [x] Add mobile session management
+
+   - [x] Create `useMobileSession` hook for mobile-specific session handling
+   - [x] Add `verifyAndRestoreSession` method to auth store
+   - [x] Implement periodic session checks for mobile devices
+   - Success criteria: Mobile sessions persist and restore correctly
+
+3. [x] Add visibility change handling
+
+   - [x] Detect when app becomes visible again on mobile
+   - [x] Restore session when app comes back to foreground
+   - Success criteria: Session is maintained when switching between apps
+
+4. [x] Integrate mobile session provider
+   - [x] Create `MobileSessionProvider` component
+   - [x] Add to main layout for automatic mobile session management
+   - Success criteria: Mobile session management is automatic and transparent
+
+## Project Status Board
+
+- [x] Fix cookie settings for mobile compatibility
+- [x] Add mobile session management
+- [x] Add visibility change handling
+- [x] Integrate mobile session provider
+
+## Executor's Feedback or Assistance Requests
+
+The mobile session persistence issue has been fixed with the following improvements:
+
+1. **Cookie Security**: Set `secure: true` for all environments to ensure HTTPS-only cookies
+2. **SameSite Optimization**: Use `"lax"` for mobile devices to avoid browser restrictions
+3. **Mobile Detection**: Added device detection to apply mobile-specific settings
+4. **Session Restoration**: Added `verifyAndRestoreSession` method to restore sessions from cookies
+5. **Periodic Checks**: Implemented 30-second interval checks for mobile session validity
+6. **Visibility Handling**: Added event listener for when app becomes visible again
+7. **Provider Integration**: Created `MobileSessionProvider` for automatic session management
+
+The main issue was that cookies weren't being set with proper security flags for mobile devices, and there was no mechanism to restore sessions when they were lost.
+
+## Lessons
+
+1. **Mobile Cookie Handling**: Always use `secure: true` for authentication cookies, even in development
+2. **SameSite Strategy**: Use `"lax"` for mobile devices to avoid browser restrictions while maintaining security
+3. **Session Persistence**: Implement periodic checks and restoration mechanisms for mobile devices
+4. **Visibility API**: Use the Page Visibility API to handle app switching on mobile devices
+
 # Layout Component Split Plan
 
 ## Background and Motivation
