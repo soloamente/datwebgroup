@@ -36,6 +36,9 @@ export const useMobileSession = () => {
   }, [authStore]);
 
   useEffect(() => {
+    // Always set initialized to true immediately
+    setIsInitialized(true);
+
     // Check if we're on a mobile device
     if (isMobileDevice()) {
       console.log("Mobile device detected, checking session persistence...");
@@ -70,9 +73,7 @@ export const useMobileSession = () => {
         );
       };
     }
-
-    setIsInitialized(true);
-  }, [authStore, checkSessionValidity]);
+  }, []); // Remove dependencies to prevent infinite re-renders
 
   // Additional check for session validity on mobile
   useEffect(() => {

@@ -7,7 +7,6 @@ import { Preferences } from "@/components/ui/preferences";
 import { ReactLenis } from "lenis/react";
 import { Toaster as SonnerToaster } from "sonner";
 import { DM_Sans } from "next/font/google";
-import { MobileSessionProvider } from "@/components/mobile-session-provider";
 
 // Update: Font now loaded from src/app/fonts/ingram instead of public/fonts/ingram
 const ingram = localFont({
@@ -43,10 +42,8 @@ export default function RootLayout({
             root
             options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}
           >
-            <MobileSessionProvider>
-              <Preferences />
-              {children}
-            </MobileSessionProvider>
+            <Preferences />
+            {children}
           </ReactLenis>
           <SonnerToaster position="bottom-center" />
         </ThemeProvider>
