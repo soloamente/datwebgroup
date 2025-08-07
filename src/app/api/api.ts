@@ -2,6 +2,17 @@
 import axios, { AxiosError } from "axios";
 import useAuthStore from "./auth";
 
+// Import User type for better type safety
+interface User {
+  id: number;
+  username: string;
+  nominativo: string;
+  email: string;
+  role: string;
+  active: number;
+  must_change_password: number;
+}
+
 const api = axios.create({
   baseURL: "https://sviluppo.datasystemgroup.it/api",
   withCredentials: true,
@@ -126,17 +137,20 @@ api.interceptors.response.use(
           responseHeaders: error.response?.headers,
         });
         const hasUser = (() => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const user: unknown = authStore.user;
+          const user = authStore.user;
           return (
-            !!user && typeof user === "object" && user !== null && "id" in user
+            !!user &&
+            typeof user === "object" &&
+            user !== null &&
+            "id" in user &&
+            typeof (user as any).id === "number"
           );
         })();
 
         console.log("Auth state check:", {
           isAuthenticated,
           hasUser,
-          user: authStore.user as unknown,
+          user: authStore.user,
         });
 
         // Only clear auth if we don't have a valid session
