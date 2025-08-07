@@ -344,49 +344,18 @@ const useAuthStore = create<AuthStore>()(
             get().setAuth(userData);
             console.log("Auth state updated, user:", userData);
 
-            // Try to get proper Laravel session cookies from the backend
-            // First, try to make a request to get the CSRF token
-            try {
+            // Log session status for debugging
+            if (!laravelSession || !xsrfToken) {
               console.log(
-                "Attempting to get proper Laravel session cookies from backend",
+                "Session cookies not found - this might indicate a session issue",
               );
-
-              // Make a request to get the CSRF token (this should set the XSRF-TOKEN cookie)
-              const csrfResponse = await api.get("/csrf-token");
-              console.log("CSRF token response:", csrfResponse.data);
-
-              // Check if the cookies were set by the backend
-              const backendLaravelSession = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("laravel_session="));
-              const backendXsrfToken = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("XSRF-TOKEN="));
-
+              console.log("This could be because:");
               console.log(
-                "Backend set Laravel session:",
-                !!backendLaravelSession,
+                "1. The backend is not configured to set session cookies",
               );
-              console.log("Backend set XSRF token:", !!backendXsrfToken);
-
-              // If backend didn't set them, the session might not be properly established
-              if (!backendLaravelSession || !backendXsrfToken) {
-                console.log(
-                  "Backend didn't set session cookies - this might indicate a session issue",
-                );
-                console.log("This could be because:");
-                console.log(
-                  "1. The backend is not configured to set session cookies",
-                );
-                console.log("2. The session is not being properly established");
-                console.log(
-                  "3. The backend expects different authentication method",
-                );
-              }
-            } catch (csrfError) {
-              console.log("CSRF token request failed:", csrfError);
+              console.log("2. The session is not being properly established");
               console.log(
-                "This might indicate that the session is not properly established",
+                "3. The backend expects different authentication method",
               );
             }
 
