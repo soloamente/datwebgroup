@@ -135,7 +135,7 @@ api.interceptors.response.use(
         console.log("Auth state check:", {
           isAuthenticated,
           hasUser,
-          user: authStore.user,
+          user: authStore.user as unknown,
         });
 
         // Only clear auth if we don't have a valid session
