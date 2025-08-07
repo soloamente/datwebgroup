@@ -126,6 +126,7 @@ api.interceptors.response.use(
           responseHeaders: error.response?.headers,
         });
         const hasUser = (() => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const user: unknown = authStore.user;
           return (
             !!user && typeof user === "object" && user !== null && "id" in user
