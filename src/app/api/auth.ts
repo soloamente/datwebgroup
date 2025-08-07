@@ -12,8 +12,81 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest", // Required by Laravel for AJAX requests
   },
+  // Additional configuration for cross-domain cookies
+  timeout: 10000,
 });
+
+// Add request interceptor to ensure proper headers for Laravel
+api.interceptors.request.use((config) => {
+  // Ensure we're sending the right headers for Laravel
+  config.headers["X-Requested-With"] = "XMLHttpRequest";
+  config.headers.Accept = "application/json";
+
+  // Add additional headers that might help with cross-domain cookies
+  config.headers["Cache-Control"] = "no-cache";
+
+  // Log cookies being sent for debugging
+  console.log("Request cookies being sent:", document.cookie);
+  console.log("Request URL:", config.url);
+  console.log("Request method:", config.method);
+
+  return config;
+});
+
+// Add response interceptor to handle cookies from Laravel
+api.interceptors.response.use(
+  (response) => {
+    console.log("Response headers:", response.headers);
+    console.log("Set-Cookie headers:", response.headers["set-cookie"]);
+
+    // Log all cookies after response
+    console.log("All cookies after response:", document.cookie);
+
+    // Check if we received session cookies
+    const setCookieHeaders = response.headers["set-cookie"];
+    if (setCookieHeaders) {
+      console.log("Received Set-Cookie headers:", setCookieHeaders);
+
+      // Check for Laravel session cookies
+      const hasLaravelSession = setCookieHeaders.some((cookie) =>
+        cookie.includes("laravel_session"),
+      );
+      const hasXsrfToken = setCookieHeaders.some((cookie) =>
+        cookie.includes("XSRF-TOKEN"),
+      );
+
+      console.log("Session cookies in response:", {
+        hasLaravelSession,
+        hasXsrfToken,
+      });
+    }
+
+    return response;
+  },
+  (error) => {
+    console.error("API Error:", error);
+
+    // If we get a 401 error, it might be due to missing session cookies
+    if (error.response?.status === 401) {
+      console.log("401 Unauthorized - checking session cookies");
+      const laravelSession = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("laravel_session="));
+      const xsrfToken = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("XSRF-TOKEN="));
+
+      console.log("Session cookies on 401 error:", {
+        hasLaravelSession: !!laravelSession,
+        hasXsrfToken: !!xsrfToken,
+      });
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 interface ApiResponse<T> {
   data: T;
@@ -85,12 +158,17 @@ const setAuthCookie = (cookieData: CookieStorage, expiresInDays = 30) => {
   });
 
   try {
-    Cookies.set("auth-storage", JSON.stringify(cookieData), {
+    // For cross-domain requests, we need to be more permissive with cookie settings
+    const cookieOptions = {
       path: "/",
       expires: expiresInDays,
-      secure: isHttps, // Only secure if HTTPS
-      sameSite: isMobile ? "lax" : "strict", // Use "lax" for mobile to avoid issues
-    });
+      secure: true, // Always secure for cross-domain
+      sameSite: "none" as const, // Allow cross-site cookies
+    };
+
+    console.log("Setting cookie with options:", cookieOptions);
+
+    Cookies.set("auth-storage", JSON.stringify(cookieData), cookieOptions);
 
     // Verify the cookie was set
     const verifyCookie = Cookies.get("auth-storage");
@@ -190,19 +268,29 @@ const useAuthStore = create<AuthStore>()(
         }
       },
       clearAuth: () => {
-        Cookies.remove("auth-storage", { path: "/" });
+        // Remove auth cookie with cross-domain settings
+        Cookies.remove("auth-storage", {
+          path: "/",
+          secure: true,
+          sameSite: "none",
+        });
         set({ user: null, error: null, isLoading: false });
+        console.log("Auth cleared, cookies removed");
       },
       setError: (error) => set({ error, isLoading: false }),
       setLoading: (loading) => set({ isLoading: loading }),
       isAuthenticated: () => {
         const cookie = Cookies.get("auth-storage");
-        if (!cookie) return false;
+        if (!cookie) {
+          console.log("No auth-storage cookie found");
+          return false;
+        }
+
         try {
           const data = JSON.parse(cookie) as CookieStorage;
           const hasUser = !!data.state?.user;
 
-          // Also check for Laravel session cookies
+          // Check for Laravel session cookies
           const laravelSession = document.cookie
             .split("; ")
             .find((row) => row.startsWith("laravel_session="));
@@ -213,14 +301,13 @@ const useAuthStore = create<AuthStore>()(
           console.log("Auth check - Has user:", hasUser);
           console.log("Auth check - Has Laravel session:", !!laravelSession);
           console.log("Auth check - Has XSRF token:", !!xsrfToken);
-
-          // Log all cookies for debugging
           console.log("All cookies:", document.cookie);
 
-          // For now, only check for user data since Laravel session cookies might not be set by the backend
-          // The backend might be using a different authentication mechanism
+          // For cross-domain requests, we might not have Laravel session cookies
+          // So we rely primarily on our auth-storage cookie
           return hasUser;
-        } catch {
+        } catch (error) {
+          console.error("Error parsing auth cookie:", error);
           return false;
         }
       },
@@ -558,8 +645,13 @@ const useAuthStore = create<AuthStore>()(
           await api.post("/logout");
           // Clear user state regardless of API success/failure on logout
           set({ user: null, error: null, isLoading: false });
-          // Also clear the cookie explicitly
-          Cookies.remove("auth-storage", { path: "/" });
+          // Also clear the cookie explicitly with cross-domain settings
+          Cookies.remove("auth-storage", {
+            path: "/",
+            secure: true,
+            sameSite: "none",
+          });
+          console.log("Logout successful, cookies cleared");
         } catch (error) {
           console.error("Logout error:", error);
           // Still clear user state even if API fails
@@ -568,9 +660,12 @@ const useAuthStore = create<AuthStore>()(
             error: "Errore durante il logout.",
             isLoading: false,
           });
-          Cookies.remove("auth-storage", { path: "/" });
-          // Optionally re-throw or handle differently if needed
-          // throw new Error("Logout failed");
+          Cookies.remove("auth-storage", {
+            path: "/",
+            secure: true,
+            sameSite: "none",
+          });
+          console.log("Logout failed but cookies cleared");
         }
       },
 
