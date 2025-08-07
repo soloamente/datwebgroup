@@ -27,10 +27,14 @@ api.interceptors.request.use((config) => {
   // Add additional headers that might help with cross-domain cookies
   config.headers["Cache-Control"] = "no-cache";
 
+  // Force credentials to be included
+  config.withCredentials = true;
+
   // Log cookies being sent for debugging
   console.log("Request cookies being sent:", document.cookie);
   console.log("Request URL:", config.url);
   console.log("Request method:", config.method);
+  console.log("WithCredentials:", config.withCredentials);
 
   return config;
 });
@@ -63,6 +67,13 @@ api.interceptors.response.use(
       });
     }
 
+    // Log successful response details
+    console.log("✅ Successful response:", {
+      status: response.status,
+      url: response.config.url,
+      hasCookies: !!setCookieHeaders,
+    });
+
     return response;
   },
   (error) => {
@@ -70,7 +81,7 @@ api.interceptors.response.use(
 
     // If we get a 401 error, it might be due to missing session cookies
     if (error.response?.status === 401) {
-      console.log("401 Unauthorized - checking session cookies");
+      console.log("❌ 401 Unauthorized - checking session cookies");
       const laravelSession = document.cookie
         .split("; ")
         .find((row) => row.startsWith("laravel_session="));
@@ -81,6 +92,17 @@ api.interceptors.response.use(
       console.log("Session cookies on 401 error:", {
         hasLaravelSession: !!laravelSession,
         hasXsrfToken: !!xsrfToken,
+        laravelSessionValue:
+          laravelSession?.split("=")[1]?.substring(0, 10) + "...",
+        xsrfTokenValue: xsrfToken?.split("=")[1]?.substring(0, 10) + "...",
+      });
+
+      // Log request details for debugging
+      console.log("Request that failed:", {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        withCredentials: error.config?.withCredentials,
       });
     }
 
