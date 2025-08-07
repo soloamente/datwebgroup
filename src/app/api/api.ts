@@ -32,6 +32,14 @@ api.interceptors.request.use((config) => {
   console.log("API Request Interceptor - Laravel Session:", !!laravelSession);
   console.log("API Request Interceptor - XSRF Token:", !!xsrfToken);
 
+  // Add detailed logging for debugging
+  console.log("🔍 Request details:", {
+    url: config.url,
+    method: config.method,
+    withCredentials: config.withCredentials,
+    headers: config.headers,
+  });
+
   if (authStore.isAuthenticated()) {
     // The session cookies are automatically included due to withCredentials: true
     console.log(
@@ -68,10 +76,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => {
     console.log(
-      "API Response Interceptor - Success:",
+      "✅ API Response Interceptor - Success:",
       response.status,
       response.config.url,
     );
+
+    // Log response details for debugging
+    console.log("🔍 Response details:", {
+      status: response.status,
+      url: response.config.url,
+      headers: response.headers,
+      hasSetCookie: !!response.headers["set-cookie"],
+    });
+
     return response;
   },
   async (error: unknown) => {
@@ -92,12 +109,22 @@ api.interceptors.response.use(
 
       if (error.response?.status === 401) {
         console.log(
-          "API Response Interceptor - 401 Unauthorized, checking auth state",
+          "❌ API Response Interceptor - 401 Unauthorized, checking auth state",
         );
         const authStore = useAuthStore.getState();
 
         // Check if we actually have a valid session
         const isAuthenticated = authStore.isAuthenticated();
+
+        // Add detailed logging for 401 errors
+        console.log("🔍 401 Error details:", {
+          url: error.config?.url,
+          method: error.config?.method,
+          withCredentials: error.config?.withCredentials,
+          headers: error.config?.headers,
+          responseData: error.response?.data,
+          responseHeaders: error.response?.headers,
+        });
         const hasUser = !!authStore.user;
 
         console.log("Auth state check:", {
