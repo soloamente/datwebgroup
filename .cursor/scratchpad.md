@@ -2109,3 +2109,37 @@ From the console logs provided, we can see:
 ## Status: IN PROGRESS
 
 The cookie saving mechanism is working, but we need to either get the backend to set proper session cookies or find the correct authentication mechanism.
+
+## Latest Changes (2024-07-28)
+
+### Removed Bearer Token Authentication
+
+- **Issue**: The backend uses `better-auth` which expects session-based authentication, not Bearer tokens
+- **Change**: Removed `Authorization: Bearer {user_id}` header from API interceptor
+- **Reason**: Laravel better-auth uses session cookies for authentication, not token-based auth
+
+### Enhanced Session Cookie Debugging
+
+- **Change**: Modified `verifyOtp` function to better handle session cookies
+- **Removed**: Manual cookie setting with random values (not working)
+- **Added**: Better debugging to understand why backend doesn't set session cookies
+- **Focus**: Now investigating if the backend is properly configured to set session cookies
+
+### Updated Authentication Logic
+
+- **Change**: Made `isAuthenticated` more lenient, focusing on `auth-storage` cookie
+- **Reason**: Laravel session cookies might not be set by the backend due to configuration issues
+
+## Current Investigation Points
+
+1. **Backend Session Configuration**: Is the Laravel backend properly configured to set session cookies?
+2. **Better-Auth Integration**: How is better-auth configured and what authentication method does it expect?
+3. **CSRF Token Endpoint**: Does the `/csrf-token` endpoint actually set session cookies?
+4. **Session Storage**: Is the backend using file-based sessions, database sessions, or something else?
+
+## Next Steps
+
+1. **Test login flow** with the removed Bearer token authentication
+2. **Check console logs** for session cookie debugging information
+3. **Investigate backend configuration** for session management
+4. **Consider alternative authentication methods** if session-based auth is not working

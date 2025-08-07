@@ -52,11 +52,11 @@ api.interceptors.request.use((config) => {
     config.headers.Accept = "application/json";
     config.headers["X-Requested-With"] = "XMLHttpRequest";
 
-    // Add Authorization header if we have user data
-    if (authStore.user?.id) {
-      config.headers.Authorization = `Bearer ${authStore.user.id}`;
-      console.log("API Request Interceptor - Added Authorization header");
-    }
+    // Remove Authorization header - Laravel better-auth uses session cookies, not Bearer tokens
+    // if (authStore.user?.id) {
+    //   config.headers.Authorization = `Bearer ${authStore.user.id}`;
+    //   console.log("API Request Interceptor - Added Authorization header");
+    // }
 
     return config;
   }

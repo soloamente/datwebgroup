@@ -217,8 +217,8 @@ const useAuthStore = create<AuthStore>()(
           // Log all cookies for debugging
           console.log("All cookies:", document.cookie);
 
-          // For now, only check for user data since Laravel session cookies might not be set immediately
-          // TODO: Investigate why Laravel session cookies are not being set by the backend
+          // For now, only check for user data since Laravel session cookies might not be set by the backend
+          // The backend might be using a different authentication mechanism
           return hasUser;
         } catch {
           return false;
@@ -369,77 +369,25 @@ const useAuthStore = create<AuthStore>()(
               );
               console.log("Backend set XSRF token:", !!backendXsrfToken);
 
-              // If backend didn't set them, try manual approach as fallback
+              // If backend didn't set them, the session might not be properly established
               if (!backendLaravelSession || !backendXsrfToken) {
                 console.log(
-                  "Backend didn't set cookies, using manual fallback",
+                  "Backend didn't set session cookies - this might indicate a session issue",
                 );
-
-                if (!backendLaravelSession) {
-                  console.log("Setting Laravel session cookie manually");
-                  const sessionId =
-                    Math.random().toString(36).substring(2, 15) +
-                    Math.random().toString(36).substring(2, 15);
-                  Cookies.set("laravel_session", sessionId, {
-                    path: "/",
-                    expires: 30,
-                    secure: isMobileDevice() ? false : true,
-                    sameSite: isMobileDevice() ? "lax" : "strict",
-                  });
-                }
-
-                if (!backendXsrfToken) {
-                  console.log("Setting XSRF token cookie manually");
-                  const token =
-                    Math.random().toString(36).substring(2, 15) +
-                    Math.random().toString(36).substring(2, 15);
-                  Cookies.set("XSRF-TOKEN", token, {
-                    path: "/",
-                    expires: 30,
-                    secure: isMobileDevice() ? false : true,
-                    sameSite: isMobileDevice() ? "lax" : "strict",
-                  });
-                }
+                console.log("This could be because:");
+                console.log(
+                  "1. The backend is not configured to set session cookies",
+                );
+                console.log("2. The session is not being properly established");
+                console.log(
+                  "3. The backend expects different authentication method",
+                );
               }
             } catch (csrfError) {
+              console.log("CSRF token request failed:", csrfError);
               console.log(
-                "CSRF token request failed, using manual cookies:",
-                csrfError,
+                "This might indicate that the session is not properly established",
               );
-
-              // Fallback to manual cookie setting
-              const existingLaravelSession = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("laravel_session="));
-              const existingXsrfToken = document.cookie
-                .split("; ")
-                .find((row) => row.startsWith("XSRF-TOKEN="));
-
-              if (!existingLaravelSession) {
-                console.log("Laravel session cookie missing, setting manually");
-                const sessionId =
-                  Math.random().toString(36).substring(2, 15) +
-                  Math.random().toString(36).substring(2, 15);
-                Cookies.set("laravel_session", sessionId, {
-                  path: "/",
-                  expires: 30,
-                  secure: isMobileDevice() ? false : true,
-                  sameSite: isMobileDevice() ? "lax" : "strict",
-                });
-              }
-
-              if (!existingXsrfToken) {
-                console.log("XSRF token cookie missing, setting manually");
-                const token =
-                  Math.random().toString(36).substring(2, 15) +
-                  Math.random().toString(36).substring(2, 15);
-                Cookies.set("XSRF-TOKEN", token, {
-                  path: "/",
-                  expires: 30,
-                  secure: isMobileDevice() ? false : true,
-                  sameSite: isMobileDevice() ? "lax" : "strict",
-                });
-              }
             }
 
             // Double-check that the state was set correctly
@@ -452,24 +400,26 @@ const useAuthStore = create<AuthStore>()(
               );
             }, 100);
 
-            return { success: true };
+            set({ isLoading: false });
+            return {
+              success: true,
+              message: response.data.message ?? "Login effettuato con successo",
+            };
           } else {
-            console.error(
-              "Verify OTP: User data missing in response",
-              response.data,
-            );
-            const message = "Dati utente non ricevuti dopo la verifica OTP.";
-            set({ user: null, error: message, isLoading: false });
-            return { success: false, message };
+            set({ isLoading: false });
+            return {
+              success: false,
+              message: "Dati utente non validi nella risposta",
+            };
           }
         } catch (error) {
           let message = "Errore durante la verifica OTP.";
-          if (axios.isAxiosError(error) && error.response?.data) {
-            const errorData = error.response.data as ApiErrorResponse;
-            message = errorData.message || message;
+          if (axios.isAxiosError(error)) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            message = error.response?.data?.message || message;
           }
           console.error("Verify OTP error:", error);
-          set({ user: null, error: message, isLoading: false });
+          set({ error: message, isLoading: false });
           return { success: false, message };
         }
       },
