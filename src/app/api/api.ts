@@ -126,7 +126,7 @@ api.interceptors.response.use(
           responseHeaders: error.response?.headers,
         });
         const hasUser = (() => {
-          const user = authStore.user;
+          const user: unknown = authStore.user;
           return (
             !!user && typeof user === "object" && user !== null && "id" in user
           );
