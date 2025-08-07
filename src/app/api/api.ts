@@ -133,7 +133,7 @@ api.interceptors.response.use(
           method: error.config?.method,
           withCredentials: error.config?.withCredentials,
           headers: error.config?.headers,
-          responseData: error.response?.data,
+          responseData: error.response?.data as unknown,
           responseHeaders: error.response?.headers,
         });
         const hasUser = (() => {
@@ -143,7 +143,7 @@ api.interceptors.response.use(
             typeof user === "object" &&
             user !== null &&
             "id" in user &&
-            typeof (user as any).id === "number"
+            typeof (user as Record<string, unknown>).id === "number"
           );
         })();
 
