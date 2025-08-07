@@ -125,10 +125,12 @@ api.interceptors.response.use(
           responseData: error.response?.data,
           responseHeaders: error.response?.headers,
         });
-        const hasUser =
-          !!authStore.user &&
-          typeof authStore.user === "object" &&
-          authStore.user !== null;
+        const hasUser = (() => {
+          const user = authStore.user;
+          return (
+            !!user && typeof user === "object" && user !== null && "id" in user
+          );
+        })();
 
         console.log("Auth state check:", {
           isAuthenticated,
