@@ -53,15 +53,13 @@ export default function TokenOtpForm({
         toast.success("Login completato con successo");
         onSuccess({ success: true, message: "Login completato con successo" });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/prefer-nullish-coalescing
-        setError(result.message || "Codice OTP non valido");
+        setError(result.message ?? "Codice OTP non valido");
         onSuccess({
           success: false,
-          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-          message: result.message || "Codice OTP non valido",
+          message: result.message ?? "Codice OTP non valido",
         });
       }
-    } catch (error) {
+    } catch {
       const message = "Errore durante la verifica del codice OTP";
       setError(message);
       toast.error(message);
@@ -90,11 +88,11 @@ export default function TokenOtpForm({
         setError("");
       } else {
         const message =
-          result.message || "Errore durante l'invio del nuovo OTP";
+          result.message ?? "Errore durante l'invio del nuovo OTP";
         setError(message);
         toast.error(message);
       }
-    } catch (error) {
+    } catch {
       const message = "Errore durante l'invio del nuovo OTP";
       setError(message);
       toast.error(message);

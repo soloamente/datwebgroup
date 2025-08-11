@@ -1,17 +1,15 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState, useId } from "react";
-import { CheckIcon, ChevronDownIcon, Trash2Icon } from "lucide-react";
+import { useCallback, useEffect, useState, useId } from "react";
+import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import {
   userService,
   type DocumentClass,
   type DocumentClassField,
   type Sharer,
   docClassService,
-  type AssignSharerRequest,
   type AvailableSharersResponse,
-  type RemoveSharerResponse,
 } from "@/app/api/api"; // Import necessary types
 import { toast } from "sonner";
 import {
@@ -21,16 +19,10 @@ import {
   TabsContent,
   TabsContents,
 } from "@/components/animate-ui/components/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+// Removed unused Table imports
 import { Button } from "@/components/ui/button";
-import { Stack } from "@/components/ui/stack";
+// Removed unused Stack import
+import Image from "next/image";
 import { Checkbox as AnimatedCheckbox } from "@/components/animate-ui/base/checkbox";
 import {
   Command,
@@ -195,25 +187,28 @@ export default function DocumentClassDetailPage() {
   const isInvalid = editNome.trim() === "";
 
   // Function to fetch available sharers for assignment
-  const fetchAvailableSharers = async (docClassId?: number) => {
-    const classId = docClassId ?? documentClass?.id;
-    if (!classId) return;
+  const fetchAvailableSharers = useCallback(
+    async (docClassId?: number) => {
+      const classId = docClassId ?? documentClass?.id;
+      if (!classId) return;
 
-    setIsLoadingSharers(true);
-    try {
-      const response: AvailableSharersResponse =
-        await docClassService.getAvailableSharers(classId);
-      // Extract the data array from the API response
-      const sharers = response.data || [];
-      setAvailableSharers(sharers);
-      console.log("Available sharers loaded:", sharers);
-    } catch (error) {
-      console.error("Failed to fetch available sharers:", error);
-      toast.error("Impossibile caricare gli sharers disponibili");
-    } finally {
-      setIsLoadingSharers(false);
-    }
-  };
+      setIsLoadingSharers(true);
+      try {
+        const response: AvailableSharersResponse =
+          await docClassService.getAvailableSharers(classId);
+        // Extract the data array from the API response
+        const sharers = response.data || [];
+        setAvailableSharers(sharers);
+        console.log("Available sharers loaded:", sharers);
+      } catch (error) {
+        console.error("Failed to fetch available sharers:", error);
+        toast.error("Impossibile caricare gli sharers disponibili");
+      } finally {
+        setIsLoadingSharers(false);
+      }
+    },
+    [documentClass?.id],
+  );
 
   useEffect(() => {
     if (idFromRoute) {
@@ -286,7 +281,7 @@ export default function DocumentClassDetailPage() {
       };
       void fetchData();
     }
-  }, [idFromRoute]);
+  }, [idFromRoute, fetchAvailableSharers]);
 
   if (isLoading) {
     return (
@@ -629,9 +624,11 @@ export default function DocumentClassDetailPage() {
               {/* Left Side: Cover Image */}
               <div className="group relative mx-auto w-40 flex-shrink-0 md:mx-0">
                 {documentClass.logo_url ? (
-                  <img
+                  <Image
                     src={documentClass.logo_url}
                     alt={`Cover for ${documentClass.nome}`}
+                    width={160}
+                    height={240}
                     className="h-60 w-40 rounded-lg object-cover shadow-md"
                   />
                 ) : (
@@ -1089,7 +1086,7 @@ export default function DocumentClassDetailPage() {
             >
               <div className="min-w-[220px] flex-1">
                 <Label htmlFor={sharerSelectId} className="mb-1 block text-sm">
-                  Seleziona l'utente
+                  Seleziona l&apos;utente
                 </Label>
                 <Popover
                   open={isSharerSelectOpen}
@@ -1127,10 +1124,10 @@ export default function DocumentClassDetailPage() {
                                   <span>{sharer.nominativo}</span>
                                 </>
                               ) : (
-                                "Seleziona l'utente..."
+                                "Seleziona l&apos;utente..."
                               );
                             })()
-                          : "Seleziona l'utente..."}
+                          : "Seleziona l&apos;utente..."}
                       </span>
                       <ChevronDownIcon
                         size={18}

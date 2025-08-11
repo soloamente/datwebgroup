@@ -43,6 +43,8 @@ The user reported that login sessions are not maintained on mobile devices, whil
 - [x] Fix sidebar shrinking in dashboard layouts (admin + sharer)
 - [x] Update date formatting to full Italian style on viewer pages
 - [x] Use boring avatar fallback in viewer header avatar
+- [x] Fix lint issues in `src/app/dashboard/admin/classi-documentali/[id]/page.tsx`
+- [x] Fix lint issues in `src/components/login/token/token-otp-form.tsx`
 - [ ] Test login flow on mobile devices
 - [ ] Verify session persistence across page refreshes
 - [ ] Test logout functionality
@@ -50,7 +52,7 @@ The user reported that login sessions are not maintained on mobile devices, whil
 
 ## Current Status / Progress Tracking
 
-**Latest Update**: Added Laravel session cookie management to ensure proper authentication with Laravel backend.
+**Latest Update**: Resolved all reported lints. Replaced `<img>` with Next.js `Image`, removed unused imports, fixed missing hook dependency warning, escaped apostrophes in labels, and switched `||` to `??` in OTP form. Lint passes cleanly for both files.
 
 **Key Changes Made**:
 
