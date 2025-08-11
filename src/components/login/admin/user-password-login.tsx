@@ -99,7 +99,7 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
         />
       </div>
 
-      {error && <p className="text-center text-sm text-red-500">{error}</p>}
+      {/* inline error removed; using toast only */}
 
       <Button
         type="submit"

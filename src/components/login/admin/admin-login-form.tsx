@@ -6,6 +6,7 @@ import UsernameInput from "@/components/login/username-input";
 import PasswordInput from "@/components/login/password-input";
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface AdminLoginFormProps {
   onSuccess: (data: {
@@ -54,13 +55,15 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
           username,
           password,
         });
+        toast.success("Codice OTP inviato alla tua email");
         return;
       } else {
         console.log("Login failed:", result?.message);
-        setError(
+        const message =
           result?.message ??
-            "Login fallito. Controlla le credenziali e riprova.",
-        );
+          "Login fallito. Controlla le credenziali e riprova.";
+        setError(message);
+        toast.error(message);
         return;
       }
 
@@ -74,9 +77,10 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError(
-        error instanceof Error ? error.message : "Errore durante il login",
-      );
+      const message =
+        error instanceof Error ? error.message : "Errore durante il login";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -96,7 +100,7 @@ export default function AdminLoginForm({ onSuccess }: AdminLoginFormProps) {
         /> */}
       </div>
 
-      {error && <p className="text-center text-sm text-red-500">{error}</p>}
+      {/* inline error removed; using toast only */}
 
       <Button
         type="submit"

@@ -44,6 +44,7 @@ export default function TokenLoginHandler({
     if (!token) {
       setStep("error");
       setError("Token non fornito nell'URL");
+      toast.error("Token non fornito nell'URL");
       return;
     }
 
@@ -90,6 +91,7 @@ export default function TokenLoginHandler({
 
     if (!otp.trim()) {
       setError("Inserisci il codice OTP");
+      toast.error("Inserisci il codice OTP");
       return;
     }
 
@@ -221,7 +223,7 @@ export default function TokenLoginHandler({
                 />
               </div>
 
-              {error && <div className="text-destructive text-sm">{error}</div>}
+              {/* inline error removed; using toast only */}
 
               <div className="flex flex-col gap-2">
                 <Button type="submit" disabled={isLoading || !otp.trim()}>

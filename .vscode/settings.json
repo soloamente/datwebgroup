@@ -10,7 +10,7 @@
   ],
   "extensions.ignoreRecommendations": true,
   "typescript.tsserver.log": "off",
-  "editor.stickyScroll.enabled": false,
+  "editor.stickyScroll.enabled": true,
   "workbench.tree.enableStickyScroll": false,
   "files.associations": {
     ".env.*": "dotenv",
@@ -142,7 +142,7 @@
     "itemSize": 32
   },
   "editor.hideCursorInOverviewRuler": true,
-  "editor.minimap.enabled": false,
+  "editor.minimap.enabled": true,
   "window.titleBarStyle": "native",
   "apc.electron": {
     "titleBarStyle": "hiddenInset",

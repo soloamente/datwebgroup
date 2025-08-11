@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,6 +31,7 @@ import {
   Calendar,
   ArrowUpDown,
 } from "lucide-react";
+import { MdClass } from "react-icons/md";
 import useAuthStore from "@/app/api/auth";
 import {
   userService,
@@ -41,6 +41,30 @@ import {
 import { useRouter, useParams } from "next/navigation";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { formatFullDate } from "@/lib/date-format";
+import { IoDownloadOutline, IoExtensionPuzzle, IoEye } from "react-icons/io5";
+import {
+  BsFileEarmarkPdfFill,
+  BsFileEarmarkTextFill,
+  BsFileEarmarkExcelFill,
+  BsFileEarmarkMedicalFill,
+  BsFillFolderFill,
+} from "react-icons/bs";
+import { TbSquareRoundedArrowDownFilled } from "react-icons/tb";
+import {
+  FaArrowRightLong,
+  FaArrowUpLong,
+  FaArrowDownLong,
+  FaArrowUp,
+  FaArrowDown,
+  FaArrowDownShortWide,
+  FaArrowUpWideShort,
+  FaArrowDownWideShort,
+  FaArrowDownAZ,
+  FaClock,
+  FaUser,
+  FaKey,
+} from "react-icons/fa6";
 
 type FileSortOption =
   | "name_az"
@@ -115,15 +139,7 @@ export default function BatchDetailsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const formatDate = (dateString: string): string => {
-    try {
-      return format(new Date(dateString), "dd MMM yyyy 'alle' HH:mm", {
-        locale: it,
-      });
-    } catch {
-      return dateString;
-    }
-  };
+  const formatDate = (dateString: string): string => formatFullDate(dateString);
 
   const handleDownloadFile = async (file: ViewerFile) => {
     try {
@@ -259,8 +275,8 @@ export default function BatchDetailsPage() {
           <Button onClick={loadBatchDetails} variant="outline">
             Riprova
           </Button>
-          <Button onClick={handleBackToViewer} variant="outline">
-            Torna ai Documenti
+          <Button onClick={handleBackToViewer} variant="secondary">
+            Torna indietro
           </Button>
         </div>
       </div>
@@ -272,8 +288,8 @@ export default function BatchDetailsPage() {
       <div className="flex h-screen items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <p className="text-destructive">Batch non trovato</p>
-          <Button onClick={handleBackToViewer} variant="outline">
-            Torna ai Documenti
+          <Button onClick={handleBackToViewer} variant="secondary">
+            Torna indietro
           </Button>
         </div>
       </div>
@@ -288,6 +304,53 @@ export default function BatchDetailsPage() {
   const getUserInitial = () => {
     const displayName = getUserDisplayName();
     return displayName.charAt(0).toUpperCase();
+  };
+
+  // Helper function to get the appropriate file icon based on file type
+  const getFileIcon = (fileName: string, mimeType: string) => {
+    const extension = fileName.split(".").pop()?.toLowerCase();
+
+    // Check for PDF files
+    if (extension === "pdf" || mimeType.includes("pdf")) {
+      return <BsFileEarmarkPdfFill className="text-muted-foreground h-8 w-8" />;
+    }
+
+    // Check for Excel files
+    if (
+      extension === "xlsx" ||
+      extension === "xls" ||
+      mimeType.includes("excel") ||
+      mimeType.includes("spreadsheet")
+    ) {
+      return (
+        <BsFileEarmarkExcelFill className="text-muted-foreground h-8 w-8" />
+      );
+    }
+
+    // Check for Word/Document files
+    if (
+      extension === "doc" ||
+      extension === "docx" ||
+      mimeType.includes("word") ||
+      mimeType.includes("document")
+    ) {
+      return (
+        <BsFileEarmarkTextFill className="text-muted-foreground h-8 w-8" />
+      );
+    }
+
+    // Default to text file icon for other document types
+    return <BsFileEarmarkTextFill className="text-muted-foreground h-8 w-8" />;
+  };
+
+  const getFileExtension = (fileName: string): string => {
+    const extension = fileName.split(".").pop()?.toLowerCase();
+    return extension ? extension.toUpperCase() : "FILE";
+  };
+
+  const getFileNameWithoutExtension = (fileName: string): string => {
+    const lastDotIndex = fileName.lastIndexOf(".");
+    return lastDotIndex !== -1 ? fileName.substring(0, lastDotIndex) : fileName;
   };
 
   // Get all files from all documents
@@ -307,55 +370,176 @@ export default function BatchDetailsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={handleBackToViewer}
-            className="flex items-center space-x-2"
+            className="ring-border bg-card flex items-center space-x-2 border-none ring-1"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Torna ai Documenti</span>
+            <span>Torna indietro</span>
           </Button>
         </div>
+      </div>
+
+      {/* Files Section - Outside Card */}
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold">File Allegati</h2>
+          </div>
+          <div className="flex items-center space-x-4">
+            {/* Sort Controls */}
+
+            <Select
+              value={fileSortBy}
+              onValueChange={(value: FileSortOption) => setFileSortBy(value)}
+            >
+              <SelectTrigger className="ring-border bg-card border-none ring-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name_az">
+                  Nome A <FaArrowRightLong className="opacity-70" /> Z
+                </SelectItem>
+                <SelectItem value="name_za">
+                  Nome Z <FaArrowRightLong className="opacity-70" /> A
+                </SelectItem>
+                <SelectItem value="size_largest">
+                  Dimensione <FaArrowDownWideShort className="opacity-70" />
+                </SelectItem>
+                <SelectItem value="size_smallest">
+                  Dimensione <FaArrowUpWideShort className="opacity-70" />
+                </SelectItem>
+                <SelectItem value="type_az">
+                  Tipo A <FaArrowRightLong className="opacity-70" /> Z
+                </SelectItem>
+                <SelectItem value="type_za">
+                  Tipo Z <FaArrowRightLong className="opacity-70" /> A
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+              <Input
+                placeholder="Cerca file..."
+                className="ring-border bg-card rounded-lg border-none pl-10 ring-1"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {sortedFiles.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <FileText className="text-muted-foreground mb-4 h-12 w-12" />
+            <h3 className="mb-2 text-lg font-medium">
+              {searchTerm ? "Nessun file trovato" : "Nessun file disponibile"}
+            </h3>
+            <p className="text-muted-foreground text-center">
+              {searchTerm
+                ? "Prova a modificare i termini di ricerca"
+                : "Non ci sono file allegati a questa condivisione"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {sortedFiles.map((file) => (
+              <div
+                key={file.id}
+                className="ring-border bg-card flex flex-col rounded-lg p-4 ring-1 transition-colors"
+              >
+                <div className="mb-8 flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    {getFileIcon(file.original_filename, file.mime_type)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <p className="truncate text-sm font-medium">
+                        {getFileNameWithoutExtension(file.original_filename)}
+                      </p>
+                      <Badge
+                        variant={"outline"}
+                        className="text-muted-foreground font-ingram ring-border ml-auto border-none text-xs ring-1"
+                      >
+                        {getFileExtension(file.original_filename)}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
+                      {formatFileSize(file.size)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleViewFile(file)}
+                    className="ring-border flex-1 border-none ring-[1.5px]"
+                  >
+                    <IoEye className="text-muted-foreground h-5 w-5" />
+                    Visualizza
+                  </Button>
+                  <Button
+                    onClick={() => handleDownloadFile(file)}
+                    className="bg-primary flex-1 gap-1 font-medium text-white"
+                  >
+                    <TbSquareRoundedArrowDownFilled className="h-5 w-5" />
+                    Scarica
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Batch Info Card */}
       <Card>
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col items-start">
             <div className="flex-1">
-              <CardTitle className="text-2xl">{batch.title}</CardTitle>
-              <CardDescription className="mt-2">
-                Condiviso da {batch.sharer.nominativo} il{" "}
-                {formatDate(batch.sent_at)}
-              </CardDescription>
-              {batch.document_class && (
-                <div className="mt-2 flex items-center space-x-2">
-                  <span className="text-muted-foreground text-sm">
-                    Classe documentale: {batch.document_class.name}
-                  </span>
-                </div>
-              )}
+              <CardTitle className="text-2xl">Informazioni</CardTitle>
             </div>
-            <Badge variant={batch.status === "sent" ? "default" : "secondary"}>
-              {batch.status === "sent" ? "Inviato" : batch.status}
-            </Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="text-muted-foreground flex items-center space-x-2 text-sm">
-              <Clock className="h-4 w-4" />
-              <span>{formatDate(batch.sent_at)}</span>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">Condiso da</span>
+              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                <FaUser className="text-muted-foreground/70 h-4 w-4" />
+                {batch.sharer.nominativo}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">Condiso il</span>
+              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                <FaClock className="text-muted-foreground/70 h-4 w-4" />
+                {formatDate(batch.sent_at)}
+              </div>
             </div>
 
-            <div className="text-muted-foreground flex items-center space-x-2 text-sm">
-              <FileText className="h-4 w-4" />
-              <span>{allFiles.length} file allegati</span>
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">
+                Classe documentale
+              </span>
+              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                <BsFillFolderFill className="text-muted-foreground/70 h-4 w-4" />
+                <span>{batch.document_class.name}</span>
+              </div>
             </div>
 
-            <div className="text-muted-foreground flex items-center space-x-2 text-sm">
-              <User className="h-4 w-4" />
-              <span>{batch.viewers?.length || 0} viewer</span>
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-sm">
+                File allegati
+              </span>
+              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                <BsFileEarmarkMedicalFill className="text-muted-foreground/70 h-4 w-4" />
+                <span>{allFiles.length} file allegati</span>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -365,149 +549,32 @@ export default function BatchDetailsPage() {
       {batch.documents?.[0]?.values && batch.documents[0].values.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Valori dei campi</CardTitle>
-            <CardDescription>Dettagli del documento condiviso</CardDescription>
+            <CardTitle className="text-xl">Valori dei campi</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
               {batch.documents[0].values.map((value) => (
-                <div
-                  key={value.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium">
-                      {value.field.label}:
-                    </span>
-                  </div>
+                <div key={value.id} className="flex flex-col items-start gap-2">
                   <span className="text-muted-foreground text-sm">
+                    {value.field.label}
+                  </span>
+                  <div className="flex w-full gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                    <FaKey className="text-muted-foreground/70 h-4 w-4" />
                     {getFieldValueDisplay(
                       value.value_text ??
                         value.value_int ??
                         value.value_dec ??
                         value.value_bool ??
-                        value.value_date ??
-                        value.value_datetime,
+                        formatFullDate(value.value_date ?? "") ??
+                        formatFullDate(value.value_datetime ?? ""),
                     )}
-                  </span>
+                  </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Files Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>File Allegati</CardTitle>
-              <CardDescription>
-                {sortedFiles.length} di {allFiles.length} file disponibili per
-                il download
-              </CardDescription>
-            </div>
-            <div className="flex items-center space-x-4">
-              {/* Sort Controls */}
-              <div className="flex items-center space-x-2">
-                <ArrowUpDown className="text-muted-foreground h-4 w-4" />
-                <span className="text-foreground text-sm font-medium">
-                  Ordina:
-                </span>
-              </div>
-              <Select
-                value={fileSortBy}
-                onValueChange={(value: FileSortOption) => setFileSortBy(value)}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name_az">Nome A-Z</SelectItem>
-                  <SelectItem value="name_za">Nome Z-A</SelectItem>
-                  <SelectItem value="size_largest">Dimensione ↓</SelectItem>
-                  <SelectItem value="size_smallest">Dimensione ↑</SelectItem>
-                  <SelectItem value="type_az">Tipo A-Z</SelectItem>
-                  <SelectItem value="type_za">Tipo Z-A</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Search */}
-              <div className="relative">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
-                <Input
-                  placeholder="Cerca file..."
-                  className="w-64 pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {sortedFiles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <FileText className="text-muted-foreground mb-4 h-12 w-12" />
-              <h3 className="mb-2 text-lg font-medium">
-                {searchTerm ? "Nessun file trovato" : "Nessun file disponibile"}
-              </h3>
-              <p className="text-muted-foreground text-center">
-                {searchTerm
-                  ? "Prova a modificare i termini di ricerca"
-                  : "Non ci sono file allegati a questa condivisione"}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {sortedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="hover:bg-muted/50 flex items-center space-x-4 rounded-lg border p-4 transition-colors"
-                >
-                  <div className="flex-shrink-0">
-                    <File className="text-muted-foreground h-8 w-8" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <p className="truncate font-medium">
-                        {file.original_filename}
-                      </p>
-                      <Badge variant="outline" className="text-xs">
-                        {file.pivot.label}
-                      </Badge>
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      {formatFileSize(file.size)} • {file.mime_type}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 text-right">
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewFile(file)}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Visualizza
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownloadFile(file)}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Scarica
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

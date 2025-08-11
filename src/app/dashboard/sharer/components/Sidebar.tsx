@@ -79,7 +79,7 @@ export default function Sidebar({
       id="sidebar"
       className={`${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } bg-sidebar fixed z-30 m-2 flex h-[calc(100vh-1rem)] ${
+      } bg-sidebar fixed z-30 m-2 flex h-[calc(100vh-1rem)] shrink-0 ${
         isCompact ? "w-[80px]" : "w-[300px]"
       } flex-col gap-4 overflow-hidden rounded-2xl border p-3 transition-all duration-300 ease-in-out md:sticky md:top-4 md:m-4 md:h-[calc(100vh-2rem)] md:${
         isCompact ? "w-[80px]" : "w-[300px]"

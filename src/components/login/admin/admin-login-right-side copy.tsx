@@ -126,10 +126,13 @@ export default function AdminLoginRightSide({
       if (result.exists && result.role) {
         onUsernameChecked(currentUsername.trim(), result.role);
       } else {
-        setError(result.message ?? "User not found or invalid username.");
+        const message =
+          result.message ?? "Utente non trovato o username non valido.";
+        setError(message);
+        toast.error(message);
       }
     } catch (e: unknown) {
-      let message = "Failed to check username. Please try again.";
+      let message = "Verifica dello username non riuscita. Riprova.";
       if (
         typeof e === "object" &&
         e !== null &&
@@ -144,6 +147,7 @@ export default function AdminLoginRightSide({
         message = e.message;
       }
       setError(message);
+      toast.error(message);
       console.error("Check username error:", e);
     }
     setIsLoading(false);
@@ -163,7 +167,7 @@ export default function AdminLoginRightSide({
 
   const handlePasswordLogin = async () => {
     if (!currentPassword) {
-      setError("Password is required.");
+      setError("La password è obbligatoria.");
       return;
     }
     setError(null);
@@ -183,10 +187,14 @@ export default function AdminLoginRightSide({
           password: currentPassword,
         });
       } else {
-        setError(result?.message ?? "Login failed. Check credentials.");
+        const message =
+          result?.message ?? "Accesso non riuscito. Controlla le credenziali.";
+        setError(message);
+        toast.error(message);
       }
     } catch (e) {
-      setError("An error occurred during login.");
+      setError("Si è verificato un errore durante il login.");
+      toast.error("Si è verificato un errore durante il login.");
       console.error("Password login error:", e);
     }
     setIsLoading(false);
@@ -228,9 +236,7 @@ export default function AdminLoginRightSide({
                 // Add Enter key handler
                 onKeyDown={handleUsernameInputKeyDown}
               />
-              {error && (
-                <p className="text-center text-sm text-red-500">{error}</p>
-              )}
+              {/* inline error removed; using toast only */}
               {/* Glowing animated background behind the button */}
               <div className="relative w-full">
                 <div className="pointer-events-none absolute -inset-1 z-0 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm" />
@@ -297,9 +303,7 @@ export default function AdminLoginRightSide({
                 // Add Enter key handler
                 onKeyDown={handlePasswordInputKeyDown}
               />
-              {error && (
-                <p className="text-center text-sm text-red-500">{error}</p>
-              )}
+              {/* inline error removed; using toast only */}
               <div className="relative w-full">
                 <div className="pointer-events-none absolute -inset-1 z-0 animate-pulse rounded-2xl bg-gradient-to-tr from-blue-400/40 via-blue-200/10 to-blue-600/30 blur-sm" />
                 <Button

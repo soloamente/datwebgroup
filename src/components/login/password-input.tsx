@@ -88,7 +88,7 @@ export default function PasswordInput({
           onChange={onChange}
           autoFocus
           className="peer border-border h-14 rounded-2xl border-[1.5px] p-4 ps-10 pe-9 placeholder:text-black/20 dark:border-white/20 dark:placeholder:text-white/20"
-          placeholder="Pa12£$56789!%"
+          placeholder="Password"
           type={isVisible ? "text" : "password"}
           onKeyDown={onKeyDown}
         />

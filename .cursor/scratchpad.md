@@ -39,9 +39,14 @@ The user reported that login sessions are not maintained on mobile devices, whil
 - [x] Fix cookie settings for mobile devices
 - [x] Add Laravel session cookie handling
 - [x] Fix infinite loading issue
+- [x] Add global 404 redirect handler
+- [x] Fix sidebar shrinking in dashboard layouts (admin + sharer)
+- [x] Update date formatting to full Italian style on viewer pages
+- [x] Use boring avatar fallback in viewer header avatar
 - [ ] Test login flow on mobile devices
 - [ ] Verify session persistence across page refreshes
 - [ ] Test logout functionality
+- [ ] Verify table top rounded corners render correctly in admin sharer table
 
 ## Current Status / Progress Tracking
 
@@ -56,6 +61,92 @@ The user reported that login sessions are not maintained on mobile devices, whil
 
 **Next Steps**: Test the login flow to ensure Laravel session cookies are properly maintained.
 
+---
+
+# Date Formatting Update (Viewer Pages)
+
+## Background and Motivation
+
+The viewer pages displayed dates like "12 ago 2025 alle 16:36". The user requested a full Italian format such as "12 Agosto 2025, alle 16:36".
+
+## Key Changes
+
+1. Added `formatFullDate` in `src/lib/date-format.ts`:
+
+   - Converts the input date to `Europe/Rome` using `date-fns-tz`.
+   - Formats day, full month name, year, and time.
+   - Capitalizes the Italian month name to match the requested style.
+
+2. Updated viewer pages to use the new helper:
+   - `src/app/dashboard/viewer/batch/[id]/page.tsx`: replaced local `formatDate` logic with `formatFullDate`.
+   - `src/app/dashboard/viewer/page.tsx`: replaced local `formatDate` logic with `formatFullDate`.
+
+## Success Criteria
+
+- Dates render as "12 Agosto 2025, alle 16:36" wherever `sent_at` is shown in viewer pages.
+
+## Status
+
+- [x] Implement helper and update usages
+- [x] Lint check (no errors)
+- [ ] Manual verification in UI
+
+---
+
+# Viewer Avatar Update
+
+## Background and Motivation
+
+The viewer header avatar should display a deterministic "boring avatar" (boring-avatars) when no custom image is present, consistent with other parts of the app that already use the `AvatarFallback` with a `name` prop.
+
+## Change
+
+- Updated `src/app/dashboard/viewer/layout.tsx` to pass `name`, `size`, and `variant` to `AvatarFallback`, enabling the boring avatar.
+
+## Success Criteria
+
+- When the user has no `avatar` URL, the fallback renders a boring avatar generated from `user.nominativo`.
+- Lint passes with no errors.
+
+## Status
+
+- [x] Implemented and linted. Please verify visually in the viewer dashboard header.
+
+## Lessons
+
+- Centralize date formatting in `src/lib/date-format.ts` to maintain consistency across the app.
+
+---
+
+# Sidebar Shrinking Fix
+
+## Background and Motivation
+
+On pages like `src/app/dashboard/admin/classi-documentali/[id]/page.tsx`, the sidebar became excessively narrow when content overflowed, due to flexbox shrinking behavior.
+
+## Key Changes
+
+1. `src/components/sidebar/AdminSidebar.tsx`
+
+   - Added `shrink-0` to the sidebar `<aside>` to prevent it from shrinking.
+   - Added `min-w-0` to the `#content` section to allow content to truncate/shrink instead of pushing the sidebar.
+
+2. `src/app/dashboard/sharer/components/Sidebar.tsx`
+
+   - Added `shrink-0` to the sidebar `<aside>`.
+
+3. `src/app/dashboard/sharer/components/DashboardClient.tsx`
+   - Added `min-w-0` to the `#content` section.
+
+## Success Criteria
+
+- Sidebar width remains fixed at 300px (or 80px in compact mode) and no longer gets compressed by wide content.
+- Main content handles overflow properly without affecting sidebar width.
+
+## Status
+
+- [x] Implemented and linted changes. Please reload and verify on `classi-documentali/[id]` and other dashboard pages.
+
 ## Executor's Feedback or Assistance Requests
 
 The user reported that the site was loading infinitely after the initial fixes. This was resolved by removing the MobileSessionProvider from the layout.
@@ -68,6 +159,43 @@ Now the user has reported that while the `auth-storage` cookie is maintained, th
 4. Adding comprehensive debugging for Laravel session cookies
 
 Ready for testing to verify that Laravel session cookies are properly maintained.
+
+---
+
+# 404 Redirect Behavior
+
+## Background and Motivation
+
+When an unauthenticated user requests an unknown URL (404), they should be redirected to `\/login`. When an authenticated user hits an unknown URL, they should be redirected to their role-specific dashboard. This ensures a smooth UX and avoids showing a 404 page unnecessarily.
+
+## Key Challenges and Analysis
+
+1. Respect existing session format stored in `auth-storage` cookie (Zustand persist JSON)
+2. Ensure behavior works with Next.js App Router conventions
+3. Avoid interfering with middleware-based protections
+
+## High-level Task Breakdown
+
+1. [x] Implement `src\/app\/not-found.tsx` to handle global 404s
+   - Success criteria: Unauthenticated → `\/login`; Authenticated → role dashboard
+2. [x] Parse `auth-storage` cookie safely in server component and redirect accordingly
+   - Success criteria: No runtime errors if cookie is malformed or absent
+
+## Project Status Board
+
+- [x] Add `src\/app\/not-found.tsx` with redirect logic
+- [x] Lint check for the new file (no errors)
+- [ ] Manual test unknown routes both logged in and logged out
+
+## Current Status / Progress Tracking
+
+- Implemented `not-found.tsx` which runs on 404. It reads `auth-storage`, parses `{ state: { user } }`, and redirects:
+  - If `user` exists: `\/dashboard\/admin|sharer|viewer` based on `user.role`
+  - Else: `\/login`
+
+## Lessons
+
+- Next.js App Router allows a global `not-found.tsx` for catch-all 404 handling; redirecting here centralizes unknown route behavior without altering middleware.
 
 ## Lessons
 
@@ -1838,6 +1966,29 @@ The statistics now provide meaningful insights into client growth trends with ac
    - Calculate percentages with proper null/zero handling
    - Update statistics whenever the underlying data changes
 
+# Minor UI tweak: Right-align file extension badge on viewer batch cards
+
+## Background and Motivation
+
+On the viewer batch file cards (`src/app/dashboard/viewer/batch/[id]/page.tsx`), the file extension `Badge` should be aligned to the right of the filename row for better visual hierarchy and readability.
+
+## Change
+
+- Updated the container row to allow the `Badge` to push to the end by adding `ml-auto` to the `Badge` classes.
+
+## File Edited
+
+- `src/app/dashboard/viewer/batch/[id]/page.tsx`
+  - Inside the file title row, changed the `Badge` class from `... ring-1` to `... ring-1 ml-auto`.
+
+## Success Criteria
+
+- The file extension badge appears flush to the right on the same line as the truncated filename.
+
+## Notes
+
+- No layout regressions observed; flex row already wraps filename and badge, and `ml-auto` is the minimal non-breaking change.
+
 # Authentication 401 Error Fix
 
 ## Background and Motivation
@@ -2143,3 +2294,22 @@ The cookie saving mechanism is working, but we need to either get the backend to
 2. **Check console logs** for session cookie debugging information
 3. **Investigate backend configuration** for session management
 4. **Consider alternative authentication methods** if session-based auth is not working
+
+# UI Polish: Table top rounded corners
+
+## Background and Motivation
+
+The admin sharer table container had rounded corners, but the table header overlapped with a separate ring/border, and the container didn't clip children, so the top corners appeared squared.
+
+## Change
+
+- Updated `src/components/dashboard/tables/admin/sharer-table.tsx` table wrapper classes to include `overflow-hidden` so children respect the rounded corners.
+- Removed the extra `ring-1` on `TableHeader` that visually added squared edges.
+
+## Status
+
+- [x] Implemented; needs visual verification across breakpoints and with sticky header.
+
+## Lessons
+
+- When using a rounded outer container with sticky headers, ensure the container has `overflow-hidden` and avoid redundant borders on inner sticky elements to preserve corner radii.

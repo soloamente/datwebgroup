@@ -10,6 +10,7 @@ import {
 import useAuthStore from "@/app/api/auth";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 interface AdminOtpFormProps {
   email: string;
@@ -41,7 +42,9 @@ export default function AdminOtpForm({
     setError("");
 
     if (otp.length !== 5) {
-      setError("Inserisci un codice OTP valido");
+      const message = "Inserisci un codice OTP valido";
+      setError(message);
+      toast.error(message);
       setLoading(false);
       return;
     }
@@ -58,6 +61,7 @@ export default function AdminOtpForm({
         console.log("OTP verification successful");
         console.log("Auth store user:", authStore.user);
         console.log("Auth store isAuthenticated:", authStore.isAuthenticated());
+        toast.success("Accesso completato con successo");
 
         // Check session status
         const sessionStatus = authStore.checkSessionStatus();
@@ -78,13 +82,15 @@ export default function AdminOtpForm({
           }
         }, 100);
       } else {
-        setError(
+        const message =
           result.message ??
-            "Login fallito. Controlla le credenziali e riprova.",
-        );
+          "Login fallito. Controlla le credenziali e riprova.";
+        setError(message);
+        toast.error(message);
       }
     } catch (error) {
       setError("Errore durante il login. Riprova.");
+      toast.error("Errore durante il login. Riprova.");
     } finally {
       setLoading(false);
     }
@@ -95,12 +101,14 @@ export default function AdminOtpForm({
       setLoading(true);
       await authStore.prelogin(email.trim(), username.trim(), password);
       startOtpCountdown();
+      toast.success("Nuovo codice OTP inviato alla tua email");
     } catch (error) {
-      setError(
+      const message =
         error instanceof Error
           ? error.message
-          : "Errore durante l'invio dell'OTP",
-      );
+          : "Errore durante l'invio dell'OTP";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -134,7 +142,7 @@ export default function AdminOtpForm({
         </InputOTPGroup>
       </InputOTP>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {/* inline error removed; using toast only */}
 
       <div className="flex flex-col items-center gap-4">
         <div className="relative w-full">

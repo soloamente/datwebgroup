@@ -36,8 +36,8 @@ import {
   Clock,
   User,
   ArrowUpDown,
-  Tag,
 } from "lucide-react";
+import { FaTag, FaFilePdf } from "react-icons/fa";
 import useAuthStore from "@/app/api/auth";
 import {
   userService,
@@ -47,8 +47,12 @@ import {
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { formatFullDate } from "@/lib/date-format";
 import { motion, AnimatePresence } from "motion/react";
 import { Stack } from "@/components/ui/stack";
+import { IoEye, IoTime } from "react-icons/io5";
+import { FaArrowRightLong } from "react-icons/fa6";
+import { BsFileEarmarkPdfFill } from "react-icons/bs";
 
 type SortOption =
   | "date_newest"
@@ -115,15 +119,7 @@ export default function ViewerDashboard() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const formatDate = (dateString: string): string => {
-    try {
-      return format(new Date(dateString), "dd MMM yyyy 'alle' HH:mm", {
-        locale: it,
-      });
-    } catch {
-      return dateString;
-    }
-  };
+  const formatDate = (dateString: string): string => formatFullDate(dateString);
 
   const handleDownloadFile = async (file: ViewerFile) => {
     try {
@@ -294,10 +290,6 @@ export default function ViewerDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={authStore.user?.avatar} />
-              <AvatarFallback name={getUserDisplayName()} variant="beam" />
-            </Avatar>
             <div>
               <h1 className="text-2xl font-bold">Documenti Condivisi</h1>
               <p className="text-muted-foreground">
@@ -325,7 +317,7 @@ export default function ViewerDashboard() {
                   </CardDescription>
                   {batch.document_class && (
                     <div className="mt-2 flex items-center space-x-2">
-                      <Tag className="text-muted-foreground h-4 w-4" />
+                      <FaTag className="text-muted-foreground h-4 w-4" />
                       <span className="text-muted-foreground text-sm">
                         Classe documentale: {batch.document_class.name}
                       </span>
@@ -476,10 +468,6 @@ export default function ViewerDashboard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={authStore.user?.avatar} />
-              <AvatarFallback name={getUserDisplayName()} variant="beam" />
-            </Avatar>
             <div>
               <h1 className="text-2xl font-bold">Documenti Condivisi</h1>
               <p className="text-muted-foreground">
@@ -495,14 +483,18 @@ export default function ViewerDashboard() {
             value={sortBy}
             onValueChange={(value: SortOption) => setSortBy(value)}
           >
-            <SelectTrigger className="w-fit">
+            <SelectTrigger className="ring-border w-fit border-none ring-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="date_newest">Data più recente</SelectItem>
               <SelectItem value="date_oldest">Data più vecchia</SelectItem>
-              <SelectItem value="title_az">Titolo A-Z</SelectItem>
-              <SelectItem value="title_za">Titolo Z-A</SelectItem>
+              <SelectItem value="title_az">
+                Titolo A <FaArrowRightLong className="opacity-70" /> Z
+              </SelectItem>
+              <SelectItem value="title_za">
+                Titolo Z <FaArrowRightLong className="opacity-70" /> A
+              </SelectItem>
               <SelectItem value="files_count">Numero file</SelectItem>
             </SelectContent>
           </Select>
@@ -531,41 +523,28 @@ export default function ViewerDashboard() {
                   ease: "easeOut",
                 }}
               >
-                <Card className="cursor-pointer transition-shadow hover:shadow-md">
-                  <CardHeader className="mb-0">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{batch.title}</CardTitle>
-                        <CardDescription className="mt-2">
-                          Condiviso da {batch.sharer.nominativo}
-                        </CardDescription>
-                      </div>
-                      <Badge
-                        variant={
-                          batch.status === "sent" ? "default" : "secondary"
-                        }
-                      >
-                        {batch.status === "sent" ? "Inviato" : batch.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+                <div className="text-card-foreground flex flex-col rounded-xl border bg-black/5 shadow-sm transition-shadow hover:shadow-md dark:bg-white/5">
+                  <header className="flex flex-col items-center justify-center gap-2 px-6 py-3 text-sm">
+                    <h2 className="font-medium">
                       {batch.document_class && (
                         <div className="flex items-center space-x-2">
-                          <Tag className="text-muted-foreground h-4 w-4" />
-                          <span className="text-muted-foreground text-sm">
-                            {batch.document_class.name}
+                          <span className="text-sm opacity-80">
+                            {batch.document_class.singular_name}
                           </span>
                         </div>
                       )}
-                      <div className="text-muted-foreground flex items-center space-x-2 text-sm">
-                        <Clock className="h-4 w-4" />
+                    </h2>
+                    {/* <p className="">Condiviso da {batch.sharer.nominativo}</p> */}
+                  </header>
+                  <div className="bg-background rounded-xl px-6 py-4">
+                    <div className="space-y-4">
+                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <IoTime className="h-5 w-5" />
                         <span>{formatDate(batch.sent_at)}</span>
                       </div>
 
-                      <div className="text-muted-foreground flex items-center space-x-2 text-sm">
-                        <FileText className="h-4 w-4" />
+                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                        <BsFileEarmarkPdfFill className="h-4 w-4" />
                         <span>{totalFiles} file allegati</span>
                       </div>
 
@@ -576,12 +555,12 @@ export default function ViewerDashboard() {
                           router.push(`/dashboard/viewer/batch/${batch.id}`);
                         }}
                       >
-                        <Eye className="h-4 w-4" />
+                        <IoEye className="h-5 w-5" />
                         Visualizza Dettagli
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </motion.div>
             );
           })}

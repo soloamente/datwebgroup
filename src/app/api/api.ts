@@ -277,6 +277,7 @@ export interface DocumentClass {
   id: number;
   nome: string;
   descrizione: string;
+  singular_name?: string; // Nome al singolare per la classe documentale
   logo_url: string | null;
   campi: DocumentClassField[];
   sharers: Sharer[] | null; // Changed to allow null
@@ -346,7 +347,7 @@ export interface SharedDocument {
 
 export interface SharedBatch {
   id: number;
-  title: string;
+  singular_name: string;
   status: string;
   sent_at: string;
   viewers: ViewerInfo[];
@@ -662,6 +663,7 @@ const recoverUsername = async (
 export interface UpdateDocumentClassRequest {
   nome: string;
   descrizione: string;
+  singular_name?: string; // facoltativo - nome al singolare
 }
 
 export interface UpdateDocumentClassResponse {
@@ -698,6 +700,7 @@ export interface MyDocumentClass {
   id: number;
   name: string;
   description: string | null;
+  singular_name?: string; // Nome al singolare per la classe documentale
   fields: MyDocumentClassField[];
 }
 
@@ -768,6 +771,7 @@ const recoveryUsernameRequest = async (
 export interface UpdateDocumentClassApiRequest {
   name: string;
   description: string;
+  singular_name?: string; // facoltativo - nome al singolare
 }
 
 const updateDocumentClass = async (
@@ -790,6 +794,7 @@ const updateDocumentClass = async (
 export interface CreateDocumentClassRequest {
   name: string; // obbligatorio
   description?: string; // facoltativo
+  singular_name?: string; // facoltativo - nome al singolare
   logo?: File | null; // facoltativo
 }
 
@@ -815,6 +820,9 @@ const createDocumentClass = async (
   formData.append("name", data.name);
   if (data.description) {
     formData.append("description", data.description);
+  }
+  if (data.singular_name) {
+    formData.append("singular_name", data.singular_name);
   }
   if (data.logo) {
     formData.append("logo", data.logo);
@@ -1809,6 +1817,7 @@ export interface ViewerDocumentClass {
   id: number;
   name: string;
   description: string | null;
+  singular_name?: string; // Nome al singolare per la classe documentale
   logo_path: string | null;
   json_schema: string;
   created_by: number;

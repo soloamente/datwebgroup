@@ -8,6 +8,7 @@ import { StatsGrid } from "@/components/admin/stats-grid";
 import { Users, UserCheck, UserX, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateUserDialog } from "@/components/create-user-dialog";
+import { FaUserPlus } from "react-icons/fa6";
 
 export default function ListaSharerPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -128,7 +129,7 @@ export default function ListaSharerPage() {
             className="bg-primary rounded-full text-white"
             onClick={handleOpenCreateDialog}
           >
-            <UserPlus className="h-4 w-4" />
+            <FaUserPlus className="h-4 w-4" />
             Crea utente
           </Button>
         </div>
@@ -137,7 +138,7 @@ export default function ListaSharerPage() {
         <StatsGrid
           stats={[
             {
-              title: "Totale Sharers",
+              title: "Totale",
               value: currentStats.total.toString(),
               change: {
                 value: calculatePercentageChange(

@@ -18,7 +18,7 @@ export default function UsernameInput({
       <div className="relative">
         <Input
           id={id}
-          placeholder="johndoe"
+          placeholder="Username"
           type="username"
           value={value}
           autoFocus

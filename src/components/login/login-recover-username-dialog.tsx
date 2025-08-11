@@ -238,12 +238,7 @@ export default function LoginRecoverUsernameDialog({
                   />
                 </div>
                 {/* Error message with icon, if present */}
-                {error && (
-                  <div className="text-destructive animate-in fade-in mt-1 flex items-center gap-2 text-sm font-medium">
-                    <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                    <span>{error}</span>
-                  </div>
-                )}
+                {/* inline error removed; using toast only */}
                 {/* Submit button, full width, modern style */}
                 <Button
                   type="submit"

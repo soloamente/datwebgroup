@@ -13,7 +13,6 @@ import {
 import { Input as KamuiInput } from "@/components/ui/kamui/input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button as KamuiButton } from "@/components/ui/button/button";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { userService } from "@/app/api/api";
@@ -24,6 +23,7 @@ import {
   ArrowLeftIcon,
   ZoomInIcon,
   ZoomOutIcon,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
@@ -325,11 +325,11 @@ export function CreateUserDialog({
 
     try {
       const response = await userService.createSharer(data);
-      toast.success(response.message ?? "Sharer creato con successo.");
+      toast.success(response.message ?? "Utente creato con successo.");
       onUserCreated();
       onClose();
     } catch (err: unknown) {
-      let errorMessage = "Errore durante la creazione dello sharer.";
+      let errorMessage = "Errore durante la creazione dell'utente.";
       const newErrors: Record<string, string | null> = { form: errorMessage };
       if (err && typeof err === "object" && "response" in err && err.response) {
         const response = err.response as {
@@ -367,20 +367,20 @@ export function CreateUserDialog({
       >
         <DialogContent className="bg-background grid max-w-4xl overflow-hidden rounded-3xl border-transparent p-0 shadow-2xl md:grid-cols-2">
           <VisuallyHidden>
-            <DialogTitle>Crea un nuovo Sharer</DialogTitle>
+            <DialogTitle>Crea un nuovo utente</DialogTitle>
           </VisuallyHidden>
 
           {/* Left Side: Form */}
           <div className="flex flex-col justify-center p-12">
             <div className="w-full">
               <h1 className="text-foreground text-3xl font-medium">
-                Crea un nuovo Sharer
+                Crea un nuovo utente
               </h1>
               <p className="text-foreground/60 mb-8 text-sm">
-                Inserisci i dati per il nuovo sharer.
+                Inserisci i dati per il nuovo utente.
               </p>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} noValidate className="space-y-5">
                 <div className="space-y-2">
                   <Label
                     htmlFor="username"
@@ -393,18 +393,11 @@ export function CreateUserDialog({
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    required
                     loading={isLoading}
-                    error={!!errors.username}
                     size="xl"
                     radius="xl"
-                    placeholder="es. mariorossi"
+                    placeholder="mario.rossi"
                   />
-                  {errors.username && (
-                    <p className="text-destructive mt-1 text-xs">
-                      {errors.username}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -419,18 +412,11 @@ export function CreateUserDialog({
                     name="nominativo"
                     value={formData.nominativo}
                     onChange={handleInputChange}
-                    required
                     loading={isLoading}
-                    error={!!errors.nominativo}
                     size="xl"
                     radius="xl"
-                    placeholder="es. Mario Rossi / Studio SRL"
+                    placeholder="Mario Rossi"
                   />
-                  {errors.nominativo && (
-                    <p className="text-destructive mt-1 text-xs">
-                      {errors.nominativo}
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -443,18 +429,11 @@ export function CreateUserDialog({
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    required
                     loading={isLoading}
-                    error={!!errors.email}
                     size="xl"
                     radius="xl"
-                    placeholder="es. email@esempio.com"
+                    placeholder="mario.rossi@esempio.com"
                   />
-                  {errors.email && (
-                    <p className="text-destructive mt-1 text-xs">
-                      {errors.email}
-                    </p>
-                  )}
                 </div>
 
                 <div className="relative py-2">
@@ -482,16 +461,10 @@ export function CreateUserDialog({
                       value={formData.codice_fiscale}
                       onChange={handleInputChange}
                       loading={isLoading}
-                      error={!!errors.codice_fiscale}
                       size="xl"
                       radius="xl"
                       placeholder="RSSMRA80A01H501U"
                     />
-                    {errors.codice_fiscale && (
-                      <p className="text-destructive mt-1 text-xs">
-                        {errors.codice_fiscale}
-                      </p>
-                    )}
                   </div>
                   <div className="space-y-2">
                     <Label
@@ -506,37 +479,29 @@ export function CreateUserDialog({
                       value={formData.partita_iva}
                       onChange={handleInputChange}
                       loading={isLoading}
-                      error={!!errors.partita_iva}
                       size="xl"
                       radius="xl"
                       placeholder="12345678901"
                     />
-                    {errors.partita_iva && (
-                      <p className="text-destructive mt-1 text-xs">
-                        {errors.partita_iva}
-                      </p>
-                    )}
                   </div>
                 </div>
 
-                {errors.form && (
-                  <div className="text-destructive pt-2 text-sm">
-                    {errors.form}
-                  </div>
-                )}
-
-                <div className="space-y-4 pt-6">
-                  <KamuiButton
+                <div className="pt-4">
+                  <Button
                     type="submit"
-                    isDisabled={!isFormValid || isLoading}
-                    pending={isLoading}
-                    color="primary"
-                    size="lg"
-                    radius="lg"
-                    className="w-full text-base font-medium"
+                    disabled={isLoading}
+                    aria-busy={isLoading}
+                    className="h-12 w-full rounded-xl"
                   >
-                    Crea Utente
-                  </KamuiButton>
+                    {isLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Creazione...
+                      </span>
+                    ) : (
+                      "Crea Utente"
+                    )}
+                  </Button>
                 </div>
               </form>
             </div>

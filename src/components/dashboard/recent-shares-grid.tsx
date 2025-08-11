@@ -85,23 +85,23 @@ export function RecentSharesGrid() {
   };
 
   return (
-    <Card className="h-full flex-1 bg-neutral-900/50 text-white">
+    <Card className="bg-card ring-border h-full flex-1 border-none ring-1">
       <CardHeader className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-2">
             <CardTitle className="text-2xl font-semibold tracking-tight">
               Condivisioni Recenti
             </CardTitle>
-            <CardDescription className="text-neutral-400">
+            <CardDescription className="text-muted-foreground">
               Visualizza le tue condivisioni più recenti da {selectedClassName}.
             </CardDescription>
           </div>
           <div className="flex flex-col items-end gap-4">
             <Select onValueChange={handleClassChange} defaultValue="all">
-              <SelectTrigger className="w-[200px] border-neutral-700 bg-neutral-800/80 backdrop-blur-sm">
+              <SelectTrigger className="ring-border bg-card w-[200px] border-none ring-1 backdrop-blur-sm">
                 <SelectValue placeholder="Filtra per classe" />
               </SelectTrigger>
-              <SelectContent className="border-neutral-700 bg-neutral-800">
+              <SelectContent className="ring-border bg-card border-none ring-1">
                 <SelectItem value="all">Tutte le classi</SelectItem>
                 {documentClasses.map((dc) => (
                   <SelectItem key={dc.id} value={String(dc.id)}>
@@ -111,7 +111,7 @@ export function RecentSharesGrid() {
               </SelectContent>
             </Select>
             <div className="flex items-center gap-4">
-              <div className="text-sm text-neutral-400">
+              <div className="text-muted-foreground text-sm">
                 {startIndex + 1}-{Math.min(endIndex, recentShares.length)} di{" "}
                 {recentShares.length}
               </div>
@@ -119,7 +119,7 @@ export function RecentSharesGrid() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700/80 disabled:opacity-50"
+                  className="ring-border bg-card h-8 w-8 border-none ring-1 hover:ring-2 disabled:opacity-50"
                   onClick={handlePreviousPage}
                   disabled={currentPage === 1}
                   aria-label="Pagina precedente"
@@ -141,7 +141,7 @@ export function RecentSharesGrid() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700/80 disabled:opacity-50"
+                  className="ring-border bg-card h-8 w-8 border-none ring-1 hover:ring-2 disabled:opacity-50"
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
                   aria-label="Pagina successiva"
@@ -168,7 +168,7 @@ export function RecentSharesGrid() {
       <CardContent>
         {isLoading && (
           <div className="flex items-center justify-center p-12">
-            <div className="flex items-center gap-3 text-neutral-400">
+            <div className="text-muted-foreground flex items-center gap-3">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-600 border-t-blue-500"></div>
               <span>Caricamento...</span>
             </div>
@@ -195,7 +195,7 @@ export function RecentSharesGrid() {
                     className="block"
                     aria-label={`Visualizza dettagli della condivisione ${share.documentClassName}`}
                   >
-                    <Card className="group relative h-full cursor-pointer overflow-hidden rounded-xl border-neutral-800/50 bg-neutral-900/90 backdrop-blur-sm transition-all duration-200 ease-out hover:border-neutral-700/50 hover:bg-neutral-800/90 hover:shadow-xl hover:shadow-neutral-900/30">
+                    <Card className="group bg-card ring-border hover:ring-primary/50 relative h-full cursor-pointer overflow-hidden rounded-xl ring-1 transition-all duration-200 ease-out hover:ring-2 hover:shadow-xl">
                       {/* Status indicator */}
                       <div className="absolute top-3 right-3 z-40">
                         <Tooltip>
@@ -227,7 +227,7 @@ export function RecentSharesGrid() {
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-neutral-500" />
                             <time
-                              className="text-sm text-neutral-400"
+                              className="text-muted-foreground text-sm"
                               dateTime={share.sentAt}
                             >
                               {new Date(share.sentAt).toLocaleDateString(
@@ -243,7 +243,7 @@ export function RecentSharesGrid() {
                         </div>
                         <Badge
                           variant="outline"
-                          className="w-fit border-neutral-700/50 bg-neutral-800/50 text-neutral-300 backdrop-blur-sm"
+                          className="ring-border bg-card w-fit border-none ring-1"
                         >
                           {share.documentClassName}
                         </Badge>
@@ -256,10 +256,10 @@ export function RecentSharesGrid() {
                             <Users className="h-6 w-6 text-blue-400" />
                           </div>
                           <div>
-                            <div className="text-2xl font-bold text-white transition-colors group-hover:text-blue-400">
+                            <div className="text-2xl font-bold transition-colors group-hover:text-blue-400">
                               {share.viewers.length}
                             </div>
-                            <div className="text-sm text-neutral-400">
+                            <div className="text-muted-foreground text-sm">
                               Destinatari
                             </div>
                           </div>
@@ -285,7 +285,7 @@ export function RecentSharesGrid() {
                               {share.viewers.slice(0, 3).map((viewer) => (
                                 <Avatar
                                   key={viewer.id}
-                                  className="h-8 w-8 border-2 border-neutral-800 ring-1 ring-neutral-700/50"
+                                  className="ring-border h-8 w-8 ring-1"
                                 >
                                   <AvatarImage
                                     src={`https://ui-avatars.com/api/?name=${viewer.nominativo.replace(/ /g, "+")}&background=random&color=fff&size=32`}
@@ -303,7 +303,7 @@ export function RecentSharesGrid() {
                                       .toUpperCase()}
                                   </AvatarFallback>
                                   <AvatarGroupTooltip>
-                                    <span className="text-white">
+                                    <span className="">
                                       {viewer.nominativo}
                                     </span>
                                   </AvatarGroupTooltip>
@@ -311,7 +311,7 @@ export function RecentSharesGrid() {
                               ))}
                             </AvatarGroup>
                             {share.viewers.length > 3 && (
-                              <Avatar className="ml-1 h-8 w-8 border-2 border-neutral-800 bg-neutral-700">
+                              <Avatar className="bg-card ring-border ml-1 h-8 w-8 border-none ring-1">
                                 <AvatarFallback className="text-xs font-medium text-white">
                                   +{share.viewers.length - 3}
                                 </AvatarFallback>
@@ -320,7 +320,7 @@ export function RecentSharesGrid() {
                           </div>
 
                           {/* Arrow indicator */}
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800/50 text-neutral-400 transition-all duration-200 group-hover:bg-blue-500/20 group-hover:text-blue-400">
+                          <div className="bg-card ring-border flex h-8 w-8 items-center justify-center rounded-full ring-1 transition-all duration-200 group-hover:bg-blue-500/20 group-hover:text-blue-400">
                             <ChevronRight className="h-4 w-4" />
                           </div>
                         </div>

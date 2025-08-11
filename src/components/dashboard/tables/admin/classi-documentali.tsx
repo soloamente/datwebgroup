@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/animate-ui/base/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -122,6 +122,7 @@ import {
 import { type DateRange as DayPickerDateRange } from "react-day-picker";
 import CloseIcon from "@/components/icons/close";
 import { formatDynamicDate } from "@/lib/date-format";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 
 // Global filter function for text search across multiple fields for DocumentClass
 const globalFilterFn: FilterFn<DocumentClass> = (
@@ -258,7 +259,7 @@ const getColumns = ({
       const isFiltered = column.getIsFiltered();
       return (
         <div className="flex items-center gap-2">
-          <span>Sharer</span>
+          <span>Utente</span>
           {isFiltered && (
             <div className="flex items-center gap-1">
               <div className="bg-primary h-1.5 w-1.5 rounded-full" />
@@ -525,18 +526,18 @@ export default function DocumentClassiTable({
       <div className="flex flex-col">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
           {/* Left: Search & Reset */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex w-full items-center gap-3 sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Input
                 id={`${id}-input`}
                 ref={inputRef}
                 className={cn(
-                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-full border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-72",
+                  "bg-card focus:ring-primary/20 ring-border h-10 w-full rounded-full border-none pl-9 text-base ring-1 transition-all focus:ring-2 sm:w-64",
                   Boolean(globalFilter) && "pr-9",
                 )}
                 value={globalFilter ?? ""}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Cerca per nome, descrizione, sharer"
+                placeholder="Cerca per nome, descrizione, utente"
                 type="text"
                 aria-label="Cerca classi documentali"
               />
@@ -581,16 +582,19 @@ export default function DocumentClassiTable({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-muted/30 hover:border-primary/40 rounded-full"
+                  className="ring-border bg-card rounded-full border-none ring-1 hover:ring-2"
                   aria-label="Mostra/nascondi colonne"
                 >
                   <FilterVertical className="text-muted-foreground/80 size-4" />
                   Colonne
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-48 rounded-2xl">
+              <PopoverContent
+                align="end"
+                className="ring-border w-48 rounded-2xl border-none ring-1"
+              >
                 <div className="space-y-2">
-                  <div className="text-muted-foreground/60 px-1 text-xs font-medium tracking-wider uppercase">
+                  <div className="text-muted-foreground px-1 text-xs font-medium tracking-wider uppercase">
                     Colonne
                   </div>
                   <div className="space-y-1">
@@ -604,7 +608,7 @@ export default function DocumentClassiTable({
                       .map((column) => (
                         <div
                           key={column.id}
-                          className="hover:bg-muted/40 flex items-center gap-2 rounded-lg p-1.5 transition-colors"
+                          className="hover:bg-muted/40 flex items-center rounded-lg p-1.5 transition-colors"
                         >
                           <Checkbox
                             id={column.id}
@@ -612,11 +616,11 @@ export default function DocumentClassiTable({
                             onCheckedChange={(value) =>
                               column.toggleVisibility(!!value)
                             }
-                            className="size-4"
+                            className="ring-border size-4 ring-1"
                           />
                           <Label
                             htmlFor={column.id}
-                            className="grow cursor-pointer text-sm font-normal"
+                            className="grow cursor-pointer pl-2 text-sm font-normal"
                           >
                             {typeof column.columnDef.header === "string"
                               ? column.columnDef.header
@@ -640,7 +644,13 @@ export default function DocumentClassiTable({
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" size="sm">
                       <RiDeleteBinLine size={16} className="mr-2" />
-                      Elimina Selezionati ({numSelected})
+                      Elimina Selezionati
+                      <Badge
+                        variant="secondary"
+                        className="bg-destructive-foreground text-destructive ml-2"
+                      >
+                        {numSelected}
+                      </Badge>
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -680,70 +690,78 @@ export default function DocumentClassiTable({
       </div>
 
       {/* --- Table Section --- */}
-      <div className="bg-card border-muted/30 overflow-x-auto rounded-2xl border shadow-sm">
-        <Table className="min-w-full">
-          <TableHeader className="bg-card/95 border-muted/30 sticky top-0 z-10 border-b backdrop-blur">
+      <div className="ring-border isolate overflow-hidden rounded-2xl ring-1">
+        <Table className="bg-muted/30 min-w-full border-separate border-spacing-0">
+          <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
                 className="border-b-0 hover:bg-transparent"
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    style={{ width: `${header.getSize()}px` }}
-                    className="text-muted-foreground bg-card/95 h-14 px-5 text-left align-middle text-sm font-semibold tracking-wide uppercase"
-                  >
-                    {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                      <div
-                        className="hover:text-foreground flex cursor-pointer items-center gap-2 transition-colors select-none"
-                        onClick={header.column.getToggleSortingHandler()}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            header.column.getToggleSortingHandler()?.(e);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`Ordina per ${typeof header.column.columnDef.header === "string" ? header.column.columnDef.header : "colonna"}`}
-                      >
-                        {flexRender(
+                {headerGroup.headers.map((header, headerIdx) => {
+                  const isFirst = headerIdx === 0;
+                  const isLast = headerIdx === headerGroup.headers.length - 1;
+                  return (
+                    <TableHead
+                      key={header.id}
+                      style={{ width: `${header.getSize()}px` }}
+                      className={cn(
+                        "text-muted-foreground overflow-hidden px-5 text-left align-middle",
+                        isFirst && "rounded-tl-2xl rounded-bl-2xl",
+                        isLast && "rounded-tr-2xl rounded-br-2xl",
+                      )}
+                    >
+                      {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                        <div
+                          className="hover:text-foreground flex cursor-pointer items-center gap-2 transition-colors select-none"
+                          onClick={header.column.getToggleSortingHandler()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              header.column.getToggleSortingHandler()?.(e);
+                            }
+                          }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`Ordina per ${typeof header.column.columnDef.header === "string" ? header.column.columnDef.header : "colonna"}`}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          {{
+                            asc: (
+                              <RiArrowUpSLine
+                                size={16}
+                                className="text-muted-foreground"
+                              />
+                            ),
+                            desc: (
+                              <RiArrowDownSLine
+                                size={16}
+                                className="text-muted-foreground"
+                              />
+                            ),
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </div>
+                      ) : (
+                        flexRender(
                           header.column.columnDef.header,
                           header.getContext(),
-                        )}
-                        {{
-                          asc: (
-                            <RiArrowUpSLine
-                              size={16}
-                              className="text-muted-foreground"
-                            />
-                          ),
-                          desc: (
-                            <RiArrowDownSLine
-                              size={16}
-                              className="text-muted-foreground"
-                            />
-                          ),
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </div>
-                    ) : (
-                      flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )
-                    )}
-                  </TableHead>
-                ))}
+                        )
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_td]:bg-card ring-border rounded-lg ring-1">
             {isLoading ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-40 text-center align-middle"
+                  className="h-40 rounded-lg text-center align-middle"
                 >
                   <div className="flex flex-col items-center justify-center gap-3 py-8">
                     <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
@@ -754,28 +772,42 @@ export default function DocumentClassiTable({
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, rowIndex) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/40 border-muted/20 group h-16 cursor-pointer border-b transition-colors last:border-b-0"
+                  className="border-border group h-16 cursor-pointer border-b transition-colors last:border-b-0"
                   onClick={() => {
                     router.push(
                       `/dashboard/admin/classi-documentali/${row.original.id}`,
                     );
                   }}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell, cellIndex) => {
+                    const isTopRow = rowIndex === 0;
+                    const isFirstCell = cellIndex === 0;
+                    const isLastCell =
+                      cellIndex === row.getVisibleCells().length - 1;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "group-hover:bg-muted/10 group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors",
+                          isTopRow &&
+                            isFirstCell &&
+                            "overflow-hidden rounded-tl-2xl",
+                          isTopRow &&
+                            isLastCell &&
+                            "overflow-hidden rounded-tr-2xl",
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -817,12 +849,12 @@ export default function DocumentClassiTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                   aria-label="Pagina precedente"
                 >
-                  <RiArrowLeftSLine size={18} />
+                  <IoIosArrowBack size={18} />
                 </Button>
               </PaginationItem>
               <PaginationItem>
@@ -837,12 +869,12 @@ export default function DocumentClassiTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                   aria-label="Pagina successiva"
                 >
-                  <RiArrowRightSLine size={18} />
+                  <IoIosArrowForward size={18} />
                 </Button>
               </PaginationItem>
             </PaginationContent>

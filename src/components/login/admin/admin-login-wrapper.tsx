@@ -6,6 +6,7 @@ import useAuthStore from "@/app/api/auth";
 import AdminLoginLeftSide from "./admin-login-left-side";
 import AdminLoginRightSide from "./admin-login-right-side copy";
 import { userService } from "@/app/api/api";
+import { toast } from "sonner";
 
 // Define a type for the expected API response from /api/reset-password-by-username
 interface ResetPasswordResponse {
@@ -66,16 +67,22 @@ export default function AdminLoginWrapper() {
       setError(null);
     } else {
       console.log("Invalid login data, not changing step");
-      setError("Failed to prepare for OTP. Please try again.");
+      const message = "Preparazione OTP non riuscita. Riprova.";
+      setError(message);
+      toast.error(message);
     }
   };
 
   const handleQrScan = async (data: string) => {
-    setError("QR code login is currently not supported in this flow.");
+    const message =
+      "L'accesso tramite QR code non è supportato in questo flusso.";
+    setError(message);
+    toast.error(message);
   };
 
   const handleQrError = (errorMsg: string) => {
     setError(errorMsg);
+    toast.error(errorMsg);
   };
 
   const handleUsernameChecked = (checkedUsername: string, role: string) => {
@@ -87,7 +94,9 @@ export default function AdminLoginWrapper() {
 
   const handleForgotPassword = async () => {
     if (!username) {
-      setError("Username is required to reset password.");
+      const message = "È richiesto lo username per reimpostare la password.";
+      setError(message);
+      toast.error(message);
       return;
     }
     setIsLoading(true);
@@ -96,11 +105,16 @@ export default function AdminLoginWrapper() {
       const result = await userService.resetPasswordByUsername(username);
       if (result.success) {
         setError(result.message);
+        toast.success(result.message);
       } else {
-        setError(result.message ?? "Failed to reset password.");
+        const message =
+          result.message ?? "Reimpostazione password non riuscita.";
+        setError(message);
+        toast.error(message);
       }
     } catch (e: unknown) {
-      let message = "An error occurred while trying to reset password.";
+      let message =
+        "Si è verificato un errore durante il reset della password.";
       if (
         typeof e === "object" &&
         e !== null &&
@@ -115,6 +129,7 @@ export default function AdminLoginWrapper() {
         message = e.message;
       }
       setError(message);
+      toast.error(message);
       console.error("Forgot password error:", e);
     }
     setIsLoading(false);

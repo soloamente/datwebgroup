@@ -63,6 +63,7 @@ import {
 import CoverUploader from "@/components/ui/cover-uploader";
 import { RiPencilLine } from "@remixicon/react";
 import { formatDynamicDate } from "@/lib/date-format";
+import { AssociatedSharersTable } from "@/components/dashboard/detail-page-components/associated-sharers-table";
 
 // --- Copied type definitions from the list page for consistent transformation ---
 // Define interfaces for the raw API response structure (for a list)
@@ -81,6 +82,7 @@ interface ApiDocumentClass {
   id: number;
   name: string;
   description: string;
+  singular_name?: string;
   logo_url?: string;
   created_by: string;
   sharers_count: number;
@@ -132,6 +134,7 @@ export default function DocumentClassDetailPage() {
 
   // --- State for editable fields in Basic Info tab ---
   const [editNome, setEditNome] = useState<string>("");
+  const [editSingularName, setEditSingularName] = useState<string>("");
   const [editDescrizione, setEditDescrizione] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false); // Edit mode toggle
@@ -144,6 +147,7 @@ export default function DocumentClassDetailPage() {
   useEffect(() => {
     if (documentClass) {
       setEditNome(documentClass.nome);
+      setEditSingularName(documentClass.singular_name ?? "");
       // Always set editDescrizione to a string (never null/undefined) for controlled Textarea
       setEditDescrizione(documentClass.descrizione ?? "");
       setIsEditing(false); // Exit edit mode on doc change
@@ -159,9 +163,17 @@ export default function DocumentClassDetailPage() {
       await docClassService.updateDocumentClass(documentClass.id, {
         name: editNome,
         description: editDescrizione,
+        singular_name: editSingularName.trim() || undefined,
       });
       setDocumentClass((prev) =>
-        prev ? { ...prev, nome: editNome, descrizione: editDescrizione } : prev,
+        prev
+          ? {
+              ...prev,
+              nome: editNome,
+              descrizione: editDescrizione,
+              singular_name: editSingularName.trim() || undefined,
+            }
+          : prev,
       );
       // Show toast message using the default position from layout.tsx
       toast.success("Classe documentale aggiornata con successo.");
@@ -178,6 +190,7 @@ export default function DocumentClassDetailPage() {
   const isUnchanged =
     documentClass &&
     editNome === documentClass.nome &&
+    editSingularName === (documentClass.singular_name ?? "") &&
     editDescrizione === documentClass.descrizione;
   const isInvalid = editNome.trim() === "";
 
@@ -219,6 +232,7 @@ export default function DocumentClassDetailPage() {
                 id: apiDoc.id,
                 nome: apiDoc.name,
                 descrizione: apiDoc.description,
+                singular_name: apiDoc.singular_name,
                 logo_url: apiDoc.logo_url ?? null,
                 campi:
                   apiDoc.fields?.map((field) => ({
@@ -576,7 +590,7 @@ export default function DocumentClassDetailPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl overflow-x-hidden p-6">
+    <div className="w-full p-6">
       {/* Simplified Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold">{documentClass.nome}</h1>
@@ -599,7 +613,7 @@ export default function DocumentClassDetailPage() {
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="sharers">
-            Sharers
+            Utenti
             <Badge className="ml-2" variant="secondary">
               {documentClass.sharers?.length ?? 0}
             </Badge>
@@ -693,6 +707,34 @@ export default function DocumentClassDetailPage() {
                       Nome della classe documentale.
                     </p>
                   </div>
+                  {/* Nome al singolare Field */}
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="singularName" className="text-sm">
+                      Nome al singolare
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        id="singularName"
+                        value={editSingularName}
+                        onChange={(e) => setEditSingularName(e.target.value)}
+                        className="bg-background focus-visible:ring-primary"
+                        aria-label="Nome al singolare della classe documentale"
+                      />
+                    ) : (
+                      <div className="bg-muted/30 flex min-h-[2.5rem] items-center rounded border border-transparent px-2">
+                        {documentClass.singular_name?.trim() ? (
+                          documentClass.singular_name
+                        ) : (
+                          <span className="text-muted-foreground">
+                            Non specificato
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Nome al singolare della classe documentale.
+                    </p>
+                  </div>
                   {/* Descrizione Field */}
                   <div className="flex flex-col gap-1.5">
                     <Label
@@ -736,6 +778,7 @@ export default function DocumentClassDetailPage() {
                       className="min-w-[90px]"
                       onClick={() => {
                         setEditNome(documentClass.nome);
+                        setEditSingularName(documentClass.singular_name ?? "");
                         setEditDescrizione(documentClass.descrizione ?? "");
                         setIsEditing(false);
                       }}
@@ -757,11 +800,11 @@ export default function DocumentClassDetailPage() {
           </TabsContent>
 
           {/* Fields Tab */}
-          <TabsContent value="fields" className="space-y-6 p-6">
+          <TabsContent value="fields" className="gap-6 space-y-6 p-6 pt-12">
             {/* Section header for Fields */}
 
             {/* Card for Add Field Form */}
-            <div className="bg-background mb-4 rounded-xl border p-6 shadow-sm">
+            <div className="bg-card mb-16 rounded-xl border p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2">
                 <svg
                   width="18"
@@ -793,7 +836,7 @@ export default function DocumentClassDetailPage() {
                   <Input
                     type="text"
                     id="new_field_label"
-                    className="h-8"
+                    className="bg-muted/20 ring-border h-8 border-none ring-1"
                     placeholder="Nome campo"
                     value={newField.label}
                     onChange={(e) =>
@@ -830,9 +873,9 @@ export default function DocumentClassDetailPage() {
                   </select>
                 </div>
                 {/* Required and Primary Key checkboxes - improved UI/UX */}
-                <div className="flex flex-col gap-2 pt-2">
+                <div className="flex items-end gap-2 pt-2">
                   {/* Obbligatorio Checkbox */}
-                  <label className="group flex cursor-pointer items-center gap-2">
+                  <label className="group ring-border flex w-fit cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 pr-3 ring-1">
                     <AnimatedCheckbox
                       id="new_field_required"
                       checked={newField.required}
@@ -842,7 +885,7 @@ export default function DocumentClassDetailPage() {
                           required: !!checked,
                         }))
                       }
-                      className="group-hover:ring-primary/40 focus-visible:ring-primary transition-all group-hover:ring-2"
+                      className="group-hover:ring-primary/40 focus-visible:ring-primary ring-border cursor-pointer ring-1 transition-all group-hover:ring-2"
                       aria-checked={newField.required}
                       aria-labelledby="label-required"
                     />
@@ -851,7 +894,7 @@ export default function DocumentClassDetailPage() {
                     </span>
                   </label>
                   {/* Chiave Primaria Checkbox */}
-                  <label className="group flex cursor-pointer items-center gap-2">
+                  <label className="group ring-border flex w-fit cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 pr-3 ring-1">
                     <AnimatedCheckbox
                       id="new_field_is_primary_key"
                       checked={newField.is_primary_key}
@@ -861,7 +904,7 @@ export default function DocumentClassDetailPage() {
                           is_primary_key: !!checked,
                         }))
                       }
-                      className="group-hover:ring-primary/40 focus-visible:ring-primary transition-all group-hover:ring-2"
+                      className="group-hover:ring-primary/40 focus-visible:ring-primary ring-border cursor-pointer ring-1 transition-all group-hover:ring-2"
                       aria-checked={newField.is_primary_key}
                       aria-labelledby="label-primary-key"
                     />
@@ -888,15 +931,53 @@ export default function DocumentClassDetailPage() {
               </form>
             </div>
             {/* Card for Fields Table or Empty State */}
-            <div className="bg-background rounded-xl border p-6 shadow-sm">
-              <div className="mb-4 flex items-center gap-2">
+
+            <div className="mb-4 flex items-center gap-2">
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="text-primary"
+              >
+                <rect
+                  x="4"
+                  y="4"
+                  width="16"
+                  height="16"
+                  rx="3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M8 8h8M8 12h8M8 16h4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <h3 className="text-lg font-medium">Elenco Campi</h3>
+            </div>
+            {documentClass.campi && documentClass.campi.length > 0 ? (
+              <FieldsSortableTable
+                initialFields={[...documentClass.campi].sort(
+                  (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+                )}
+                documentClassId={documentClass.id}
+                onOrderChange={handleFieldsOrderChange}
+                onFieldUpdate={handleFieldUpdate}
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-8">
+                {/* Empty state icon */}
                 <svg
-                  width="18"
-                  height="18"
+                  width="40"
+                  height="40"
                   fill="none"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
-                  className="text-primary"
+                  className="text-muted-foreground"
                 >
                   <rect
                     x="4"
@@ -914,56 +995,17 @@ export default function DocumentClassDetailPage() {
                     strokeLinecap="round"
                   />
                 </svg>
-                <h3 className="text-lg font-medium">Elenco Campi</h3>
+                <p className="text-muted-foreground text-center text-sm">
+                  Nessun campo definito per questa classe documentale.
+                </p>
               </div>
-              {documentClass.campi && documentClass.campi.length > 0 ? (
-                <FieldsSortableTable
-                  initialFields={[...documentClass.campi].sort(
-                    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
-                  )}
-                  documentClassId={documentClass.id}
-                  onOrderChange={handleFieldsOrderChange}
-                  onFieldUpdate={handleFieldUpdate}
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-2 py-8">
-                  {/* Empty state icon */}
-                  <svg
-                    width="40"
-                    height="40"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="text-muted-foreground"
-                  >
-                    <rect
-                      x="4"
-                      y="4"
-                      width="16"
-                      height="16"
-                      rx="3"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M8 8h8M8 12h8M8 16h4"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <p className="text-muted-foreground text-center text-sm">
-                    Nessun campo definito per questa classe documentale.
-                  </p>
-                </div>
-              )}
-            </div>
+            )}
           </TabsContent>
 
           {/* Sharers Tab */}
-          <TabsContent value="sharers" className="space-y-6 p-6">
+          <TabsContent value="sharers" className="p-6 pt-12">
             {/* --- Associated Users Section --- */}
-            <div className="bg-background mb-8 w-full rounded-xl border p-6 shadow-sm">
+            <section className="mb-16 w-full space-y-4">
               {/* Section Header */}
               <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
                 {/* Icon for visual context */}
@@ -997,222 +1039,82 @@ export default function DocumentClassDetailPage() {
               </h2>
 
               <div className="space-y-6">
-                {/* Sharers Table or Empty State */}
-                {documentClass.sharers && documentClass.sharers.length > 0 ? (
-                  <div className="w-full overflow-x-auto">
-                    <div className="bg-background w-full min-w-[400px] overflow-hidden rounded-lg border shadow-sm">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/50">
-                            <TableHead className="h-9 py-2">Nome</TableHead>
-                            <TableHead className="h-9 py-2">Email</TableHead>
-                            <TableHead className="h-9 w-20 py-2">
-                              Azioni
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {documentClass.sharers.map((sharer) => (
-                            <TableRow
-                              key={sharer.id}
-                              className="group hover:bg-muted/30 transition-colors"
-                            >
-                              <TableCell className="flex items-center gap-2 py-2 font-medium">
-                                {/* Avatar or Initials */}
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage
-                                    src={sharer.logo_url}
-                                    alt={sharer.nominativo}
-                                  />
-                                  <AvatarFallback className="text-sm">
-                                    {sharer.nominativo
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")
-                                      .toUpperCase()
-                                      .slice(0, 2)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span>{sharer.nominativo}</span>
-                              </TableCell>
-                              <TableCell className="py-2">
-                                {sharer.email}
-                              </TableCell>
-                              <TableCell className="py-2">
-                                {/* Remove button with tooltip */}
-                                <div className="relative flex items-center">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleRemoveSharer(sharer.id)
-                                    }
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 focus-visible:ring-destructive h-8 w-8 p-0 focus-visible:ring-2"
-                                    title={`Rimuovi ${sharer.nominativo} dalla classe documentale`}
-                                    aria-label={`Rimuovi ${sharer.nominativo}`}
-                                  >
-                                    <Trash2Icon size={16} />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 py-8">
-                    {/* Unified Empty State Icon */}
-                    <svg
-                      width="40"
-                      height="40"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      className="text-muted-foreground"
-                    >
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M8 15c.667-1 2-3 4-3s3.333 2 4 3"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      />
-                      <circle cx="9" cy="10" r="1" fill="currentColor" />
-                      <circle cx="15" cy="10" r="1" fill="currentColor" />
-                    </svg>
-                    <p className="text-muted-foreground text-center text-sm">
-                      Nessun utente associato a questa classe documentale.
-                    </p>
-                  </div>
-                )}
+                <AssociatedSharersTable
+                  sharers={documentClass.sharers ?? []}
+                  isLoading={false}
+                  onRemove={(id) => {
+                    void handleRemoveSharer(id);
+                  }}
+                />
               </div>
-            </div>
+            </section>
 
             {/* --- Assign Sharer Section --- */}
-            <div className="bg-background w-full rounded-xl border p-6 shadow-sm">
-              {/* Card Title and Description */}
-              <div className="mb-4">
-                <h3 className="flex items-center gap-2 text-lg font-semibold">
-                  <svg
-                    width="18"
-                    height="18"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="text-primary"
-                  >
-                    <path
-                      d="M12 4v16m8-8H4"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  {documentClass.sharers && documentClass.sharers.length > 0
-                    ? "Aggiungi Sharer"
-                    : "Assegna Sharer"}
-                </h3>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Seleziona un utente da associare a questa classe documentale.
-                  Gli utenti già associati non sono mostrati.
-                </p>
-              </div>
-              {/* Assign Sharer Form */}
-              <form
-                className="bg-muted/30 border-muted flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-end"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void handleAssignSharer();
-                }}
-                aria-label="Assegna uno sharer a questa classe documentale"
-              >
-                <div className="min-w-[220px] flex-1">
-                  <Label
-                    htmlFor={sharerSelectId}
-                    className="mb-1 block text-sm"
-                  >
-                    Seleziona Sharer
-                  </Label>
-                  <Popover
-                    open={isSharerSelectOpen}
-                    onOpenChange={setIsSharerSelectOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        id={sharerSelectId}
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={isSharerSelectOpen}
-                        className={cn(
-                          "focus-visible:outline-primary h-11 w-full justify-between px-3 font-normal outline-offset-0 transition-all outline-none focus-visible:outline-2",
-                          !selectedSharerId && "text-muted-foreground",
-                        )}
-                        tabIndex={0}
-                      >
-                        <span className="flex items-center gap-2 truncate">
-                          {selectedSharerId
-                            ? (() => {
-                                const sharer = availableSharers.find(
-                                  (s) => s.id === selectedSharerId,
-                                );
-                                return sharer ? (
-                                  <>
-                                    <Avatar className="h-6 w-6">
-                                      <AvatarImage
-                                        src={sharer.logo_url}
-                                        alt={sharer.nominativo}
-                                      />
-                                      <AvatarFallback className="text-xs">
-                                        {sharer.nominativo.charAt(0)}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span>{sharer.nominativo}</span>
-                                  </>
-                                ) : (
-                                  "Seleziona uno sharer..."
-                                );
-                              })()
-                            : "Seleziona uno sharer..."}
-                        </span>
-                        <ChevronDownIcon
-                          size={18}
-                          className="text-muted-foreground/80 ml-2 shrink-0"
-                          aria-hidden="true"
-                        />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      // Only the list should scroll, not the entire popover
-                      className="border-input z-50 w-full max-w-full min-w-[var(--radix-popper-anchor-width)] p-0"
-                      align="start"
+
+            {/* Card Title and Description */}
+            <div className="mb-6">
+              <h3 className="flex items-center gap-2 text-lg font-semibold">
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="text-primary"
+                >
+                  <path
+                    d="M12 4v16m8-8H4"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                {documentClass.sharers && documentClass.sharers.length > 0
+                  ? "Aggiungi Utente"
+                  : "Assegna Utente"}
+              </h3>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Seleziona un utente da associare a questa classe documentale.
+                Gli utenti già associati non sono mostrati.
+              </p>
+            </div>
+            {/* Assign Sharer Form */}
+            <form
+              className="bg-card ring-border flex flex-col gap-4 rounded-lg p-4 ring-1 md:flex-row md:items-end"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleAssignSharer();
+              }}
+              aria-label="Assegna uno sharer a questa classe documentale"
+            >
+              <div className="min-w-[220px] flex-1">
+                <Label htmlFor={sharerSelectId} className="mb-1 block text-sm">
+                  Seleziona l'utente
+                </Label>
+                <Popover
+                  open={isSharerSelectOpen}
+                  onOpenChange={setIsSharerSelectOpen}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      id={sharerSelectId}
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isSharerSelectOpen}
+                      className={cn(
+                        "focus-visible:outline-primary h-11 w-full justify-between px-3 font-normal outline-offset-0 transition-all outline-none focus-visible:outline-2",
+                        !selectedSharerId && "text-muted-foreground",
+                      )}
+                      tabIndex={0}
                     >
-                      <Command>
-                        <CommandInput placeholder="Cerca sharer..." />
-                        {/* Make the dropdown scrollable with the mouse wheel when there are many sharers */}
-                        <CommandList className="pointer-events-auto max-h-60 overflow-y-auto">
-                          <CommandEmpty>Nessun sharer trovato.</CommandEmpty>
-                          <CommandGroup>
-                            {availableSharers.map((sharer) => (
-                              <CommandItem
-                                key={sharer.id}
-                                value={sharer.id.toString()}
-                                onSelect={(currentValue) => {
-                                  setSelectedSharerId(
-                                    currentValue === selectedSharerId
-                                      ? ""
-                                      : Number(currentValue),
-                                  );
-                                  setIsSharerSelectOpen(false);
-                                }}
-                              >
-                                <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 truncate">
+                        {selectedSharerId
+                          ? (() => {
+                              const sharer = availableSharers.find(
+                                (s) => s.id === selectedSharerId,
+                              );
+                              return sharer ? (
+                                <>
                                   <Avatar className="h-6 w-6">
                                     <AvatarImage
                                       src={sharer.logo_url}
@@ -1223,89 +1125,137 @@ export default function DocumentClassDetailPage() {
                                     </AvatarFallback>
                                   </Avatar>
                                   <span>{sharer.nominativo}</span>
-                                </div>
-                                <CheckIcon
-                                  className={cn(
-                                    "ml-auto h-4 w-4",
-                                    selectedSharerId === sharer.id
-                                      ? "opacity-100"
-                                      : "opacity-0",
-                                  )}
-                                />
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <Button
-                  type="submit"
-                  disabled={!selectedSharerId}
-                  size="lg"
-                  className="mt-2 h-11 w-full text-white md:mt-0 md:ml-4 md:w-auto"
-                >
-                  {isLoadingSharers ? (
-                    <svg
-                      className="mr-2 h-4 w-4 animate-spin"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"
-                      ></path>
-                    </svg>
-                  ) : null}
-                  {documentClass.sharers && documentClass.sharers.length > 0
-                    ? "Aggiungi Sharer"
-                    : "Assegna Sharer"}
-                </Button>
-              </form>
-              {/* No sharers available state */}
-              {!isLoadingSharers && availableSharers.length === 0 && (
-                <div className="text-muted-foreground mt-6 flex flex-col items-center gap-2 text-sm">
+                                </>
+                              ) : (
+                                "Seleziona l'utente..."
+                              );
+                            })()
+                          : "Seleziona l'utente..."}
+                      </span>
+                      <ChevronDownIcon
+                        size={18}
+                        className="text-muted-foreground/80 ml-2 shrink-0"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    // Only the list should scroll, not the entire popover
+                    className="border-input z-50 w-full max-w-full min-w-[var(--radix-popper-anchor-width)] p-0"
+                    align="start"
+                  >
+                    <Command>
+                      <CommandInput placeholder="Cerca utente..." />
+                      {/* Make the dropdown scrollable with the mouse wheel when there are many sharers */}
+                      <CommandList className="pointer-events-auto max-h-60 overflow-y-auto">
+                        <CommandEmpty>Nessun utente trovato.</CommandEmpty>
+                        <CommandGroup>
+                          {availableSharers.map((sharer) => (
+                            <CommandItem
+                              key={sharer.id}
+                              value={sharer.id.toString()}
+                              onSelect={(currentValue) => {
+                                setSelectedSharerId(
+                                  currentValue === selectedSharerId
+                                    ? ""
+                                    : Number(currentValue),
+                                );
+                                setIsSharerSelectOpen(false);
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage
+                                    src={sharer.logo_url}
+                                    alt={sharer.nominativo}
+                                  />
+                                  <AvatarFallback className="text-xs">
+                                    {sharer.nominativo.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>{sharer.nominativo}</span>
+                              </div>
+                              <CheckIcon
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  selectedSharerId === sharer.id
+                                    ? "opacity-100"
+                                    : "opacity-0",
+                                )}
+                              />
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Button
+                type="submit"
+                disabled={!selectedSharerId}
+                size="lg"
+                className="mt-2 h-11 w-full text-white md:mt-0 md:ml-4 md:w-auto"
+              >
+                {isLoadingSharers ? (
                   <svg
-                    width="28"
-                    height="28"
-                    fill="none"
+                    className="mr-2 h-4 w-4 animate-spin"
                     viewBox="0 0 24 24"
-                    aria-hidden="true"
                   >
                     <circle
+                      className="opacity-25"
                       cx="12"
                       cy="12"
                       r="10"
                       stroke="currentColor"
-                      strokeWidth="2"
-                    />
+                      strokeWidth="4"
+                    ></circle>
                     <path
-                      d="M8 15c.667-1 2-3 4-3s3.333 2 4 3"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <circle cx="9" cy="10" r="1" fill="currentColor" />
-                    <circle cx="15" cy="10" r="1" fill="currentColor" />
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    ></path>
                   </svg>
-                  Nessun sharer disponibile per l&apos;assegnazione.
-                </div>
-              )}
-            </div>
+                ) : null}
+                {documentClass.sharers && documentClass.sharers.length > 0
+                  ? "Aggiungi Utente"
+                  : "Assegna Utente"}
+              </Button>
+            </form>
+            {/* No sharers available state */}
+            {!isLoadingSharers && availableSharers.length === 0 && (
+              <div className="text-muted-foreground mt-6 flex flex-col items-center gap-2 text-sm">
+                <svg
+                  width="28"
+                  height="28"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M8 15c.667-1 2-3 4-3s3.333 2 4 3"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  />
+                  <circle cx="9" cy="10" r="1" fill="currentColor" />
+                  <circle cx="15" cy="10" r="1" fill="currentColor" />
+                </svg>
+                Nessun sharer disponibile per l&apos;assegnazione.
+              </div>
+            )}
           </TabsContent>
 
           {/* Audit Tab */}
           <TabsContent value="audit" className="space-y-6 p-6">
             {/* Card for advanced info */}
-            <div className="bg-background rounded-xl border p-6 shadow-sm">
+            <div className="bg-card ring-border rounded-xl p-6 ring-1">
               <div className="mb-4 flex items-center gap-2">
                 {/* Icon for advanced info */}
                 <svg

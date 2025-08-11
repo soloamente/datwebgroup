@@ -92,20 +92,20 @@ const DashboardSkeleton = () => (
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <Card className="mb-6 w-full border-neutral-800 bg-neutral-900/50 text-white">
+        <Card className="bg-card ring-border mb-6 w-full border-none ring-1">
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div className="grid gap-1.5">
               <CardTitle className="text-2xl">Statistiche</CardTitle>
-              <CardDescription className="text-neutral-400">
-                <Skeleton className="h-4 w-48 bg-neutral-700" />
+              <CardDescription className="text-muted-foreground">
+                <Skeleton className="h-4 w-48" />
               </CardDescription>
             </div>
-            <Skeleton className="h-6 w-16 bg-neutral-700" />
+            <Skeleton className="h-6 w-16" />
           </CardHeader>
           <CardContent className="px-4">
             <Tabs value={""} className="w-full">
               <div className="px-0">
-                <TabsList className="grid w-auto grid-cols-3 rounded-lg bg-neutral-800/60 p-1">
+                <TabsList className="ring-border bg-muted/30 grid w-auto grid-cols-3 rounded-lg p-1 ring-1">
                   <TabsTrigger value="week" disabled>
                     Settimana
                   </TabsTrigger>
@@ -119,7 +119,9 @@ const DashboardSkeleton = () => (
               </div>
               <TabsContent value="year" className="mt-4">
                 <div className="flex h-[250px] w-full items-center justify-center">
-                  <div className="text-neutral-400">Caricamento grafico...</div>
+                  <div className="text-muted-foreground">
+                    Caricamento grafico...
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
@@ -145,15 +147,15 @@ const DashboardSkeleton = () => (
                 ease: "easeOut",
               }}
             >
-              <Card className="border-neutral-800 bg-neutral-900/50 text-white">
+              <Card className="bg-card ring-border border-none ring-1">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
-                    <Skeleton className="h-4 w-24 bg-neutral-700" />
+                    <Skeleton className="h-4 w-24" />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Skeleton className="mb-1 h-8 w-16 bg-neutral-700" />
-                  <Skeleton className="h-3 w-20 bg-neutral-700" />
+                  <Skeleton className="mb-1 h-8 w-16" />
+                  <Skeleton className="h-3 w-20" />
                 </CardContent>
               </Card>
             </motion.div>
@@ -161,92 +163,122 @@ const DashboardSkeleton = () => (
         </div>
       </motion.div>
 
-      {/* Recent Shares Section Skeleton - Updated to match grid card design */}
+      {/* Recent Shares and Pie Chart Section Skeleton */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.3 }}
       >
-        <div className="grid grid-cols-1 gap-6">
-          <Card className="border-neutral-800 bg-neutral-900/50 text-white">
-            <CardHeader className="mb-6">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl font-semibold tracking-tight">
-                  Condivisioni Recenti
-                </CardTitle>
-                <div className="flex items-center gap-4">
-                  <Skeleton className="h-10 w-[200px] rounded-md bg-neutral-700" />
-                  <Skeleton className="h-4 w-24 bg-neutral-700" />
-                  <div className="flex gap-1">
-                    <Skeleton className="h-8 w-8 rounded-md bg-neutral-700" />
-                    <Skeleton className="h-8 w-8 rounded-md bg-neutral-700" />
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex-1">
+            <Card className="bg-card ring-border border-none ring-1">
+              <CardHeader className="mb-6">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-2xl font-semibold tracking-tight">
+                    Condivisioni Recenti
+                  </CardTitle>
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-10 w-[200px] rounded-md" />
+                    <Skeleton className="h-4 w-24" />
+                    <div className="flex gap-1">
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <CardDescription className="text-neutral-400">
-                <Skeleton className="h-4 w-64 bg-neutral-700" />
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <Card
-                    key={index}
-                    className="group relative h-full cursor-pointer overflow-hidden rounded-xl border-neutral-800/50 bg-neutral-900/90 backdrop-blur-sm"
-                  >
-                    {/* Status indicator skeleton */}
-                    <div className="absolute top-3 right-3 z-40">
-                      <Skeleton className="h-6 w-6 rounded-full bg-neutral-700" />
-                    </div>
+                <CardDescription className="text-muted-foreground">
+                  <Skeleton className="h-4 w-64" />
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <Card
+                      key={index}
+                      className="group bg-card ring-border relative h-full cursor-pointer overflow-hidden rounded-xl ring-1 backdrop-blur-sm"
+                    >
+                      {/* Status indicator skeleton */}
+                      <div className="absolute top-3 right-3 z-40">
+                        <Skeleton className="h-6 w-6 rounded-full" />
+                      </div>
 
-                    <CardHeader className="mb-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <Skeleton className="h-4 w-4 bg-neutral-700" />
-                          <Skeleton className="h-4 w-24 bg-neutral-700" />
+                      <CardHeader className="mb-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <Skeleton className="h-4 w-4" />
+                            <Skeleton className="h-4 w-24" />
+                          </div>
                         </div>
-                      </div>
-                      <Skeleton className="h-6 w-20 rounded-md bg-neutral-700" />
-                    </CardHeader>
+                        <Skeleton className="h-6 w-20 rounded-md" />
+                      </CardHeader>
 
-                    <CardContent className="space-y-4 pb-4">
-                      {/* Recipients count skeleton */}
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-12 w-12 rounded-lg bg-neutral-700" />
-                        <div>
-                          <Skeleton className="mb-1 h-8 w-8 bg-neutral-700" />
-                          <Skeleton className="h-4 w-16 bg-neutral-700" />
-                        </div>
-                      </div>
-
-                      {/* Files count skeleton */}
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-8 w-8 rounded-md bg-neutral-700" />
-                        <Skeleton className="h-4 w-12 bg-neutral-700" />
-                      </div>
-
-                      {/* Recipients avatars skeleton */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="flex -space-x-2">
-                            {Array.from({ length: 3 }).map((_, avatarIndex) => (
-                              <Skeleton
-                                key={avatarIndex}
-                                className="h-8 w-8 rounded-full border-2 border-neutral-800 bg-neutral-700"
-                              />
-                            ))}
+                      <CardContent className="space-y-4 pb-4">
+                        {/* Recipients count skeleton */}
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-12 w-12 rounded-lg" />
+                          <div>
+                            <Skeleton className="mb-1 h-8 w-8" />
+                            <Skeleton className="h-4 w-16" />
                           </div>
                         </div>
 
-                        {/* Arrow indicator skeleton */}
-                        <Skeleton className="h-8 w-8 rounded-full bg-neutral-700" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                        {/* Files count skeleton */}
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-8 w-8 rounded-md" />
+                          <Skeleton className="h-4 w-12" />
+                        </div>
+
+                        {/* Recipients avatars skeleton */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="flex -space-x-2">
+                              {Array.from({ length: 3 }).map(
+                                (_, avatarIndex) => (
+                                  <Skeleton
+                                    key={avatarIndex}
+                                    className="border-border h-8 w-8 rounded-full border-2"
+                                  />
+                                ),
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Arrow indicator skeleton */}
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="flex-shrink-0">
+            <Card className="bg-card ring-border h-full w-full max-w-sm border-none ring-1">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  <Skeleton className="h-5 w-40" />
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  <Skeleton className="h-4 w-56" />
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center gap-4">
+                <Skeleton className="h-56 w-56 rounded-full" />
+                <div className="grid w-full grid-cols-2 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Skeleton className="h-3 w-3 rounded-sm" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter className="justify-center">
+                <Skeleton className="h-4 w-24" />
+              </CardFooter>
+            </Card>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -347,11 +379,11 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <Card className="mb-6 w-full border-neutral-800 bg-neutral-900/50 text-white">
+          <Card className="bg-card ring-border mb-6 w-full border-none ring-1">
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div className="grid gap-1.5">
                 <CardTitle className="text-2xl">Statistiche</CardTitle>
-                <CardDescription className="text-neutral-400">
+                <CardDescription className="text-muted-foreground">
                   {statsCalculations ? (
                     <>
                       {formatNumber(statsCalculations.totalFiles)} file totali
@@ -377,23 +409,32 @@ export default function DashboardPage() {
                 className="w-full"
               >
                 <div className="px-0">
-                  <TabsList className="grid w-auto grid-cols-3 rounded-lg bg-neutral-800/60 p-1">
-                    <TabsTrigger value="week">Settimana</TabsTrigger>
-                    <TabsTrigger value="month">Mese</TabsTrigger>
-                    <TabsTrigger value="year">Anno</TabsTrigger>
+                  <TabsList className="ring-border bg-muted/30 grid w-auto grid-cols-3 rounded-lg p-1 ring-1">
+                    <TabsTrigger value="week" className="text-muted-foreground">
+                      Settimana
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="month"
+                      className="text-muted-foreground"
+                    >
+                      Mese
+                    </TabsTrigger>
+                    <TabsTrigger value="year" className="text-muted-foreground">
+                      Anno
+                    </TabsTrigger>
                   </TabsList>
                 </div>
                 <TabsContent value={activeTab} className="mt-4">
                   {isLoading ? (
                     <div className="flex h-[250px] w-full items-center justify-center">
-                      <div className="text-neutral-400">
+                      <div className="text-muted-foreground">
                         Caricamento grafico...
                       </div>
                     </div>
                   ) : (
                     <ChartContainer
                       config={chartConfig}
-                      className="h-[250px] w-full"
+                      className="h-[250px] w-full [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-axis-tick_text]:opacity-100 [&_.recharts-cartesian-axis-tick_text]:font-medium"
                     >
                       <BarChart
                         accessibilityLayer
@@ -463,7 +504,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-neutral-800 bg-neutral-900/50 text-white">
+              <Card className="bg-card ring-border border-none ring-1">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
                     Media giornaliera
@@ -473,11 +514,13 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold">
                     {formatNumber(statsCalculations.averageFilesPerDay)}
                   </div>
-                  <p className="text-xs text-neutral-400">file al giorno</p>
+                  <p className="text-muted-foreground text-xs">
+                    file al giorno
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-neutral-800 bg-neutral-900/50 text-white">
+              <Card className="bg-card ring-border border-none ring-1">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
                     Record massimo
@@ -487,11 +530,13 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold">
                     {statsCalculations.maxFilesInPeriod}
                   </div>
-                  <p className="text-xs text-neutral-400">file in un giorno</p>
+                  <p className="text-muted-foreground text-xs">
+                    file in un giorno
+                  </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-neutral-800 bg-neutral-900/50 text-white">
+              <Card className="bg-card ring-border border-none ring-1">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
                     Totale file
@@ -501,11 +546,11 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold">
                     {formatNumber(statsCalculations.totalFiles)}
                   </div>
-                  <p className="text-xs text-neutral-400">file totali</p>
+                  <p className="text-muted-foreground text-xs">file totali</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-neutral-800 bg-neutral-900/50 text-white">
+              <Card className="bg-card ring-border border-none ring-1">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium">
                     Media mensile
@@ -515,14 +560,17 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold">
                     {formatNumber(statsCalculations.averageFilesPerMonth)}
                   </div>
-                  <p className="text-xs text-neutral-400">file al mese</p>
+                  <p className="text-muted-foreground text-xs">file al mese</p>
                 </CardContent>
               </Card>
             </div>
           </motion.div>
         )}
 
-        {/* Recent Shares Section with Pie Chart */}
+        {
+          /* Recent Shares Section with Pie Chart */
+          // Loading skeleton for this area mirrors the layout below
+        }
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

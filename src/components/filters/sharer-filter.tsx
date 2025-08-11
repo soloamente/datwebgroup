@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/animate-ui/base/checkbox";
-import { RiUserLine, RiCloseLine } from "@remixicon/react";
+import { RiUserLine, RiCloseLine, RiUserSearchLine } from "@remixicon/react";
 import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -87,15 +87,15 @@ export function SharerFilter({
           <Button
             variant="outline"
             className={cn(
-              "border-muted/30 hover:border-primary/40 rounded-full pr-2 pl-3",
-              "flex items-center gap-1.5",
-              hasActiveFilter && "border-primary/60 bg-primary/5",
+              "ring-border hover:ring-primary/40 bg-card rounded-full border-none ring-1 hover:ring-2",
+              "flex items-center gap-2",
+              hasActiveFilter && "ring-primary/60 bg-primary/5 ring-2",
             )}
             aria-label="Filtra per sharer"
             onClick={() => !open && setOpen(true)}
           >
-            <RiUserLine className="text-muted-foreground/80 size-4" />
-            Sharer
+            <RiUserSearchLine className="text-muted-foreground/80 size-4" />
+            Utente
             {hasActiveFilter && (
               <>
                 <Badge
@@ -123,9 +123,9 @@ export function SharerFilter({
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-semibold">Filtra per Sharer</h4>
+                <h4 className="text-sm font-semibold">Filtra per utente</h4>
                 <p className="text-muted-foreground text-xs">
-                  Seleziona uno o più sharer
+                  Seleziona uno o più utenti
                 </p>
               </div>
               {hasActiveFilter && (
@@ -142,15 +142,12 @@ export function SharerFilter({
 
             {/* Search */}
             <div className="space-y-2">
-              <Label htmlFor="sharer-search" className="text-xs font-medium">
-                Cerca sharer
-              </Label>
               <Input
                 id="sharer-search"
                 placeholder="Cerca per nome..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 rounded-full"
+                className="bg-card ring-border focus:ring-primary/40 h-9 rounded-full border-none ring-1 focus:ring-2"
               />
             </div>
 
@@ -158,14 +155,14 @@ export function SharerFilter({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Label className="text-xs font-medium">
-                  Sharers disponibili
+                  Utenti disponibili
                 </Label>
                 <Badge variant="outline" className="h-5 px-1.5 text-xs">
                   {filteredSharers.length}
                 </Badge>
               </div>
               <div
-                className="border-muted/20 max-h-48 min-h-32 overflow-x-hidden overflow-y-auto rounded-lg border"
+                className="ring-border max-h-48 min-h-32 overflow-x-hidden overflow-y-auto rounded-lg border-none ring-1"
                 style={{
                   scrollBehavior: "smooth",
                   overscrollBehavior: "contain",
@@ -183,15 +180,15 @@ export function SharerFilter({
                     filteredSharers.map((sharer) => (
                       <div
                         key={sharer.id}
-                        className="hover:bg-muted/40 flex items-center gap-3 rounded-lg p-2 transition-colors"
+                        className="hover:bg-muted/40 flex cursor-pointer items-center rounded-lg p-2 transition-colors"
                       >
                         <Checkbox
                           id={`sharer-${sharer.id}`}
                           checked={selectedSharers.includes(sharer.id)}
                           onCheckedChange={() => handleSharerToggle(sharer.id)}
-                          className="size-4"
+                          className="ring-border size-4 cursor-pointer ring-1"
                         />
-                        <Avatar className="h-6 w-6">
+                        <Avatar className="ml-3 h-6 w-6">
                           <AvatarImage src={sharer.logo_url} />
                           <AvatarFallback
                             className="text-xs"
@@ -202,7 +199,7 @@ export function SharerFilter({
                         </Avatar>
                         <Label
                           htmlFor={`sharer-${sharer.id}`}
-                          className="grow cursor-pointer text-sm font-normal"
+                          className="grow cursor-pointer pl-3 text-sm font-normal"
                         >
                           {sharer.nominativo}
                         </Label>

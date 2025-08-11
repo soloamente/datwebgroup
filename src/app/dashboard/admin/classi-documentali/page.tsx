@@ -12,6 +12,8 @@ import { StatsGrid } from "@/components/admin/stats-grid";
 import { FileStack, ListChecks, CalendarPlus, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateDocumentClassDialog } from "@/components/dashboard/create-document-class-dialog";
+import { BsFileEarmarkPlusFill } from "react-icons/bs";
+import { FaFolderPlus } from "react-icons/fa6";
 
 // Define interfaces for the raw API response structure
 interface ApiDocumentClassField {
@@ -29,6 +31,7 @@ interface ApiDocumentClass {
   id: number;
   name: string; // Corresponds to DocumentClass.nome
   description: string; // Corresponds to DocumentClass.descrizione
+  singular_name?: string; // Corresponds to DocumentClass.singular_name
   logo_url?: string; // Add logo_url to API response type
   created_by: string; // Not in current DocumentClass, but present
   sharers_count: number;
@@ -256,7 +259,7 @@ export default function ClassiDocumentali() {
           className="bg-primary rounded-full text-white"
           onClick={handleOpenCreateDialog}
         >
-          <FilePlus className="h-4 w-4" />
+          <FaFolderPlus className="h-4 w-4" />
           Crea Classe Documentale
         </Button>
       </div>

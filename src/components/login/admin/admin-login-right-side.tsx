@@ -14,6 +14,7 @@ import PasswordInput from "@/components/login/password-input";
 import { userService, type Sharer } from "@/app/api/api";
 import { Loader2 } from "lucide-react";
 import { ResetPasswordDialog } from "@/components/reset-passoword";
+import { toast } from "sonner";
 
 type LoginStep = "usernameInput" | "passwordInput" | "otpInput" | "login";
 
@@ -90,7 +91,9 @@ export default function AdminLoginRightSide({
 
   const handleUsernameContinue = async () => {
     if (!currentUsername.trim()) {
-      setError("Username is required.");
+      const message = "Inserisci il tuo username.";
+      setError(message);
+      toast.error(message);
       return;
     }
     setError(null);
@@ -101,10 +104,13 @@ export default function AdminLoginRightSide({
       if (result.exists && result.role) {
         onUsernameChecked(currentUsername.trim(), result.role);
       } else {
-        setError(result.message ?? "User not found or invalid username.");
+        const message =
+          result.message ?? "Utente non trovato o username non valido.";
+        setError(message);
+        toast.error(message);
       }
     } catch (e: unknown) {
-      let message = "Failed to check username. Please try again.";
+      let message = "Verifica dello username non riuscita. Riprova.";
       if (
         typeof e === "object" &&
         e !== null &&
@@ -119,6 +125,7 @@ export default function AdminLoginRightSide({
         message = e.message;
       }
       setError(message);
+      toast.error(message);
       console.error("Check username error:", e);
     }
     setIsLoading(false);
@@ -141,7 +148,9 @@ export default function AdminLoginRightSide({
 
   const handlePasswordLogin = async () => {
     if (!currentPassword) {
-      setError("Password is required.");
+      const message = "La password è obbligatoria.";
+      setError(message);
+      toast.error(message);
       return;
     }
     setError(null);
@@ -161,10 +170,14 @@ export default function AdminLoginRightSide({
           password: currentPassword,
         });
       } else {
-        setError(result?.message ?? "Login failed. Check credentials.");
+        const message =
+          result?.message ?? "Accesso non riuscito. Controlla le credenziali.";
+        setError(message);
+        toast.error(message);
       }
     } catch (e) {
-      setError("An error occurred during login.");
+      setError("Si è verificato un errore durante il login.");
+      toast.error("Si è verificato un errore durante il login.");
       console.error("Password login error:", e);
     }
     setIsLoading(false);
@@ -188,9 +201,7 @@ export default function AdminLoginRightSide({
                 value={currentUsername}
                 onChange={(e) => setCurrentUsername(e.target.value)}
               />
-              {error && (
-                <p className="text-center text-sm text-red-500">{error}</p>
-              )}
+              {/* inline error removed; using toast only */}
               <Button
                 onClick={handleUsernameContinue}
                 disabled={isLoading}
@@ -241,9 +252,7 @@ export default function AdminLoginRightSide({
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 label="Password"
               />
-              {error && (
-                <p className="text-center text-sm text-red-500">{error}</p>
-              )}
+              {/* inline error removed; using toast only */}
               <Button
                 onClick={handlePasswordLogin}
                 disabled={isLoading}
@@ -344,11 +353,7 @@ export default function AdminLoginRightSide({
               </Button>
             </div>
             <AdminQrScanner onScan={onQrScan} onError={onQrError} />
-            {error && loginMode === "qr" && (
-              <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                {error}
-              </div>
-            )}
+            {/* inline error removed; using toast only */}
           </>
         )}
       </div>

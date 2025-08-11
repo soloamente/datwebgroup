@@ -119,6 +119,8 @@ import {
   DateRangeFilter,
 } from "@/components/filters/date-range-filter";
 import Image from "next/image";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { ImCheckmark, ImCross } from "react-icons/im";
 
 // Filter function that correctly handles active status boolean
 const activeStatusFilterFn: FilterFn<Sharer | Viewer> = (
@@ -277,9 +279,9 @@ const getColumns = ({
           className={cn("flex items-center rounded-full", !isActive ? "" : "")}
         >
           {isActive ? (
-            <CheckCircle className="size-2 rounded-full" />
+            <ImCheckmark className="size-2 rounded-full" />
           ) : (
-            <CrossCircle className="size-2 rounded-full" />
+            <ImCross className="size-2 rounded-full" />
           )}
           {isActive ? "Attivo" : "Inattivo"}
         </Badge>
@@ -531,7 +533,7 @@ export default function SharerTable({
                 id={`${id}-input`}
                 ref={inputRef}
                 className={cn(
-                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-full border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-64",
+                  "bg-card focus:ring-primary/20 ring-border h-10 w-full rounded-full border-none pl-9 text-base ring-1 transition-all focus:ring-2 sm:w-64",
                   Boolean(globalFilter) && "pr-9",
                 )}
                 value={globalFilter ?? ""}
@@ -572,7 +574,7 @@ export default function SharerTable({
                   <Button
                     ref={buttonRef}
                     variant="outline"
-                    className="border-muted/30 hover:border-primary/40 w-full rounded-full"
+                    className="ring-border bg-card w-full rounded-full border-none ring-1"
                   >
                     <StatusIcon
                       className="text-muted-foreground/60 -ms-1.5 size-5.5"
@@ -592,15 +594,15 @@ export default function SharerTable({
                   className="rounded-2xl p-2"
                   align="end"
                 >
-                  <div className="space-y-2">
-                    <div className="text-muted-foreground/60 px-1 text-xs font-medium tracking-wider uppercase">
+                  <div className="flex flex-col justify-center space-y-3">
+                    <div className="text-muted-foreground flex justify-center text-xs uppercase">
                       Stato
                     </div>
-                    <div className="space-y-0.5">
+                    <div className="space-y-2">
                       {uniqueStatusValues.map((value, i) => (
                         <div
                           key={String(value)}
-                          className="hover:bg-muted/30 flex items-center gap-2 rounded-lg p-1.5 transition-colors"
+                          className="hover:bg-muted/10 ring-border flex items-center gap-2 rounded-lg p-1.5 ring-1 transition-colors"
                         >
                           <Checkbox
                             id={`${id}-${i}`}
@@ -608,7 +610,7 @@ export default function SharerTable({
                             onCheckedChange={(checked: boolean) =>
                               handleStatusChange(checked, value)
                             }
-                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary size-3.5 hover:cursor-pointer"
+                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary ring-border size-3.5 ring-1 hover:cursor-pointer"
                           />
                           <Label
                             htmlFor={`${id}-${i}`}
@@ -703,70 +705,78 @@ export default function SharerTable({
       </div>
 
       {/* --- Table Section --- */}
-      <div className="bg-card border-muted/30 overflow-x-auto rounded-2xl border shadow-sm">
-        <Table className="min-w-full">
-          <TableHeader className="bg-card/95 border-muted/30 sticky top-0 z-10 border-b backdrop-blur">
+      <div className="ring-border isolate overflow-hidden rounded-2xl ring-1">
+        <Table className="bg-muted/30 min-w-full border-separate border-spacing-0">
+          <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
                 className="border-b-0 hover:bg-transparent"
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    style={{ width: `${header.getSize()}px` }}
-                    className="text-muted-foreground bg-card/95 h-14 px-5 text-left align-middle text-sm font-semibold tracking-wide uppercase"
-                  >
-                    {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                      <div
-                        className="hover:text-foreground flex cursor-pointer items-center gap-2 transition-colors select-none"
-                        onClick={header.column.getToggleSortingHandler()}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            header.column.getToggleSortingHandler()?.(e);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`Ordina per ${typeof header.column.columnDef.header === "string" ? header.column.columnDef.header : "colonna"}`}
-                      >
-                        {flexRender(
+                {headerGroup.headers.map((header, headerIdx) => {
+                  const isFirst = headerIdx === 0;
+                  const isLast = headerIdx === headerGroup.headers.length - 1;
+                  return (
+                    <TableHead
+                      key={header.id}
+                      style={{ width: `${header.getSize()}px` }}
+                      className={cn(
+                        "text-muted-foreground overflow-hidden px-5 text-left align-middle",
+                        isFirst && "rounded-tl-2xl rounded-bl-2xl",
+                        isLast && "rounded-tr-2xl rounded-br-2xl",
+                      )}
+                    >
+                      {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                        <div
+                          className="hover:text-foreground flex cursor-pointer items-center gap-2 transition-colors select-none"
+                          onClick={header.column.getToggleSortingHandler()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              header.column.getToggleSortingHandler()?.(e);
+                            }
+                          }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`Ordina per ${typeof header.column.columnDef.header === "string" ? header.column.columnDef.header : "colonna"}`}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          {{
+                            asc: (
+                              <RiArrowUpSLine
+                                size={16}
+                                className="text-muted-foreground"
+                              />
+                            ),
+                            desc: (
+                              <RiArrowDownSLine
+                                size={16}
+                                className="text-muted-foreground"
+                              />
+                            ),
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </div>
+                      ) : (
+                        flexRender(
                           header.column.columnDef.header,
                           header.getContext(),
-                        )}
-                        {{
-                          asc: (
-                            <RiArrowUpSLine
-                              size={16}
-                              className="text-muted-foreground"
-                            />
-                          ),
-                          desc: (
-                            <RiArrowDownSLine
-                              size={16}
-                              className="text-muted-foreground"
-                            />
-                          ),
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </div>
-                    ) : (
-                      flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )
-                    )}
-                  </TableHead>
-                ))}
+                        )
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_td]:bg-card ring-border rounded-lg ring-1">
             {isLoading ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-40 text-center align-middle"
+                  className="h-40 rounded-lg text-center align-middle"
                 >
                   <div className="flex flex-col items-center justify-center gap-3 py-8">
                     <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
@@ -777,23 +787,37 @@ export default function SharerTable({
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, rowIndex) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/40 border-muted/20 group h-16 cursor-pointer border-b transition-colors last:border-b-0"
+                  className="border-border group h-16 border-b transition-colors last:border-b-0"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell, cellIndex) => {
+                    const isTopRow = rowIndex === 0;
+                    const isFirstCell = cellIndex === 0;
+                    const isLastCell =
+                      cellIndex === row.getVisibleCells().length - 1;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "group-hover:bg-muted/10 group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors",
+                          isTopRow &&
+                            isFirstCell &&
+                            "overflow-hidden rounded-tl-2xl",
+                          isTopRow &&
+                            isLastCell &&
+                            "overflow-hidden rounded-tr-2xl",
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -830,12 +854,12 @@ export default function SharerTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                   aria-label="Pagina precedente"
                 >
-                  <RiArrowLeftSLine size={18} />
+                  <IoIosArrowBack size={18} />
                 </Button>
               </PaginationItem>
               <PaginationItem>
@@ -850,12 +874,12 @@ export default function SharerTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                   aria-label="Pagina successiva"
                 >
-                  <RiArrowRightSLine size={18} />
+                  <IoIosArrowForward size={18} />
                 </Button>
               </PaginationItem>
             </PaginationContent>

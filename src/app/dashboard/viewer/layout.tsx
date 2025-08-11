@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import useAuthStore from "@/app/api/auth";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Users, Settings } from "lucide-react";
 import { IoExitOutline } from "react-icons/io5";
+import { BoringAvatarFallback } from "@/components/ui/boring-avatar";
 
 interface ViewerLayoutProps {
   children: React.ReactNode;
@@ -50,24 +51,28 @@ export default function ViewerLayout({ children }: ViewerLayoutProps) {
       {/* Header */}
       <div className="border-border bg-background sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
         <div className="flex flex-1 items-center justify-between">
-          <div className="flex items-center">
-            <h1 className="text-foreground text-xl font-semibold">
-              Viewer Dashboard
-            </h1>
-          </div>
+          <Image
+            src="/logo_positivo.png"
+            alt="DatawebGroup Logo"
+            width={1000}
+            height={1000}
+            className="h-auto w-15"
+          />
 
           <div className="flex items-center gap-x-4 lg:gap-x-6">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
+                  className="relative h-10 w-10 rounded-full p-0"
                 >
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="!size-10 shrink-0 [&_[data-slot='avatar-fallback']>svg]:size-full">
                     <AvatarImage src={authStore.user?.avatar} />
-                    <AvatarFallback>
-                      {authStore.user?.nominativo?.charAt(0) ?? "V"}
-                    </AvatarFallback>
+                    <BoringAvatarFallback
+                      name={authStore.user?.nominativo ?? "User"}
+                      size={40}
+                      variant="beam"
+                    />
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -77,7 +82,7 @@ export default function ViewerLayout({ children }: ViewerLayoutProps) {
                     <p className="text-sm leading-none font-medium">
                       {authStore.user?.nominativo}
                     </p>
-                    <p className="text-muted-foreground/30 text-xs leading-none">
+                    <p className="text-muted-foreground text-xs leading-none">
                       {authStore.user?.email}
                     </p>
                   </div>

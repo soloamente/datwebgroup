@@ -34,13 +34,15 @@ function BoringAvatarFallback({
       )}
       {...props}
     >
-      <BoringAvatar
-        size={size}
-        name={name}
-        variant={variant}
-        colors={colors}
-        square={square}
-      />
+      <div className="size-full [&>svg]:size-full">
+        <BoringAvatar
+          size={size}
+          name={name}
+          variant={variant}
+          colors={colors}
+          square={square}
+        />
+      </div>
     </AvatarPrimitive.Fallback>
   );
 }

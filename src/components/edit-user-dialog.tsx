@@ -326,11 +326,11 @@ export function EditUserDialog({
         await userService.updateSharerLogo(user.id, logoFile);
       }
 
-      toast.success("Sharer aggiornato con successo.");
+      toast.success("Utente aggiornato con successo.");
       onUserUpdate();
       onClose();
     } catch (err: unknown) {
-      let errorMessage = "Errore durante l'aggiornamento dello sharer.";
+      let errorMessage = "Errore durante l'aggiornamento dell'utente.";
       const newErrors: Record<string, string | null> = { form: errorMessage };
       if (err && typeof err === "object" && "response" in err && err.response) {
         const response = err.response as {
@@ -368,16 +368,16 @@ export function EditUserDialog({
       >
         <DialogContent className="bg-background grid max-w-4xl overflow-hidden rounded-3xl border-transparent p-0 shadow-2xl md:grid-cols-2">
           <VisuallyHidden>
-            <DialogTitle>Modifica Sharer</DialogTitle>
+            <DialogTitle>Modifica utente</DialogTitle>
           </VisuallyHidden>
 
           <div className="flex flex-col justify-center p-12">
             <div className="w-full">
               <h1 className="text-foreground text-3xl font-medium">
-                Modifica Sharer
+                Modifica utente
               </h1>
               <p className="text-foreground/60 mb-8 text-sm">
-                Modifica i dati dello sharer.
+                Modifica i dati dello utente.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -396,7 +396,7 @@ export function EditUserDialog({
                     disabled
                     size="xl"
                     radius="xl"
-                    placeholder="es. mariorossi"
+                    placeholder="mario.rossi"
                     className="cursor-not-allowed"
                   />
                 </div>
@@ -418,7 +418,7 @@ export function EditUserDialog({
                     error={!!errors.nominativo}
                     size="xl"
                     radius="xl"
-                    placeholder="es. Mario Rossi / Studio SRL"
+                    placeholder="Mario Rossi"
                   />
                   {errors.nominativo && (
                     <p className="text-destructive mt-1 text-xs">
@@ -442,7 +442,7 @@ export function EditUserDialog({
                     error={!!errors.email}
                     size="xl"
                     radius="xl"
-                    placeholder="es. email@esempio.com"
+                    placeholder="mario.rossi@esempio.com"
                   />
                   {errors.email && (
                     <p className="text-destructive mt-1 text-xs">

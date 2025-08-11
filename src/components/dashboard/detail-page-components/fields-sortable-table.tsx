@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { cn } from "@/lib/utils";
 import { type DocumentClassField } from "@/app/api/api"; // Assuming DocumentClassField is exported from here
 import {
   KeyboardSensor,
@@ -73,21 +74,31 @@ interface EnumOption {
 // Fix: Replace DraggableRowFields with StaticRowFields and ensure alignment
 function StaticRowFields({
   row,
+  rowIndex,
   onRowClick,
 }: {
   row: Row<DocumentClassField>;
+  rowIndex: number;
   onRowClick?: (field: DocumentClassField) => void;
 }) {
   return (
     <TableRow
-      className="hover:bg-muted/30 border-border/50 cursor-pointer border-b transition-all duration-200"
+      className="border-border group h-16 cursor-pointer border-b transition-colors last:border-b-0"
       onClick={() => onRowClick?.(row.original)}
     >
-      {row.getVisibleCells().map((cell) => (
+      {row.getVisibleCells().map((cell, cellIndex) => (
         <TableCell
           key={cell.id}
           style={{ width: cell.column.getSize() }}
-          className="px-4 py-4 text-left align-middle"
+          className={cn(
+            "group-hover:bg-muted/10 group-hover:text-foreground max-w-xs truncate px-5 py-4 text-left align-middle text-base transition-colors",
+            rowIndex === 0 &&
+              cellIndex === 0 &&
+              "overflow-hidden rounded-tl-2xl",
+            rowIndex === 0 &&
+              cellIndex === row.getVisibleCells().length - 1 &&
+              "overflow-hidden rounded-tr-2xl",
+          )}
         >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>
@@ -458,7 +469,7 @@ function FieldEditDrawer({
                               )
                             }
                             placeholder="Inserisci l'etichetta del campo"
-                            className="mt-1"
+                            className="bg-muted/20 ring-border mt-1 border-none ring-1"
                           />
                         </div>
                       </div>
@@ -727,7 +738,7 @@ function FieldEditDrawer({
                               )
                             }
                             placeholder="Inserisci l'ordine di ordinamento"
-                            className="mt-1"
+                            className="bg-muted/20 ring-border mt-1 border-none ring-1"
                           />
                         </div>
                       </div>
@@ -740,14 +751,14 @@ function FieldEditDrawer({
               <div className="border-border bg-muted/20 flex flex-shrink-0 gap-3 border-t p-6">
                 <Button
                   onClick={handleSave}
-                  className="bg-primary hover:bg-primary/90 text-foreground flex-1 rounded-xl"
+                  className="bg-primary hover:bg-primary/90 flex-2 rounded-xl"
                 >
                   Salva
                 </Button>
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="flex-1 rounded-xl"
+                  className="bg-card ring-border flex-1 rounded-xl border-none ring-1"
                 >
                   Annulla
                 </Button>
@@ -1015,21 +1026,26 @@ export function FieldsSortableTable({
   return (
     <div className="w-full">
       <div
-        className="border-border bg-background overflow-y-auto rounded-lg border"
+        className="ring-border isolate overflow-hidden rounded-2xl ring-1"
         style={{ maxHeight }}
       >
-        <Table>
-          <TableHeader>
+        <Table className="bg-muted/30 min-w-full border-separate border-spacing-0">
+          <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="border-border bg-muted/30 border-b"
+                className="border-b-0 hover:bg-transparent"
               >
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header, headerIdx) => (
                   <TableHead
                     key={header.id}
                     style={{ width: header.getSize() }}
-                    className="px-4 py-4 text-left"
+                    className={cn(
+                      "text-muted-foreground overflow-hidden px-5 text-left align-middle",
+                      headerIdx === 0 && "rounded-tl-2xl rounded-bl-2xl",
+                      headerIdx === headerGroup.headers.length - 1 &&
+                        "rounded-tr-2xl rounded-br-2xl",
+                    )}
                   >
                     {header.isPlaceholder
                       ? null
@@ -1042,24 +1058,57 @@ export function FieldsSortableTable({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_td]:bg-card ring-border rounded-lg ring-1">
             {table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={fieldColumns.length}
-                  className="text-muted-foreground py-12 text-center"
+                  className="h-40 text-center align-middle"
                 >
-                  Nessun campo configurato. Clicca su una riga per modificare le
-                  proprietà del campo.
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
+                    <svg
+                      width="40"
+                      height="40"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      className="text-muted-foreground/40"
+                    >
+                      <rect
+                        x="4"
+                        y="4"
+                        width="16"
+                        height="16"
+                        rx="3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M8 8h8M8 12h8M8 16h4"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-base">
+                        Nessun campo configurato
+                      </p>
+                      <p className="text-muted-foreground/80 text-xs">
+                        Clicca su una riga per modificare le proprietà del campo
+                      </p>
+                    </div>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               table
                 .getRowModel()
-                .rows.map((row) => (
+                .rows.map((row, rowIndex) => (
                   <StaticRowFields
                     key={row.id}
                     row={row}
+                    rowIndex={rowIndex}
                     onRowClick={handleEditField}
                   />
                 ))

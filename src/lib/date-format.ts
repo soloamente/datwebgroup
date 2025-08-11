@@ -42,6 +42,37 @@ export const formatDynamicDate = (
 };
 
 /**
+ * Formats a date string into a full Italian date with time, e.g.:
+ * "12 Agosto 2025, alle 16:36".
+ *
+ * Notes:
+ * - Uses the provided IANA time zone (default Europe/Rome)
+ * - Capitalizes the month name to match the requested style
+ */
+export const formatFullDate = (
+  dateString: string | undefined | null,
+  timeZone = "Europe/Rome",
+): string => {
+  if (!dateString) return "Non disponibile";
+
+  try {
+    const zonedDate = toZonedTime(new Date(dateString), timeZone);
+
+    const day = format(zonedDate, "d", { locale: it });
+    const month = format(zonedDate, "MMMM", { locale: it });
+    const year = format(zonedDate, "yyyy", { locale: it });
+    const time = format(zonedDate, "HH:mm", { locale: it });
+
+    const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+
+    return `${day} ${monthCapitalized} ${year}, alle ${time}`;
+  } catch (error) {
+    console.error("Date formatting error (formatFullDate):", error);
+    return String(dateString);
+  }
+};
+
+/**
  * Converts a date string or Date object into a format suitable for HTML date or datetime-local input fields.
  * Handles potential invalid date strings gracefully.
  *

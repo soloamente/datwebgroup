@@ -39,7 +39,9 @@ export default function TokenOtpForm({
     setError("");
 
     if (otp.length !== 5) {
-      setError("Inserisci un codice OTP valido");
+      const message = "Inserisci un codice OTP valido";
+      setError(message);
+      toast.error(message);
       setLoading(false);
       return;
     }
@@ -60,10 +62,12 @@ export default function TokenOtpForm({
         });
       }
     } catch (error) {
-      setError("Errore durante la verifica del codice OTP");
+      const message = "Errore durante la verifica del codice OTP";
+      setError(message);
+      toast.error(message);
       onSuccess({
         success: false,
-        message: "Errore durante la verifica del codice OTP",
+        message,
       });
     } finally {
       setLoading(false);
@@ -85,11 +89,15 @@ export default function TokenOtpForm({
         startOtpCountdown();
         setError("");
       } else {
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        setError(result.message || "Errore durante l'invio del nuovo OTP");
+        const message =
+          result.message || "Errore durante l'invio del nuovo OTP";
+        setError(message);
+        toast.error(message);
       }
     } catch (error) {
-      setError("Errore durante l'invio del nuovo OTP");
+      const message = "Errore durante l'invio del nuovo OTP";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -123,7 +131,7 @@ export default function TokenOtpForm({
         </InputOTPGroup>
       </InputOTP>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {/* inline error removed; using toast only */}
 
       <div className="flex flex-col items-center gap-4">
         <div className="relative w-full">

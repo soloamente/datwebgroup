@@ -99,7 +99,7 @@ export function ChartPieDonutText() {
 
   if (isLoading) {
     return (
-      <Card className="flex flex-col border-neutral-800 bg-neutral-900/50 text-white">
+      <Card className="bg-card ring-border flex flex-col border-none ring-1">
         <CardHeader className="items-center pb-0">
           <CardTitle className="text-lg">Distribuzione Classi</CardTitle>
           <CardDescription className="text-neutral-400">
@@ -159,10 +159,10 @@ export function ChartPieDonutText() {
   }
 
   return (
-    <Card className="flex h-full w-[500px] flex-col bg-neutral-900/50 text-white">
+    <Card className="bg-card flex h-full w-[500px] flex-col">
       <CardHeader className="items-center p-0">
         <CardTitle className="text-lg">Distribuzione Classi</CardTitle>
-        <CardDescription className="text-neutral-400">
+        <CardDescription className="text-muted-foreground">
           Documenti per classe documentale
         </CardDescription>
       </CardHeader>
@@ -193,7 +193,7 @@ export function ChartPieDonutText() {
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-white text-2xl font-bold"
+                          className="text-2xl font-bold"
                         >
                           {totalCount.toLocaleString()}
                         </tspan>
@@ -201,7 +201,7 @@ export function ChartPieDonutText() {
                           x={viewBox.cx}
                           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/prefer-nullish-coalescing
                           y={(viewBox.cy || 0) + 20}
-                          className="fill-neutral-400 text-xs"
+                          className="text-muted-foreground text-xs"
                         >
                           Documenti totali
                         </tspan>
@@ -225,7 +225,7 @@ export function ChartPieDonutText() {
           {statsData.map((stat, index) => (
             <div
               key={stat.class_name}
-              className="flex w-full max-w-[400px] items-center justify-between rounded-lg bg-neutral-800/50 p-2"
+              className="bg-muted/10 ring-border flex w-full max-w-[400px] items-center justify-between rounded-lg p-2 ring-1"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -233,16 +233,14 @@ export function ChartPieDonutText() {
                   style={{ backgroundColor: getDocumentClassColor(index) }}
                 ></div>
                 <div>
-                  <div className="text-sm font-medium text-white">
-                    {stat.class_name}
-                  </div>
-                  <div className="text-neutral-400">
+                  <div className="text-sm font-medium">{stat.class_name}</div>
+                  <div className="text-muted-foreground">
                     {((stat.document_count / totalCount) * 100).toFixed(1)}%
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-medium text-white">
+                <div className="text-lg font-medium">
                   {stat.document_count.toLocaleString()}
                 </div>
               </div>

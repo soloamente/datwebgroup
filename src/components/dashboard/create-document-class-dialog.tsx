@@ -25,6 +25,7 @@ export function CreateDocumentClassDialog({
   onCreated,
 }: CreateDocumentClassDialogProps) {
   const [name, setName] = useState("");
+  const [singularName, setSingularName] = useState("");
   const [description, setDescription] = useState("");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +36,7 @@ export function CreateDocumentClassDialog({
   React.useEffect(() => {
     if (!isOpen) {
       setName("");
+      setSingularName("");
       setDescription("");
       setCoverImage(null);
       setError(null);
@@ -51,6 +53,7 @@ export function CreateDocumentClassDialog({
         await docClassService.createDocumentClass({
           name,
           description,
+          singular_name: singularName.trim() || undefined,
           logo: coverImage,
         });
       if (response.errors) {
@@ -126,6 +129,25 @@ export function CreateDocumentClassDialog({
                   size="xl"
                   radius="xl"
                   placeholder="e.g. Fatture"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="singularName"
+                  className="text-foreground/60 text-sm"
+                >
+                  Nome al singolare
+                </Label>
+                <Input
+                  id="singularName"
+                  value={singularName}
+                  onChange={(e) => setSingularName(e.target.value)}
+                  loading={isLoading}
+                  error={!!error}
+                  size="xl"
+                  radius="xl"
+                  placeholder="e.g. Fattura"
                 />
               </div>
 

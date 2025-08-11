@@ -369,7 +369,7 @@ export default function ViewerTable({
               id={`${id}-input`}
               ref={inputRef}
               className={cn(
-                "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-full border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-70",
+                "bg-card focus:ring-primary/20 ring-border h-10 w-full rounded-full border-none pl-9 text-base ring-1 transition-all focus:ring-2 sm:w-64",
                 Boolean(globalFilter) && "pr-9",
               )}
               value={globalFilter}
@@ -466,20 +466,26 @@ export default function ViewerTable({
       </div>
 
       {/* Table */}
-      <div className="bg-card border-muted/30 overflow-x-auto rounded-2xl border shadow-sm">
-        <Table className="min-w-full">
-          <TableHeader className="bg-card/95 border-muted/30 sticky top-0 z-10 border-b backdrop-blur">
+      <div className="ring-border isolate overflow-hidden overflow-x-auto rounded-2xl ring-1">
+        <Table className="bg-muted/30 min-w-full border-separate border-spacing-0">
+          <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
                 className="border-b-0 hover:bg-transparent"
               >
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, headerIdx) => {
+                  const isFirst = headerIdx === 0;
+                  const isLast = headerIdx === headerGroup.headers.length - 1;
                   return (
                     <TableHead
                       key={header.id}
                       style={{ width: `${header.getSize()}px` }}
-                      className="text-muted-foreground bg-card/95 h-14 px-5 text-left align-middle text-sm font-semibold tracking-wide uppercase"
+                      className={cn(
+                        "text-muted-foreground overflow-hidden px-5 text-left align-middle",
+                        isFirst && "rounded-tl-2xl rounded-bl-2xl",
+                        isLast && "rounded-tr-2xl rounded-br-2xl",
+                      )}
                     >
                       {header.isPlaceholder ? null : header.column.getCanSort() ? (
                         <div
@@ -506,14 +512,14 @@ export default function ViewerTable({
                           {{
                             asc: (
                               <RiArrowUpSLine
-                                className="shrink-0 opacity-60"
+                                className="text-muted-foreground"
                                 size={16}
                                 aria-hidden="true"
                               />
                             ),
                             desc: (
                               <RiArrowDownSLine
-                                className="shrink-0 opacity-60"
+                                className="text-muted-foreground"
                                 size={16}
                                 aria-hidden="true"
                               />
@@ -532,7 +538,7 @@ export default function ViewerTable({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_td]:bg-card ring-border rounded-lg ring-1">
             {isLoading ? (
               <TableRow>
                 <TableCell
@@ -552,12 +558,12 @@ export default function ViewerTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/40 border-muted/20 group h-16 cursor-pointer border-b transition-colors last:border-b-0"
+                  className="border-border group h-16 cursor-pointer border-b transition-colors last:border-b-0"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className="group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
+                      className="group-hover:bg-muted/10 group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -607,7 +613,7 @@ export default function ViewerTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                   aria-label="Pagina precedente"
@@ -627,7 +633,7 @@ export default function ViewerTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                   aria-label="Pagina successiva"

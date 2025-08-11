@@ -39,6 +39,11 @@ function getDashboardUrl(role?: string): string {
   }
 }
 
+function isHomeRoute(pathname: string): boolean {
+  // Only treat the true homepage as the home route to avoid redirect loops
+  return pathname === "/";
+}
+
 function isProtectedRoute(pathname: string): boolean {
   return (
     pathname.startsWith("/dashboard") ||
@@ -63,6 +68,11 @@ export async function middleware(req: NextRequest) {
   console.log("Request URL:", req.url);
   console.log("All cookies:", req.cookies.getAll());
   console.log("Session cookie found:", !!sessionCookie);
+
+  if (isHomeRoute(nextUrl.pathname)) {
+    return NextResponse.redirect(new URL("/login", nextUrl.origin));
+  }
+
   if (sessionCookie) {
     console.log("Session cookie value length:", sessionCookie.value.length);
   }

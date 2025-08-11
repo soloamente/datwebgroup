@@ -145,7 +145,7 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
           <Button
             variant="outline"
             className={cn(
-              "border-muted/30 hover:border-primary/40 relative rounded-full transition-all",
+              "ring-border bg-card relative rounded-full border-none ring-1 transition-all",
               (dateRange?.from ?? dateRange?.to) &&
                 "border-primary/40 bg-primary/10 text-primary",
             )}
@@ -202,7 +202,7 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
             >
               <div className="border-b p-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-muted/20 border-muted/30 flex h-10 items-center justify-center rounded-md border px-3 text-center">
+                  <div className="bg-muted/20 ring-border flex h-10 items-center justify-center rounded-md border-none px-3 text-center ring-1">
                     <span className="text-sm font-medium">
                       {dateRange?.from
                         ? format(dateRange.from, "dd MMM, yyyy", {
@@ -211,7 +211,7 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
                         : "Data di inizio"}
                     </span>
                   </div>
-                  <div className="bg-muted/20 border-muted/30 flex h-10 items-center justify-center rounded-md border px-3 text-center">
+                  <div className="bg-muted/20 ring-border flex h-10 items-center justify-center rounded-md border-none px-3 text-center ring-1">
                     <span className="text-sm font-medium">
                       {dateRange?.to
                         ? format(dateRange.to, "dd MMM, yyyy", {
@@ -271,21 +271,24 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
                   : "w-[260px] min-w-[240px] flex-shrink-0 rounded-r-2xl",
               )}
             >
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-muted-foreground/80 mb-2 text-sm font-medium tracking-wider uppercase">
+              <div className="flex h-full flex-col justify-between">
+                <div className="ring-border bg-background/90 rounded-lg border-none ring-1">
+                  <p className="text-muted-foreground flex justify-center p-2 text-sm font-medium uppercase">
                     Filtra per
                   </p>
-                  <div className="flex flex-col gap-1">
+                  <div className="bg-card ring-border flex flex-col gap-2 rounded-2xl p-2 ring-1">
                     {availableDateFields.map((field) => (
                       <Button
                         key={field.value}
                         variant={
                           dateField === field.value ? "secondary" : "ghost"
                         }
-                        size="sm"
                         onClick={() => onDateFieldChange(field.value)}
-                        className="h-auto justify-start rounded-lg px-2 py-1.5 text-sm"
+                        className={cn(
+                          "h-auto justify-start rounded-md px-3 py-2 text-sm",
+                          dateField === field.value &&
+                            "bg-muted/20 ring-border ring-1",
+                        )}
                       >
                         {field.label}
                       </Button>
@@ -293,11 +296,11 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-muted-foreground/80 mb-2 text-sm font-medium tracking-wider uppercase">
+                <div className="ring-border bg-background/90 rounded-lg border-none ring-1">
+                  <p className="text-muted-foreground flex justify-center p-2 text-sm font-medium uppercase">
                     Preset Rapidi
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-card ring-border grid grid-cols-2 gap-2 rounded-2xl p-2 ring-1">
                     {quickDatePresets.map((preset) => (
                       <Button
                         key={preset.value}
@@ -308,7 +311,10 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
                         }
                         size="sm"
                         onClick={() => handleQuickPreset(preset)}
-                        className="h-auto rounded-lg px-2 py-1.5 text-sm"
+                        className={cn(
+                          "ring-border h-auto rounded-md border-none px-3 py-2 text-sm ring-1",
+                          activePreset?.value === preset.value && "bg-muted/20",
+                        )}
                       >
                         {preset.label}
                       </Button>

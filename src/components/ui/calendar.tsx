@@ -92,10 +92,13 @@ function Calendar({
                 handleChange(value);
               }}
             >
-              <SelectTrigger className="pr-1.5 focus:ring-0">
+              <SelectTrigger className="ring-border bg-card pr-1.5 ring-1 focus:ring-0">
                 <SelectValue>{selected?.props?.children}</SelectValue>
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent
+                position="popper"
+                className="ring-border bg-card ring-1"
+              >
                 {options.map((option, id: number) => (
                   <SelectItem
                     key={id}
