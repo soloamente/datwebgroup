@@ -16,6 +16,7 @@ import {
   flexRender,
   getCoreRowModel,
   type ColumnDef,
+  type FilterFn,
   useReactTable,
 } from "@tanstack/react-table";
 import { Trash2Icon } from "lucide-react";
@@ -97,6 +98,8 @@ export function AssociatedSharersTable({
     data: sharers,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    // Provide an empty map of filter functions to satisfy augmented TableOptions typing
+    filterFns: {} as Record<string, FilterFn<Sharer>>,
     enableSortingRemoval: false,
   });
 
