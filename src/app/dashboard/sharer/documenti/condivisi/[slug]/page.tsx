@@ -77,7 +77,7 @@ export default function DocumentClassPage() {
               (batch: SharedBatch) => ({
                 id: batch.id,
                 batchId: batch.id,
-                title: batch.title,
+                title: batch.singular_name,
                 status: batch.status,
                 sent_at: batch.sent_at,
                 viewers: batch.viewers,

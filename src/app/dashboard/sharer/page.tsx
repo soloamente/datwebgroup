@@ -434,7 +434,7 @@ export default function DashboardPage() {
                   ) : (
                     <ChartContainer
                       config={chartConfig}
-                      className="h-[250px] w-full [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-axis-tick_text]:opacity-100 [&_.recharts-cartesian-axis-tick_text]:font-medium"
+                      className="[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground h-[250px] w-full [&_.recharts-cartesian-axis-tick_text]:font-medium [&_.recharts-cartesian-axis-tick_text]:opacity-100"
                     >
                       <BarChart
                         accessibilityLayer
