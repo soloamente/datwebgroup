@@ -98,7 +98,7 @@ export function useRecentShares(documentClassId: number | null = null) {
                 batchId: batch.id,
                 documentClassId: docClass.id,
                 documentClassName: docClass.name,
-                title: batch.title,
+                title: batch.singular_name,
                 sentAt: batch.sent_at,
                 viewers: batch.viewers,
                 totalFiles,
