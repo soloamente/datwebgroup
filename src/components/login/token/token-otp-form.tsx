@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   InputOTP,
@@ -24,7 +24,7 @@ export default function TokenOtpForm({
 }: TokenOtpFormProps) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [, setError] = useState("");
   const [otpCountdown, setOtpCountdown] = useState(60); // 1 minute in seconds
   const [otpResendAvailable, setOtpResendAvailable] = useState(false);
   const authStore = useAuthStore();
@@ -38,50 +38,56 @@ export default function TokenOtpForm({
     startOtpCountdown();
   }, []);
 
-  const handleVerifyOtp = async (e?: React.FormEvent, providedOtp?: string) => {
-    if (e) e.preventDefault();
-    // Prevent duplicate submissions (auto-submit + manual click/paste)
-    if (loading || isSubmittingRef.current) return;
-    setLoading(true);
-    isSubmittingRef.current = true;
-    setError("");
+  const handleVerifyOtp = useCallback(
+    async (e?: React.FormEvent, providedOtp?: string) => {
+      if (e) e.preventDefault();
+      // Prevent duplicate submissions (auto-submit + manual click/paste)
+      if (loading || isSubmittingRef.current) return;
+      setLoading(true);
+      isSubmittingRef.current = true;
+      setError("");
 
-    const codeToVerify = (providedOtp ?? otp).trim();
+      const codeToVerify = (providedOtp ?? otp).trim();
 
-    if (codeToVerify.length !== 5) {
-      const message = "Inserisci un codice OTP valido";
-      setError(message);
-      toast.error(message);
-      setLoading(false);
-      return;
-    }
+      if (codeToVerify.length !== 5) {
+        const message = "Inserisci un codice OTP valido";
+        setError(message);
+        toast.error(message);
+        setLoading(false);
+        return;
+      }
 
-    try {
-      const result = await authStore.verifyOtpByToken(username, codeToVerify);
+      try {
+        const result = await authStore.verifyOtpByToken(username, codeToVerify);
 
-      if (result.success) {
-        toast.success("Login completato con successo");
-        onSuccess({ success: true, message: "Login completato con successo" });
-      } else {
-        setError(result.message ?? "Codice OTP non valido");
+        if (result.success) {
+          toast.success("Login completato con successo");
+          onSuccess({
+            success: true,
+            message: "Login completato con successo",
+          });
+        } else {
+          setError(result.message ?? "Codice OTP non valido");
+          onSuccess({
+            success: false,
+            message: result.message ?? "Codice OTP non valido",
+          });
+        }
+      } catch {
+        const message = "Errore durante la verifica del codice OTP";
+        setError(message);
+        toast.error(message);
         onSuccess({
           success: false,
-          message: result.message ?? "Codice OTP non valido",
+          message,
         });
+      } finally {
+        setLoading(false);
+        isSubmittingRef.current = false;
       }
-    } catch {
-      const message = "Errore durante la verifica del codice OTP";
-      setError(message);
-      toast.error(message);
-      onSuccess({
-        success: false,
-        message,
-      });
-    } finally {
-      setLoading(false);
-      isSubmittingRef.current = false;
-    }
-  };
+    },
+    [authStore, loading, onSuccess, otp, username],
+  );
 
   const handleResendOtp = async () => {
     if (!token) {
@@ -139,17 +145,18 @@ export default function TokenOtpForm({
     if (otp.length < 5) {
       isSubmittingRef.current = false;
     }
-  }, [otp, loading]);
+  }, [otp, loading, handleVerifyOtp]);
 
   // Ensure the OTP input is focused when this form mounts
   useEffect(() => {
     // Try focusing the internal input element created by input-otp
     const focusInput = () => {
-      const el = (document.querySelector('[data-slot="input-otp"] input') ||
-        document.querySelector(
-          '[data-slot="input-otp"]',
-        )) as HTMLElement | null;
-      el?.focus();
+      const el =
+        document.querySelector('[data-slot="input-otp"] input') ??
+        document.querySelector('[data-slot="input-otp"]');
+      if (el instanceof HTMLElement) {
+        el.focus();
+      }
     };
     // Try immediately and after next tick for safety
     focusInput();
