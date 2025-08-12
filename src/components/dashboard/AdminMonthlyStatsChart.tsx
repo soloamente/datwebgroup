@@ -135,7 +135,7 @@ export default function AdminMonthlyStatsChart() {
         <CardContent className="px-4">
           <Tabs
             value={metric}
-            onValueChange={(v) => setMetric(v as MetricKey)}
+            onValueChange={(v) => setMetric(v)}
             className="w-full"
           >
             <div className="px-0">
@@ -191,7 +191,7 @@ export default function AdminMonthlyStatsChart() {
                                 {METRIC_LABEL[metric]}:{" "}
                                 <span className="font-bold">
                                   {typeof p?.value === "number"
-                                    ? (p.value as number)
+                                    ? p.value
                                     : Number(p?.value ?? 0)}
                                 </span>
                               </p>

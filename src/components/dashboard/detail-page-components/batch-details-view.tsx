@@ -170,7 +170,7 @@ const MetadataValue = ({ value, dataType }: MetadataValueProps) => {
     }
     case "number":
     case "bigint":
-      return <p className="font-medium">{String(value)}</p>;
+      return <p className="">{String(value)}</p>;
     case "object": {
       const displayValue = JSON.stringify(value);
       return (
@@ -198,7 +198,7 @@ const MetadataDisplay = ({ doc, docClassDetails }: MetadataDisplayProps) => {
 
   if (metadataEntries.length === 0) {
     return (
-      <div className="bg-muted/50 flex min-h-[200px] flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center">
+      <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border-dashed p-8 text-center">
         <RiInbox2Line className="text-muted-foreground mb-4 h-10 w-10" />
         <h3 className="font-semibold">Nessun metadato</h3>
         <p className="text-muted-foreground text-sm">
@@ -209,15 +209,15 @@ const MetadataDisplay = ({ doc, docClassDetails }: MetadataDisplayProps) => {
   }
 
   return (
-    <dl className="bg-muted/50 grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border p-4 sm:grid-cols-2">
+    <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg p-4 sm:grid-cols-2">
       {metadataEntries.map(([key, value]) => {
         const fieldDetails = getFieldDetails(key);
         return (
-          <div key={key} className="break-words">
+          <div key={key} className="flex flex-col gap-2 break-words">
             <dt className="text-muted-foreground text-sm font-medium">
               {fieldDetails?.label ?? key}
             </dt>
-            <dd>
+            <dd className="ring-border bg-muted/10 rounded-md border-none p-2 text-sm ring-1">
               <MetadataValue value={value} dataType={fieldDetails?.data_type} />
             </dd>
           </div>
@@ -275,7 +275,7 @@ const MetadataForm = ({
       }}
       className="space-y-4"
     >
-      <div className="bg-muted/50 grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border p-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg p-4 sm:grid-cols-2">
         {docClassDetails.fields.map((field) => {
           const value = formData[field.name];
           const isPrimaryKey = field.is_primary_key;
@@ -287,7 +287,7 @@ const MetadataForm = ({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="text-md flex w-fit items-center gap-2 rounded-sm px-2 py-1.5 ring-1 ring-black/10">
+                      <div className="ring-border bg-muted/10 flex items-center gap-2 rounded-sm border-none px-2 py-1.5 font-medium ring-1">
                         <KeyRound size={16} className="text-amber-500" />
                         <MetadataValue
                           value={value}
@@ -338,10 +338,10 @@ const MetadataForm = ({
                     handleFieldChange(field.name, newValue)
                   }
                 >
-                  <SelectTrigger className="ring-1 ring-black/10">
+                  <SelectTrigger className="ring-border bg-muted/10 border-none ring-1">
                     <SelectValue placeholder="Seleziona..." />
                   </SelectTrigger>
-                  <SelectContent className="border-0 ring-1 shadow-sm ring-black/10">
+                  <SelectContent className="ring-border border-0 ring-1 shadow-sm">
                     {field.options?.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
@@ -352,7 +352,7 @@ const MetadataForm = ({
               ) : (
                 <Input
                   id={field.name}
-                  className="ring-1 ring-black/10"
+                  className="ring-border bg-muted/10 border-none ring-1"
                   type={
                     field.data_type === "date"
                       ? "date"
@@ -414,7 +414,7 @@ const DocumentContentView = ({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="ring-border gap-2 border-none ring-1">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Database size={20} />
@@ -430,7 +430,7 @@ const DocumentContentView = ({
             </Button>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4">
           {isEditingMetadata ? (
             <MetadataForm
               doc={doc}

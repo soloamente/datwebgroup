@@ -25,7 +25,8 @@ export default function AdminOtpForm({
 }: AdminOtpFormProps) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // We only use the setter for toast-driven flows; no in-UI error rendering
+  const [, setError] = useState("");
   const [otpCountdown, setOtpCountdown] = useState(600); // 10 minutes in seconds
   const [otpResendAvailable, setOtpResendAvailable] = useState(false);
 
@@ -103,7 +104,7 @@ export default function AdminOtpForm({
         isSubmittingRef.current = false;
         hasAutoSubmittedRef.current = false;
       }
-    } catch (error) {
+    } catch {
       setError("Errore durante il login. Riprova.");
       toast.error("Errore durante il login. Riprova.");
       isSubmittingRef.current = false;
@@ -120,11 +121,9 @@ export default function AdminOtpForm({
       await authStore.prelogin(email.trim(), username.trim(), password);
       startOtpCountdown();
       toast.success("Nuovo codice OTP inviato alla tua email");
-    } catch (error) {
+    } catch (err) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Errore durante l'invio dell'OTP";
+        err instanceof Error ? err.message : "Errore durante l'invio dell'OTP";
       setError(message);
       toast.error(message);
     } finally {
@@ -153,12 +152,13 @@ export default function AdminOtpForm({
   // Ensure the OTP input is focused when the component mounts
   useEffect(() => {
     const focusInput = () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const el = (document.querySelector('[data-slot="input-otp"] input') ||
-        document.querySelector(
-          '[data-slot="input-otp"]',
-        )) as HTMLElement | null;
-      el?.focus();
+      const el =
+        document.querySelector<HTMLInputElement>(
+          '[data-slot="input-otp"] input',
+        ) ?? document.querySelector('[data-slot="input-otp"]');
+      if (el instanceof HTMLElement) {
+        el.focus();
+      }
     };
     focusInput();
     const id = window.setTimeout(focusInput, 0);
