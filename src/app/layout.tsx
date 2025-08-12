@@ -22,8 +22,8 @@ const dmSans = DM_Sans({
 // Update: Font now loaded from src/app/fonts/Inter instead of public/fonts/inter
 
 export const metadata: Metadata = {
-  title: "Dataweb Group",
-  description: "Dataweb Group",
+  title: "Notar Share Doc",
+  description: "Notar Share Doc",
   icons: { icon: "/" },
 };
 
