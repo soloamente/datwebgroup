@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import UtentiLoading from "./loading";
 import ViewerTable from "@/components/dashboard/tables/sharer/viewer-table";
 import { userService, type Viewer } from "@/app/api/api";
 import { toast } from "sonner";
@@ -161,7 +162,9 @@ export default function ListaViewerPage() {
 
   return (
     <>
-      {!loading && viewers.length === 0 ? (
+      {loading ? (
+        <UtentiLoading />
+      ) : viewers.length === 0 ? (
         <main className="flex flex-grow flex-col items-center justify-center gap-4 p-4 text-center">
           <Image
             src={theme === "dark" ? "/AddUser.png" : "/AddUser_LightMode.png"}

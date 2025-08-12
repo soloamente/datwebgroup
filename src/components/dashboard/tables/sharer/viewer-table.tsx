@@ -462,12 +462,65 @@ export default function ViewerTable({
             }
             availableDateFields={availableDateFields}
           />
+
+          {/* Toggle columns visibility */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="ring-border bg-card rounded-full border-none ring-1"
+                aria-label="Mostra/nascondi colonne"
+              >
+                <RiFilter3Line size={16} />
+                Colonne
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48 rounded-2xl">
+              <div className="space-y-2">
+                <div className="text-muted-foreground/60 px-1 text-xs font-medium tracking-wider uppercase">
+                  Colonne
+                </div>
+                <div className="space-y-1">
+                  {table
+                    .getAllColumns()
+                    .filter(
+                      (column) =>
+                        typeof column.accessorFn !== "undefined" &&
+                        column.getCanHide(),
+                    )
+                    .map((column) => (
+                      <div
+                        key={column.id}
+                        className="hover:bg-muted/40 flex items-center gap-2 rounded-lg p-1.5 transition-colors"
+                      >
+                        <Checkbox
+                          id={column.id}
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) =>
+                            column.toggleVisibility(!!value)
+                          }
+                          className="size-4"
+                        />
+                        <Label
+                          htmlFor={column.id}
+                          className="grow cursor-pointer text-sm font-normal"
+                        >
+                          {typeof column.columnDef.header === "string"
+                            ? column.columnDef.header
+                            : column.id}
+                        </Label>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
       {/* Table */}
       <div className="ring-border isolate overflow-hidden overflow-x-auto rounded-2xl ring-1">
-        <Table className="bg-muted/30 min-w-full border-separate border-spacing-0">
+        <Table className="bg-muted/20 min-w-full border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
@@ -554,23 +607,37 @@ export default function ViewerTable({
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, rowIndex) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className="border-border group h-16 cursor-pointer border-b transition-colors last:border-b-0"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="group-hover:bg-muted/10 group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell, cellIndex) => {
+                    const isTopRow = rowIndex === 0;
+                    const isFirstCell = cellIndex === 0;
+                    const isLastCell =
+                      cellIndex === row.getVisibleCells().length - 1;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "group-hover:bg-muted/10 group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors",
+                          isTopRow &&
+                            isFirstCell &&
+                            "overflow-hidden rounded-tl-2xl",
+                          isTopRow &&
+                            isLastCell &&
+                            "overflow-hidden rounded-tr-2xl",
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (

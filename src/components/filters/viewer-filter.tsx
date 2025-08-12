@@ -84,9 +84,9 @@ export function ViewerFilter({
           <Button
             variant="outline"
             className={cn(
-              "border-muted/30 hover:border-primary/40 rounded-full pr-2 pl-3",
+              "ring-border bg-card rounded-full border-none pr-2 pl-3 ring-1",
               "flex items-center gap-1.5",
-              hasActiveFilter && "border-primary/60 bg-primary/5",
+              hasActiveFilter && "bg-primary/10 text-primary",
             )}
             aria-label="Filtra per destinatario"
             onClick={() => !open && setOpen(true)}
@@ -149,7 +149,7 @@ export function ViewerFilter({
                 placeholder="Cerca per nome..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 rounded-full"
+                className="ring-border bg-muted/10 h-9 rounded-full border-none ring-1"
               />
             </div>
 
@@ -182,13 +182,13 @@ export function ViewerFilter({
                     filteredViewers.map((viewer) => (
                       <div
                         key={viewer.id}
-                        className="hover:bg-muted/40 flex items-center gap-3 rounded-lg p-2 transition-colors"
+                        className="hover:bg-muted/40 flex cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors"
                       >
                         <Checkbox
                           id={`viewer-${viewer.id}`}
                           checked={selectedViewers.includes(viewer.id)}
                           onCheckedChange={() => handleViewerToggle(viewer.id)}
-                          className="size-4"
+                          className="ring-border size-4 cursor-pointer border-none ring-1"
                         />
                         <Avatar className="h-6 w-6">
                           <AvatarFallback

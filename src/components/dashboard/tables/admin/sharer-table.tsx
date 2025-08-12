@@ -706,7 +706,7 @@ export default function SharerTable({
 
       {/* --- Table Section --- */}
       <div className="ring-border isolate overflow-hidden rounded-2xl ring-1">
-        <Table className="bg-muted/30 min-w-full border-separate border-spacing-0">
+        <Table className="bg-muted/20 min-w-full border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow

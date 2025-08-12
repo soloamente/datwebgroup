@@ -43,6 +43,33 @@ import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
+// File-type icons from Font Awesome 6 via react-icons
+import {
+  FaFilePdf,
+  FaFileWord,
+  FaFileExcel,
+  FaFilePowerpoint,
+  FaFileImage,
+  FaFileZipper,
+  FaFileCsv,
+  FaFileAudio,
+  FaFileVideo,
+  FaFileCode,
+  FaFileLines,
+  FaFile,
+} from "react-icons/fa6";
+// Requested: use Bootstrap PDF icon
+import {
+  BsFileEarmarkPdfFill,
+  BsFileEarmarkZipFill,
+  BsFileEarmarkTextFill,
+  BsFileEarmarkExcelFill,
+  BsFileEarmarkImageFill,
+  BsFileEarmarkFill,
+  BsFileEarmarkMusicFill,
+  BsFileEarmarkPlayFill,
+} from "react-icons/bs";
+import type { IconType } from "react-icons";
 import {
   Check,
   File as FileIcon,
@@ -62,6 +89,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import DocumentiLoading from "./loading";
 import { toast } from "sonner";
 
 interface FileWithPreview extends File {
@@ -275,6 +303,7 @@ export default function DocumentiPage() {
             value={(value as string) ?? ""}
             onChange={(e) => handleMetadataChange(field.name, e.target.value)}
             required={!!field.required}
+            wrapperClassName="max-w-none"
           />
         );
       case "integer":
@@ -283,18 +312,21 @@ export default function DocumentiPage() {
           typeof value === "boolean" || value === 0 ? "" : value;
         return (
           <Input
+            className="ring-border bg-muted/10 cursor-pointer border-none ring-1"
             id={field.name}
             type="number"
             placeholder={`Inserisci ${field.label.toLowerCase()}`}
             value={numericValue ?? ""}
             onChange={(e) => handleMetadataChange(field.name, e.target.value)}
             required={!!field.required}
+            wrapperClassName="max-w-none"
           />
         );
       }
       case "date":
         return (
           <SingleDatePicker
+            className="ring-border bg-muted/10 cursor-pointer border-none ring-1"
             value={value ? new Date(value as string) : undefined}
             onChange={(date) =>
               handleMetadataChange(
@@ -318,8 +350,12 @@ export default function DocumentiPage() {
         );
       case "boolean":
         return (
-          <div className="border-input flex h-10 items-center space-x-2 rounded-md border px-3">
+          <div className="ring-border flex h-10 w-fit cursor-pointer items-center space-x-2 rounded-full border-none px-3 ring-1">
             <Checkbox
+              className={cn(
+                "ring-border cursor-pointer ring-1",
+                !!value ? "bg-primary" : "bg-muted/10",
+              )}
               id={field.name}
               checked={!!value}
               onCheckedChange={(checked) =>
@@ -328,7 +364,7 @@ export default function DocumentiPage() {
             />
             <label
               htmlFor={field.name}
-              className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
               {field.label}
               {field.required ? (
@@ -348,14 +384,21 @@ export default function DocumentiPage() {
             value={(value as string) ?? ""}
             required={!!field.required}
           >
-            <SelectTrigger id={field.name}>
+            <SelectTrigger
+              id={field.name}
+              className="ring-border bg-muted/10 w-full cursor-pointer border-none ring-1"
+            >
               <SelectValue
                 placeholder={`Seleziona ${field.label.toLowerCase()}`}
               />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option) => (
-                <SelectItem key={option.id} value={option.value}>
+                <SelectItem
+                  className="cursor-pointer"
+                  key={option.id}
+                  value={option.value}
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -410,6 +453,77 @@ export default function DocumentiPage() {
       "application/pdf",
     ];
     return supportedTypes.includes(file.type);
+  };
+
+  // Returns an icon component for a given file, based on its MIME type or extension
+  const getFileTypeIcon = (file: File): IconType => {
+    const mimeType = file.type?.toLowerCase() ?? "";
+    const name = file.name?.toLowerCase() ?? "";
+
+    // PDF
+    if (mimeType === "application/pdf" || name.endsWith(".pdf"))
+      return BsFileEarmarkPdfFill;
+
+    // Office Documents
+    if (
+      mimeType.includes("word") ||
+      name.endsWith(".doc") ||
+      name.endsWith(".docx")
+    )
+      return FaFileWord;
+    if (
+      mimeType.includes("excel") ||
+      name.endsWith(".xls") ||
+      name.endsWith(".xlsx")
+    )
+      return FaFileExcel;
+    if (
+      mimeType.includes("powerpoint") ||
+      name.endsWith(".ppt") ||
+      name.endsWith(".pptx")
+    )
+      return FaFilePowerpoint;
+
+    // Images (fallback handled separately where we actually render previews)
+    if (mimeType.startsWith("image/")) return BsFileEarmarkImageFill;
+
+    // Audio / Video
+    if (mimeType.startsWith("audio/")) return BsFileEarmarkMusicFill;
+    if (mimeType.startsWith("video/")) return BsFileEarmarkPlayFill;
+
+    // Archives
+    if (
+      mimeType === "application/zip" ||
+      name.endsWith(".zip") ||
+      name.endsWith(".7z") ||
+      name.endsWith(".rar")
+    )
+      return BsFileEarmarkZipFill;
+
+    // CSV
+    if (name.endsWith(".csv")) return BsFileEarmarkExcelFill;
+
+    // Code
+    if (
+      name.endsWith(".js") ||
+      name.endsWith(".ts") ||
+      name.endsWith(".tsx") ||
+      name.endsWith(".json") ||
+      name.endsWith(".html") ||
+      name.endsWith(".css")
+    )
+      return BsFileEarmarkFill;
+
+    // Text
+    if (
+      mimeType.startsWith("text/") ||
+      name.endsWith(".txt") ||
+      name.endsWith(".md")
+    )
+      return BsFileEarmarkTextFill;
+
+    // Default
+    return BsFileEarmarkFill;
   };
 
   const handleSendDocuments = async () => {
@@ -490,7 +604,7 @@ export default function DocumentiPage() {
                 <Label
                   htmlFor="file-upload"
                   className={cn(
-                    "border-border flex flex-1 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
+                    "border-border flex h-full flex-1 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors",
                     isDragging
                       ? "border-primary bg-primary/10"
                       : "bg-background hover:border-primary/50",
@@ -526,11 +640,11 @@ export default function DocumentiPage() {
                     </div>
                   ) : (
                     <ScrollArea className="h-full w-full">
-                      <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                      <div className="grid h-full min-h-[200px] auto-rows-[1fr] grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {files.map((file) => (
                           <div
                             key={file.name}
-                            className="group border-border bg-muted relative aspect-square overflow-hidden rounded-lg border"
+                            className="group ring-border bg-muted/30 relative h-full min-h-[160px] overflow-hidden rounded-lg border-none ring-2"
                           >
                             {file.type.startsWith("image/") ? (
                               <Image
@@ -540,9 +654,14 @@ export default function DocumentiPage() {
                                 className="object-cover"
                               />
                             ) : (
-                              <div className="flex h-full flex-col items-center justify-center gap-2 p-2">
-                                <FileIcon className="text-muted-foreground h-8 w-8" />
-                                <p className="text-muted-foreground text-center text-xs break-all">
+                              <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
+                                {(() => {
+                                  const Icon = getFileTypeIcon(file);
+                                  return (
+                                    <Icon className="text-muted-foreground h-1/2 w-1/2 md:h-2/3 md:w-2/3" />
+                                  );
+                                })()}
+                                <p className="text-muted-foreground px-2 text-center text-sm break-all">
                                   {file.name}
                                 </p>
                               </div>
@@ -597,7 +716,7 @@ export default function DocumentiPage() {
                         ))}
                         <Label
                           htmlFor="file-upload"
-                          className="group border-border bg-muted/50 hover:border-primary/50 flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors"
+                          className="group border-border bg-muted/50 hover:border-primary/50 flex h-full min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors"
                         >
                           <div className="text-center">
                             <PlusCircle className="text-muted-foreground group-hover:text-primary mx-auto h-8 w-8 transition-colors" />
@@ -625,13 +744,16 @@ export default function DocumentiPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-1 flex-col space-y-6">
-                <div className="grid w-full gap-2">
+                <div className="grid w-full gap-3">
                   <Label htmlFor="doc-class">Classe Documentale</Label>
                   <Select
                     onValueChange={handleDocClassChange}
                     value={selectedDocClassId}
                   >
-                    <SelectTrigger id="doc-class">
+                    <SelectTrigger
+                      id="doc-class"
+                      className="ring-border bg-muted/10 w-full cursor-pointer border-none ring-1"
+                    >
                       <SelectValue placeholder="Seleziona una classe..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -641,7 +763,11 @@ export default function DocumentiPage() {
                         </SelectItem>
                       ) : (
                         documentClasses.map((dc) => (
-                          <SelectItem key={dc.id} value={dc.id.toString()}>
+                          <SelectItem
+                            className="cursor-pointer"
+                            key={dc.id}
+                            value={dc.id.toString()}
+                          >
                             {dc.name}
                           </SelectItem>
                         ))
@@ -659,7 +785,7 @@ export default function DocumentiPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="border-border bg-muted/50 text-muted-foreground flex h-full min-h-[150px] flex-1 items-center justify-center rounded-lg border-2 border-dashed text-center text-sm">
+                  <div className="ring-border bg-muted/50 text-muted-foreground flex h-full min-h-[150px] flex-1 items-center justify-center rounded-lg border-dashed text-center text-sm ring-2">
                     Seleziona una classe documentale
                     <br />
                     per compilare i metadati.
@@ -761,16 +887,130 @@ export default function DocumentiPage() {
       case 4: // Summary and Send
         return (
           <motion.div {...animationProps}>
-            <div className="bg-muted/50 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
-              <div className="bg-primary/10 text-primary mb-6 flex h-20 w-20 items-center justify-center rounded-full">
-                <Check className="h-10 w-10" />
+            <div className="space-y-6">
+              <div className="bg-muted/20 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
+                <div className="bg-primary/10 text-primary mb-6 flex h-20 w-20 items-center justify-center rounded-full">
+                  <Check className="h-10 w-10" />
+                </div>
+                <h2 className="text-2xl font-bold">Tutto pronto!</h2>
+                <p className="text-muted-foreground mt-2">
+                  Ricontrolla il riepilogo qui sotto.
+                  <br />
+                  Se è tutto corretto, puoi procedere con l&apos;invio.
+                </p>
               </div>
-              <h2 className="text-2xl font-bold">Tutto pronto!</h2>
-              <p className="text-muted-foreground mt-2">
-                Ricontrolla il riepilogo sulla destra.
-                <br />
-                Se è tutto corretto, puoi procedere con l&apos;invio.
-              </p>
+
+              <Card className="flex flex-col gap-6">
+                <CardHeader>
+                  <CardTitle>Riepilogo Spedizione</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 space-y-6">
+                  <div>
+                    <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                      <FileUp className="h-4 w-4" />
+                      <span>File</span>
+                      <Badge variant="secondary">{files.length}</Badge>
+                    </h3>
+                    {files.length > 0 ? (
+                      <ScrollArea className="h-auto max-h-48">
+                        <div className="space-y-2">
+                          {files.map((file) => (
+                            <div
+                              key={file.name}
+                              className="bg-muted/50 flex items-center gap-2 rounded-md p-2"
+                            >
+                              {(() => {
+                                const Icon = getFileTypeIcon(file);
+                                return (
+                                  <Icon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+                                );
+                              })()}
+                              <span className="text-sm">{file.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
+                        <p className="text-muted-foreground text-center text-sm">
+                          Nessun file.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                      <FileText className="h-4 w-4" />
+                      <span>Classe Documentale</span>
+                    </h3>
+                    {selectedDocClass ? (
+                      <p className="text-sm font-medium">
+                        {selectedDocClass.name}
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground py-2 text-center text-sm">
+                        Non selezionata.
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
+                      <Users className="h-4 w-4" />
+                      <span>Destinatari</span>
+                      <Badge variant="secondary">
+                        {selectedClients.length}
+                      </Badge>
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedClients.length > 0 ? (
+                        <ScrollArea className="h-auto max-h-32">
+                          <div className="space-y-2 pr-2">
+                            {selectedClients.map((client) => (
+                              <div
+                                key={client.id}
+                                className="bg-muted/50 flex items-center justify-between rounded-md p-2"
+                              >
+                                <span className="text-sm">
+                                  {client.nominativo}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      ) : (
+                        <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
+                          <p className="text-muted-foreground text-center text-sm">
+                            Nessun cliente.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    disabled={!isFormValid || isSubmitting}
+                    onClick={handleSendDocuments}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span>Invio in corso...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Invia a {selectedClients.length} Cliente
+                        {selectedClients.length !== 1 && "i"}
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
             </div>
           </motion.div>
         );
@@ -780,7 +1020,8 @@ export default function DocumentiPage() {
   };
 
   return (
-    <div className="grid h-full flex-1 grid-cols-1 lg:grid-cols-[1fr_400px]">
+    <div className="flex h-full flex-1 flex-col">
+      {isLoading && <DocumentiLoading />}
       <main className="flex h-full flex-col">
         <header className="flex-shrink-0 border-b p-4 lg:px-8 lg:py-6">
           <h1 className="text-foreground text-2xl font-bold tracking-tight">
@@ -865,114 +1106,11 @@ export default function DocumentiPage() {
           </div>
         </div>
       </main>
-      {/* Right Column: Summary Sidebar */}
-      <aside className="bg-sidebar-background flex flex-col p-4">
-        <div className="bg-card sticky top-6 flex h-full flex-col gap-6 rounded-xl p-6 shadow-lg">
-          <h2 className="text-xl font-semibold">Riepilogo Spedizione</h2>
-          <div className="flex-1 space-y-6">
-            <div>
-              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
-                <FileUp className="h-4 w-4" />
-                <span>File</span>
-                <Badge variant="secondary">{files.length}</Badge>
-              </h3>
-              {files.length > 0 ? (
-                <ScrollArea className="h-auto max-h-48">
-                  <div className="space-y-2">
-                    {files.map((file) => (
-                      <div
-                        key={file.name}
-                        className="bg-muted/50 flex items-center gap-2 rounded-md p-2"
-                      >
-                        <FileIcon className="h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm">{file.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
-                  <p className="text-muted-foreground text-center text-sm">
-                    Nessun file.
-                  </p>
-                </div>
-              )}
-            </div>
-            <div>
-              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4" />
-                <span>Classe Documentale</span>
-              </h3>
-              {selectedDocClass ? (
-                <p className="text-sm font-medium">{selectedDocClass.name}</p>
-              ) : (
-                <p className="text-muted-foreground py-2 text-center text-sm">
-                  Non selezionata.
-                </p>
-              )}
-            </div>
-            <div>
-              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-sm font-medium">
-                <Users className="h-4 w-4" />
-                <span>Destinatari</span>
-                <Badge variant="secondary">{selectedClients.length}</Badge>
-              </h3>
-              <div className="space-y-2">
-                {selectedClients.length > 0 ? (
-                  <ScrollArea className="h-auto max-h-32">
-                    <div className="space-y-2 pr-2">
-                      {selectedClients.map((client) => (
-                        <div
-                          key={client.id}
-                          className="bg-muted/50 flex items-center justify-between rounded-md p-2"
-                        >
-                          <span className="text-sm">{client.nominativo}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeClient(client.id)}
-                            aria-label={`Rimuovi ${client.nominativo}`}
-                            className="h-6 w-6 flex-shrink-0"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="flex h-20 items-center justify-center rounded-lg border-2 border-dashed">
-                    <p className="text-muted-foreground text-center text-sm">
-                      Nessun cliente.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="mt-auto">
-            <Button
-              size="lg"
-              className="w-full"
-              disabled={!isFormValid || isSubmitting}
-              onClick={handleSendDocuments}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span>Invio in corso...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Invia a {selectedClients.length} Cliente
-                  {selectedClients.length !== 1 && "i"}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </aside>
+      <CreateViewerDialog
+        isOpen={isCreateViewerDialogOpen}
+        onClose={() => setIsCreateViewerDialogOpen(false)}
+        onViewerCreated={handleViewerCreated}
+      />
       <CreateViewerDialog
         isOpen={isCreateViewerDialogOpen}
         onClose={() => setIsCreateViewerDialogOpen(false)}

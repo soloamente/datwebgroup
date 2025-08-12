@@ -73,7 +73,7 @@ export function AdminDashboardClient({
       <aside
         className={`${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } bg-sidebar fixed z-30 m-2 flex h-[calc(100vh-1rem)] shrink-0 ${
+        } bg-sidebar fixed z-30 m-2 flex h-[calc(100vh-1rem)] ${
           isCompact ? "w-[80px]" : "w-[300px]"
         } flex-col gap-4 overflow-hidden rounded-2xl border p-3 transition-all duration-300 ease-in-out md:sticky md:top-4 md:m-4 md:h-[calc(100vh-2rem)] md:${
           isCompact ? "w-[80px]" : "w-[300px]"
@@ -130,7 +130,7 @@ export function AdminDashboardClient({
       {/* Main Content */}
       <section
         id="content"
-        className="flex w-full min-w-0 flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4"
+        className="flex w-full flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4"
       >
         {/* Mobile Header */}
         {isMobile && (

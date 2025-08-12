@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   InputOTP,
@@ -29,16 +29,26 @@ export default function TokenOtpForm({
   const [otpResendAvailable, setOtpResendAvailable] = useState(false);
   const authStore = useAuthStore();
 
+  // Form ref to programmatically submit when OTP is complete
+  const formRef = useRef<HTMLFormElement | null>(null);
+  // Guard to prevent duplicate submissions when auto-submitting
+  const isSubmittingRef = useRef(false);
+
   useEffect(() => {
     startOtpCountdown();
   }, []);
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOtp = async (e?: React.FormEvent, providedOtp?: string) => {
+    if (e) e.preventDefault();
+    // Prevent duplicate submissions (auto-submit + manual click/paste)
+    if (loading || isSubmittingRef.current) return;
     setLoading(true);
+    isSubmittingRef.current = true;
     setError("");
 
-    if (otp.length !== 5) {
+    const codeToVerify = (providedOtp ?? otp).trim();
+
+    if (codeToVerify.length !== 5) {
       const message = "Inserisci un codice OTP valido";
       setError(message);
       toast.error(message);
@@ -47,7 +57,7 @@ export default function TokenOtpForm({
     }
 
     try {
-      const result = await authStore.verifyOtpByToken(username, otp);
+      const result = await authStore.verifyOtpByToken(username, codeToVerify);
 
       if (result.success) {
         toast.success("Login completato con successo");
@@ -69,6 +79,7 @@ export default function TokenOtpForm({
       });
     } finally {
       setLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -117,9 +128,55 @@ export default function TokenOtpForm({
     }, 1000);
   };
 
+  // Auto-submit when the OTP reaches the required length
+  useEffect(() => {
+    if (otp.length === 5 && !loading && !isSubmittingRef.current) {
+      // Fallback: call verify directly to avoid timing issues with state updates
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      handleVerifyOtp(undefined, otp);
+    }
+    // Reset guard when user deletes a digit (allows re-submit)
+    if (otp.length < 5) {
+      isSubmittingRef.current = false;
+    }
+  }, [otp, loading]);
+
+  // Ensure the OTP input is focused when this form mounts
+  useEffect(() => {
+    // Try focusing the internal input element created by input-otp
+    const focusInput = () => {
+      const el = (document.querySelector('[data-slot="input-otp"] input') ||
+        document.querySelector(
+          '[data-slot="input-otp"]',
+        )) as HTMLElement | null;
+      el?.focus();
+    };
+    // Try immediately and after next tick for safety
+    focusInput();
+    const id = window.setTimeout(focusInput, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const handleOtpComplete = (value: string) => {
+    if (loading || isSubmittingRef.current) return;
+    setOtp(value);
+    // Call verify directly to ensure latest value is used
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    handleVerifyOtp(undefined, value);
+  };
+
   return (
-    <form onSubmit={handleVerifyOtp} className="space-y-8">
-      <InputOTP maxLength={5} value={otp} onChange={setOtp} slotSize="lg">
+    <form ref={formRef} onSubmit={handleVerifyOtp} className="space-y-8">
+      <InputOTP
+        maxLength={5}
+        value={otp}
+        onChange={setOtp}
+        slotSize="lg"
+        autoFocus
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        onComplete={handleOtpComplete}
+      >
         <InputOTPGroup className="w-full justify-center">
           <InputOTPSlot index={0} />
           <InputOTPSlot index={1} />

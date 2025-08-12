@@ -582,7 +582,7 @@ export default function DocumentClassiTable({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="ring-border bg-card rounded-full border-none ring-1 hover:ring-2"
+                  className="ring-border bg-card h rounded-full border-none ring-1"
                   aria-label="Mostra/nascondi colonne"
                 >
                   <FilterVertical className="text-muted-foreground/80 size-4" />
@@ -691,7 +691,7 @@ export default function DocumentClassiTable({
 
       {/* --- Table Section --- */}
       <div className="ring-border isolate overflow-hidden rounded-2xl ring-1">
-        <Table className="bg-muted/30 min-w-full border-separate border-spacing-0">
+        <Table className="bg-muted/20 min-w-full border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow

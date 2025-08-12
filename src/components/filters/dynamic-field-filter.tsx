@@ -244,9 +244,9 @@ export function DynamicFieldFilter({
           ref={buttonRef}
           variant="outline"
           className={cn(
-            "border-muted/30 hover:border-primary/40 rounded-full pr-2 pl-3",
+            "ring-border bg-card rounded-full border-none pr-2 pl-3 ring-1",
             "flex items-center gap-1.5",
-            hasActiveFilter && "border-primary/60 bg-primary/5",
+            hasActiveFilter && "bg-primary/10 text-primary",
           )}
           aria-label={`Filtra per ${field.label}`}
         >

@@ -45,7 +45,7 @@ export default function RootLayout({
             <Preferences />
             {children}
           </ReactLenis>
-          <SonnerToaster position="bottom-center" />
+          <SonnerToaster position="bottom-center" richColors />
         </ThemeProvider>
       </body>
     </html>

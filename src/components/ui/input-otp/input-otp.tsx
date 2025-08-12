@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import React, { createContext, useContext } from "react";
 import {
   AnimatePresence,
   type MotionProps,
@@ -49,28 +49,35 @@ type InputOTPProps = React.ComponentProps<typeof OTPInput> & {
   slotSize?: "sm" | "md" | "lg";
 };
 
-function InputOTP({
-  containerClassName,
-  className,
-  variant = "bordered",
-  slotSize = "md",
-  ...props
-}: InputOTPProps) {
-  return (
-    <InputOTPProvider variant={variant} slotSize={slotSize}>
-      <OTPInput
-        data-variant={variant}
-        data-slot="input-otp"
-        containerClassName={cn(
-          "flex items-center gap-2 has-disabled:opacity-50",
-          containerClassName,
-        )}
-        className={cn("disabled:cursor-not-allowed", className)}
-        {...props}
-      />
-    </InputOTPProvider>
-  );
-}
+const InputOTP = React.forwardRef<HTMLInputElement, InputOTPProps>(
+  (
+    {
+      containerClassName,
+      className,
+      variant = "bordered",
+      slotSize = "md",
+      ...props
+    },
+    ref,
+  ) => {
+    return (
+      <InputOTPProvider variant={variant} slotSize={slotSize}>
+        <OTPInput
+          ref={ref}
+          data-variant={variant}
+          data-slot="input-otp"
+          containerClassName={cn(
+            "flex items-center gap-2 has-disabled:opacity-50",
+            containerClassName,
+          )}
+          className={cn("disabled:cursor-not-allowed", className)}
+          {...props}
+        />
+      </InputOTPProvider>
+    );
+  },
+);
+InputOTP.displayName = "InputOTP";
 
 type InputOTPGroupProps = React.ComponentProps<"div">;
 

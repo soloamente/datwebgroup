@@ -66,9 +66,9 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "ring-border bg-muted/10 w-full cursor-pointer justify-start text-left font-normal ring-1",
             "ring-offset-background focus-visible:ring-ring inline-flex items-center rounded-md text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
-            "border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 border px-4 py-2",
+            "bg-background hover:bg-accent hover:text-accent-foreground h-10 border-none px-4 py-2",
             !value && "text-muted-foreground",
           )}
         >

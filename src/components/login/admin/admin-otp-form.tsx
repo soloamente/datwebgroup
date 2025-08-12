@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   InputOTP,
@@ -32,27 +32,38 @@ export default function AdminOtpForm({
   const router = useRouter();
   const authStore = useAuthStore();
 
+  // Form ref and submission guard to avoid duplicate submits
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const isSubmittingRef = useRef(false);
+  const hasAutoSubmittedRef = useRef(false);
+
   useEffect(() => {
     startOtpCountdown();
   }, []);
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOtp = async (e?: React.FormEvent, providedOtp?: string) => {
+    if (e) e.preventDefault();
+    if (loading || isSubmittingRef.current) return;
     setLoading(true);
+    isSubmittingRef.current = true;
     setError("");
 
-    if (otp.length !== 5) {
+    const codeToVerify = (providedOtp ?? otp).trim();
+
+    if (codeToVerify.length !== 5) {
       const message = "Inserisci un codice OTP valido";
       setError(message);
       toast.error(message);
       setLoading(false);
+      isSubmittingRef.current = false;
+      hasAutoSubmittedRef.current = false;
       return;
     }
 
     try {
       const result = await authStore.verifyOtp(
         email.trim(),
-        otp.trim(),
+        codeToVerify,
         username.trim(),
         password,
       );
@@ -87,12 +98,18 @@ export default function AdminOtpForm({
           "Login fallito. Controlla le credenziali e riprova.";
         setError(message);
         toast.error(message);
+        // Allow retry on failure
+        isSubmittingRef.current = false;
+        hasAutoSubmittedRef.current = false;
       }
     } catch (error) {
       setError("Errore durante il login. Riprova.");
       toast.error("Errore durante il login. Riprova.");
+      isSubmittingRef.current = false;
+      hasAutoSubmittedRef.current = false;
     } finally {
       setLoading(false);
+      // Keep hasAutoSubmittedRef as-is on success to avoid re-trigger loops
     }
   };
 
@@ -130,9 +147,44 @@ export default function AdminOtpForm({
     }, 1000);
   };
 
+  // Remove effect-based auto-submit to prevent loops; rely on onComplete
+
+  // Ensure the OTP input is focused when the component mounts
+  useEffect(() => {
+    const focusInput = () => {
+      const el = (document.querySelector('[data-slot="input-otp"] input') ||
+        document.querySelector(
+          '[data-slot="input-otp"]',
+        )) as HTMLElement | null;
+      el?.focus();
+    };
+    focusInput();
+    const id = window.setTimeout(focusInput, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  const handleOtpComplete = (value: string) => {
+    if (loading || isSubmittingRef.current || hasAutoSubmittedRef.current) {
+      return;
+    }
+    hasAutoSubmittedRef.current = true;
+    setOtp(value);
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    handleVerifyOtp(undefined, value);
+  };
+
   return (
-    <form onSubmit={handleVerifyOtp} className="space-y-8">
-      <InputOTP maxLength={5} value={otp} onChange={setOtp} slotSize="lg">
+    <form ref={formRef} onSubmit={handleVerifyOtp} className="space-y-8">
+      <InputOTP
+        maxLength={5}
+        value={otp}
+        onChange={setOtp}
+        slotSize="lg"
+        autoFocus
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        onComplete={handleOtpComplete}
+      >
         <InputOTPGroup className="w-full justify-center">
           <InputOTPSlot index={0} />
           <InputOTPSlot index={1} />
@@ -181,7 +233,7 @@ export default function AdminOtpForm({
             <Button
               type="button"
               disabled
-              className="bg-secondary/50 hover:bg-secondary/60 border-border h-12 w-full rounded-2xl border text-white transition-all duration-500 ease-in-out md:h-14 md:text-lg"
+              className="bg-secondary/80 disabled:bg-secondary text-foreground ring-border/80 disabled:text-foreground h-12 w-full rounded-2xl font-medium ring-1 transition-all duration-500 ease-in-out disabled:opacity-100 md:h-14 md:text-lg"
             >
               Invia nuovo codice tra {Math.floor(otpCountdown / 60)}:
               {(otpCountdown % 60).toString().padStart(2, "0")}

@@ -35,66 +35,47 @@ export function SidebarHeader({
         // Compact layout - centered avatar only
         <div className="flex justify-center">
           <motion.div
-            animate={{
-              width: 36,
-              height: 36,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-            }}
-            className="flex-shrink-0"
+            layout
+            initial={false}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="h-10 w-10 flex-shrink-0"
           >
-            <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1 transition-all duration-200">
+            <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1">
               <AvatarImage
                 src={userData.avatar}
                 alt={`Avatar di ${userData.name}`}
               />
-              <AvatarFallback name={userData.name} size={42} variant="beam" />
+              <AvatarFallback name={userData.name} size={40} variant="beam" />
             </Avatar>
           </motion.div>
         </div>
       ) : (
         // Expanded layout - full header with avatar, text, and buttons
         <motion.div
+          layout
+          initial={false}
           className="flex items-center justify-between"
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 30,
-          }}
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
         >
           {/* Avatar and User Info */}
           <motion.div
-            className="flex h-[42px] w-full min-w-0 items-center gap-2"
-            animate={{
-              width: "100%",
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-            }}
+            layout
+            initial={false}
+            className="flex h-10 w-full min-w-0 items-center gap-2"
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
             <motion.div
-              animate={{
-                width: 42,
-                height: 42,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-              }}
-              className="flex-shrink-0"
+              layout
+              initial={false}
+              className="h-10 w-10 flex-shrink-0"
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
             >
-              <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1 transition-all duration-200">
+              <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1">
                 <AvatarImage
                   src={userData.avatar}
                   alt={`Avatar di ${userData.name}`}
                 />
-                <AvatarFallback name={userData.name} size={42} variant="beam" />
+                <AvatarFallback name={userData.name} size={40} variant="beam" />
               </Avatar>
             </motion.div>
 

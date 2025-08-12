@@ -24,9 +24,9 @@ export default function UsernameInput({
           autoFocus
           onChange={onChange}
           onKeyDown={onKeyDown}
-          className="peer border-border h-14 rounded-2xl border-[1.5px] ps-10 placeholder:text-black/30 dark:border-white/20 dark:placeholder:text-white/20"
+          className="peer ring-border focus-visible:ring-primary h-14 rounded-2xl border-none bg-white/10 ps-10 ring-1 placeholder:text-black/50 dark:ring-white/20 dark:placeholder:text-white/20"
         />
-        <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
+        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
           <User size={20} aria-hidden="true" />
         </div>
       </div>

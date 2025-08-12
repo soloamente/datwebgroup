@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useBatchStore } from "@/store/batch-store";
 import Link from "next/link";
+import CondivisiByClassLoading from "./loading";
 
 // Helper type for documents enriched with batch data - REMOVED, NOW IMPORTED
 
@@ -162,29 +163,10 @@ export default function DocumentClassPage() {
     toast.info("Funzionalità per creare una nuova condivisione in arrivo!");
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4 p-4 md:p-6">
-        <div className="flex w-full items-center justify-between py-2 md:py-4">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-8 w-48 rounded-lg" />
-            <Skeleton className="h-4 w-64 rounded-lg" />
-          </div>
-          <Skeleton className="h-10 w-36 rounded-full" />
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-24 w-full rounded-lg" />
-          <Skeleton className="h-24 w-full rounded-lg" />
-          <Skeleton className="h-24 w-full rounded-lg" />
-          <Skeleton className="h-24 w-full rounded-lg" />
-        </div>
-        <Skeleton className="h-96 w-full rounded-lg" />
-      </div>
-    );
-  }
+  if (isLoading) return <CondivisiByClassLoading />;
 
   return (
-    <main className="flex flex-col gap-4 p-4 md:p-6">
+    <main className="flex flex-col gap-4">
       <div className="flex w-full items-center justify-between py-2 md:py-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-medium md:text-4xl dark:text-white">

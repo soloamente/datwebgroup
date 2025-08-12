@@ -745,6 +745,50 @@ export interface GetMyDocsStatsByClassResponse {
 }
 // --- End Interfaces for /my-docs-stats-by-class ---
 
+// --- Admin monthly stats (documents/batches/files) ---
+export interface AdminMonthlyStat {
+  label: string;
+  period: string; // YYYY-MM
+  year: number;
+  month: number;
+  document_count: number;
+  batch_count: number;
+  active_sharers_count: number;
+  file_count: number;
+}
+
+export interface AdminPeakMonthSummary {
+  year: number;
+  month: number;
+  document_count: number;
+  batch_count: number;
+  active_sharers_count: number;
+  file_count: number;
+}
+
+export interface AdminMonthlyStatsSummary {
+  total_documents: number;
+  total_batches: number;
+  total_files: number;
+  average_documents_per_month: number;
+  average_batches_per_month: number;
+  average_files_per_month: number;
+  average_files_per_document: number;
+  peak_month: AdminPeakMonthSummary;
+  period: { start: string; end: string };
+}
+
+export interface AdminMonthlyStatsData {
+  monthly_stats: AdminMonthlyStat[];
+  summary: AdminMonthlyStatsSummary;
+}
+
+export interface GetAdminMonthlyStatsResponse {
+  success: boolean;
+  message: string;
+  data: AdminMonthlyStatsData;
+}
+
 // --- Nuove interfacce per recovery-username-request ---
 export interface RecoveryUsernameRequestData {
   ragione_sociale: string;
@@ -892,6 +936,105 @@ const getMyDocsStatsByClass =
   async (): Promise<GetMyDocsStatsByClassResponse> => {
     const response = await api.get<GetMyDocsStatsByClassResponse>(
       "/my-docs-stats-by-class",
+    );
+    return response.data;
+  };
+
+/**
+ * Retrieves monthly admin statistics for documents/batches/files.
+ * NOTE: Update the endpoint path below if it differs on the server.
+ */
+const getAdminMonthlyStats =
+  async (): Promise<GetAdminMonthlyStatsResponse> => {
+    const response = await api.get<GetAdminMonthlyStatsResponse>(
+      "/admin/monthly-document-stats",
+    );
+    return response.data;
+  };
+
+// --- Admin total stats (totali storici: batches, files) ---
+export interface GetAdminTotalStatsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total_batches: number;
+    total_files: number;
+    batches_last_30_days?: number;
+    files_last_30_days?: number;
+  };
+}
+
+/**
+ * Retrieves historical totals for admin (total batches and total files).
+ * Endpoint: GET /admin/total-stats
+ */
+const getAdminTotalStats = async (): Promise<GetAdminTotalStatsResponse> => {
+  const response =
+    await api.get<GetAdminTotalStatsResponse>("/admin/total-stats");
+  return response.data;
+};
+
+// --- Admin Top Sharer Stats ---
+export interface AdminTopSharer {
+  id: number;
+  nominativo: string;
+  username: string;
+  email: string;
+  total_documents: number;
+  total_batches: number;
+  total_files: number;
+  active_days: number;
+  percentage_of_total: number;
+  average_files_per_document: number;
+}
+
+export interface AdminTopSharerStatsSummary {
+  total_documents_period: number;
+  top_5_total_documents: number;
+  top_5_percentage: number;
+  period: { start: string; end: string };
+}
+
+export interface AdminTopSharerStatsData {
+  top_sharers: AdminTopSharer[];
+  summary: AdminTopSharerStatsSummary;
+}
+
+export interface GetAdminTopSharerStatsResponse {
+  success: boolean;
+  message: string;
+  data: AdminTopSharerStatsData;
+}
+
+const getAdminTopSharerStats =
+  async (): Promise<GetAdminTopSharerStatsResponse> => {
+    const response = await api.get<GetAdminTopSharerStatsResponse>(
+      "/admin/top-sharer-stats",
+    );
+    return response.data;
+  };
+
+// --- Admin Login Stats Pie ---
+export interface AdminLoginStatsPieData {
+  total_logins: number;
+  total_qr_logins: number;
+  total_classic_logins: number;
+  total_unique_users: number;
+  qr_percentage: number;
+  classic_percentage: number;
+  period: { start: string; end: string };
+}
+
+export interface GetAdminLoginStatsPieResponse {
+  success: boolean;
+  message: string;
+  data: AdminLoginStatsPieData;
+}
+
+const getAdminLoginStatsPie =
+  async (): Promise<GetAdminLoginStatsPieResponse> => {
+    const response = await api.get<GetAdminLoginStatsPieResponse>(
+      "/admin/login-stats-pie",
     );
     return response.data;
   };
@@ -1597,6 +1740,10 @@ export const userService = {
   createDocumentClass,
   getMyFileStats,
   getMyDocsStatsByClass,
+  getAdminMonthlyStats,
+  getAdminTotalStats,
+  getAdminTopSharerStats,
+  getAdminLoginStatsPie,
   changePassword: (data: ChangePasswordData) =>
     api.post("/change-password", data),
   shareDocuments,

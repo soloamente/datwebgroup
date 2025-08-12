@@ -41,10 +41,17 @@ The user reported that login sessions are not maintained on mobile devices, whil
 - [x] Fix infinite loading issue
 - [x] Add global 404 redirect handler
 - [x] Fix sidebar shrinking in dashboard layouts (admin + sharer)
+- [x] Smooth avatar animation in sidebar header when opening/closing
 - [x] Update date formatting to full Italian style on viewer pages
 - [x] Use boring avatar fallback in viewer header avatar
 - [x] Fix lint issues in `src/app/dashboard/admin/classi-documentali/[id]/page.tsx`
 - [x] Fix lint issues in `src/components/login/token/token-otp-form.tsx`
+- [x] Fix calendar header overlap between month/year dropdowns and arrows
+- [x] Auto-submit OTP when all digits are entered in token login
+- [x] Nuova condivisione: mostra icone file per tipo nel caricamento e riepilogo
+- [x] Loading skeleton: `dashboard/sharer/utenti` (Gestione clienti)
+- [x] Loading skeleton: `dashboard/sharer/documenti` (Nuova condivisione)
+- [x] Loading skeleton: `dashboard/sharer/documenti/condivisi/[slug]` (Documenti condivisi per classe)
 - [ ] Test login flow on mobile devices
 - [ ] Verify session persistence across page refreshes
 - [ ] Test logout functionality
@@ -52,7 +59,69 @@ The user reported that login sessions are not maintained on mobile devices, whil
 
 ## Current Status / Progress Tracking
 
-**Latest Update**: Resolved all reported lints. Replaced `<img>` with Next.js `Image`, removed unused imports, fixed missing hook dependency warning, escaped apostrophes in labels, and switched `||` to `??` in OTP form. Lint passes cleanly for both files.
+Latest Update: Implemented loading skeletons for sharer sections to improve perceived performance and visual consistency while data loads.
+
+- Created `src/app/dashboard/sharer/utenti/loading.tsx` to mirror header, stats, and table layout of Gestione clienti.
+- Created `src/app/dashboard/sharer/documenti/loading.tsx` to mirror the wizard (header, stepper, current step card, summary, and navigation buttons).
+- Created `src/app/dashboard/sharer/documenti/condivisi/[slug]/loading.tsx` to mirror header, stats grid, and table controls for Documenti condivisi per classe.
+
+**Latest Update**: Aligned "Lista clienti" table with other tables. Updated `src/components/dashboard/tables/sharer/viewer-table.tsx` to:
+
+- Add a "Colonne" visibility popover (toggle per-column visibility)
+- Normalize table container/background classes to match the shared style
+- Keep existing search and date-range filters intact
+- Add rounded top corners to the first body row cells to match other tables
+
+Follow-up: Applied the same rounded top corners treatment to `src/components/dashboard/tables/sharer/shared-documents-table.tsx` so the shared documents tables (`condivisi/[slug]`) visually match. Added bottom rounded corners on the last body row cells (left/right) for full symmetry.
+
+Lint check on the edited file passed with no errors.
+
+—
+
+Nuova condivisione – icone file per tipo:
+
+- Implementato mapping icone per tipo file in `src/app/dashboard/sharer/documenti/page.tsx` usando `react-icons/fa6` (PDF, Word, Excel, PowerPoint, Image, Zip, CSV, Audio, Video, Code, Text, Default).
+- Griglia upload: per file non immagine, l'icona è grande (h-16 w-16, md:h-20 md:w-20) centrata per riempire l'area della tile.
+- Riepilogo laterale: sostituita l'icona generica con l'icona per tipo (dimensione compatta h-4 w-4).
+- Aggiunta dipendenza `react-icons@^5.2.1`.
+- Lint OK.
+
+—
+—
+
+# OTP Auto-submit Enhancement
+
+## Background and Motivation
+
+Users want the login to proceed automatically when the OTP code is fully entered, without requiring an extra click on "Accedi".
+
+## Change
+
+- Updated `src/components/login/token/token-otp-form.tsx`:
+  - Added `formRef` and `isSubmittingRef` guards.
+  - Auto-submit via `requestSubmit()` when `otp.length === 5`.
+  - Prevent duplicate submissions by guarding concurrent triggers (paste, typing, manual button click).
+
+## Success Criteria
+
+- When a user types or pastes the 5-digit OTP, the form submits immediately.
+- No double submissions occur; the loading state and guard prevent re-entry.
+- Manual click still works if needed.
+
+## Status
+
+- [x] Implemented and linted (no errors)
+- [ ] Manual UX verification across desktop and mobile
+
+Avatar open/close animation polish:
+
+- Updated `src/components/sidebar/sidebar-header.tsx` to use layout-based motion for avatar/header instead of width/height animation props that conflicted with Tailwind transitions.
+- Changes:
+  - Added `layout` and `initial={false}` to the relevant `motion.div`s to prevent re-animations on mount.
+  - Standardized sizes to `h-10 w-10` for the avatar across compact and expanded states.
+  - Removed `transition-all` on the avatar container to avoid fighting with Framer Motion.
+  - Kept a single spring config for consistency: `{ type: 'spring', stiffness: 400, damping: 30 }`.
+- Expected result: Smoother, non-jittery avatar transition when toggling the sidebar, with no squish/stretch or double-transition artifacts.
 
 **Key Changes Made**:
 
@@ -62,6 +131,30 @@ The user reported that login sessions are not maintained on mobile devices, whil
 4. Enhanced debugging to track Laravel session cookies
 
 **Next Steps**: Test the login flow to ensure Laravel session cookies are properly maintained.
+
+---
+
+# Calendar Header Overlap Fix
+
+## Background and Motivation
+
+The calendar header showed the month and year dropdowns overlapping with the previous/next arrows, making the controls hard to use.
+
+## Change
+
+- Updated `src/app/components/ui/calendar.tsx` DayPicker `classNames`:
+  - Added `px-12` to `caption` to reserve horizontal space for the nav arrows
+  - Kept arrows absolutely positioned within the reserved padding area
+  - Ensured dropdowns remain centered with `justify-center`
+
+## Success Criteria
+
+- Month and year dropdowns no longer visually overlap with the left/right arrows across breakpoints.
+
+## Status
+
+- [x] Implemented styles and linted
+- [ ] Manual UI verification (please test on the date range filter and single date pickers)
 
 ---
 
@@ -2315,3 +2408,97 @@ The admin sharer table container had rounded corners, but the table header overl
 ## Lessons
 
 - When using a rounded outer container with sticky headers, ensure the container has `overflow-hidden` and avoid redundant borders on inner sticky elements to preserve corner radii.
+
+---
+
+# Admin Dashboard – Monthly Stats Chart
+
+## Background and Motivation
+
+Gli admin necessitano di una chart con le statistiche mensili (documenti, batch, file, sharer attivi) simile a quella presente nella dashboard degli sharer, ma alimentata dall'endpoint specifico admin.
+
+## Key Challenges and Analysis
+
+1. Riutilizzare il pattern UI/UX esistente (Card, Tabs, Recharts, motion/react) per coerenza.
+2. Mappare i dati dell'endpoint admin al formato Recharts con selezione metrica.
+3. Gestire skeleton/loading state ed errori.
+
+## High-level Task Breakdown
+
+1. [x] Aggiungere API client admin
+   - [x] Tipi `AdminMonthlyStat`, `AdminMonthlyStatsSummary`, `GetAdminMonthlyStatsResponse`
+   - [x] `userService.getAdminMonthlyStats()`
+   - Success: tipizzazione corretta e chiamata API disponibile.
+2. [ ] Creare componente `AdminMonthlyStatsChart`
+   - [ ] Selettore metrica: `file_count` | `document_count` | `batch_count` | `active_sharers_count`
+   - [ ] UI: Card + Tabs con BarChart e tooltip custom
+   - [ ] Skeleton durante fetch, gestione errori
+   - Success: grafico renderizza i dati e cambia correttamente metrica.
+3. [ ] Integrare nella pagina admin dashboard
+   - [ ] Sostituire i placeholder chart esistenti con `AdminMonthlyStatsChart`
+   - Success: grafico visibile in `src/app/dashboard/admin/page.tsx`.
+4. [ ] Lint + test manuali rapidi
+   - Success: nessun errore lint, chart interattiva.
+
+## Project Status Board
+
+- [x] API: `getAdminMonthlyStats`
+- [x] Component: `AdminMonthlyStatsChart`
+- [x] Integration: admin dashboard page
+- [x] Lint + manual test
+
+## Current Status / Progress Tracking
+
+- Creati i tipi Admin e la funzione `getAdminMonthlyStats` in `src/app/api/api.ts`.
+- Implementato `src/components/dashboard/AdminMonthlyStatsChart.tsx` con selettore metrica e tooltip custom.
+- Integrato nella dashboard admin sostituendo i placeholder chart in `src/components/dashboard/DashboardClient.tsx`.
+- Aggiunta `getAdminTotalStats` in `src/app/api/api.ts` (GET `/admin/total-stats`).
+- `DashboardClient` ora usa l'endpoint per mostrare "Totale documenti condivisi" (mappato a `total_files`).
+
+## Executor's Feedback or Assistance Requests
+
+- Endpoint usato: `/admin/monthly-document-stats`. Se differisce, indicare il path corretto.
+- Valutare se aggiungere cards riassuntive con i dati di `summary` (totali e medie) sotto al grafico.
+
+## Lessons
+
+- Allineare tooltip e gradienti a quelli della chart sharer per coerenza visiva.
+
+---
+
+# Shared Documents Table Styling Synchronization
+
+## Background and Motivation
+
+The user requested that the shared documents table styling should be synchronized with the utenti table styling. This ensures consistency in UI/UX across different pages.
+
+## Key Challenges and Analysis
+
+1. Identifying the specific styling elements to synchronize
+2. Implementing these styles in the shared documents table
+3. Ensuring the synchronization is maintained across different pages
+
+## High-level Task Breakdown
+
+1. Identify the common styling elements between the utenti table and shared documents table
+2. Implement these styles in the shared documents table
+3. Test the synchronization to ensure consistency
+
+## Project Status Board
+
+- [x] Identify common styling elements
+- [x] Implement synchronization in shared documents table
+- [x] Test synchronization across different pages
+
+## Executor's Feedback or Assistance Requests
+
+- The shared documents table styling has been synchronized with the utenti table styling.
+- All common styling elements have been implemented in the shared documents table.
+- The synchronization is now complete and consistent across different pages.
+
+## Lessons
+
+1. When synchronizing styling across different tables:
+   - Identify common elements between tables
+   - Implement these elements consistently across all tables
+   - Test the synchronization to ensure consistency

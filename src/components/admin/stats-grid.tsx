@@ -83,7 +83,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
   return (
     <div
       className={cn(
-        "ring-border from-sidebar/60 to-sidebar grid rounded-2xl bg-gradient-to-br ring-1",
+        "ring-border dark:from-sidebar/60 dark:to-sidebar bg-card grid rounded-2xl ring-1 dark:bg-gradient-to-br",
         gridCols,
       )}
     >

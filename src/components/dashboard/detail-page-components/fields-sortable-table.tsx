@@ -709,11 +709,11 @@ function FieldEditDrawer({
                       </div>
                     </div>
 
-                    {/* Advanced Section */}
+                    {/* General Section */}
                     {editedField.sort_order !== undefined && (
                       <div className="space-y-4">
                         <h3 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-                          Avanzate
+                          Generale
                         </h3>
 
                         <div>

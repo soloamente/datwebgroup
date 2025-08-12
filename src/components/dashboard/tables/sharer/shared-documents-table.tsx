@@ -480,6 +480,7 @@ const getColumns = (
       header: "Data Invio",
       cell: ({ row }) => formatDynamicDate(row.getValue("sent_at")),
       filterFn: "docDateRange",
+      size: 180,
     },
     {
       accessorKey: "viewers",
@@ -533,6 +534,7 @@ const getColumns = (
         );
       },
       filterFn: "viewer",
+      size: 220,
     },
     ...((docClassDetails?.fields.map((field) => ({
       id: `metadata.${field.name}`,
@@ -565,6 +567,20 @@ const getColumns = (
                 : ["char", "string", "text"].includes(field.data_type)
                   ? "textContains"
                   : undefined,
+      // Provide label-specific and sensible default sizes to reduce unused space
+      size: (() => {
+        const label = (field.label || "").toLowerCase();
+        if (label === "azienda") return 160;
+        if (label === "anno") return 100;
+        if (label === "fatturato" || label === "utile") return 160;
+        // Defaults by data type (slightly tighter than before)
+        if (field.data_type === "boolean") return 110;
+        if (field.data_type === "enum") return 150;
+        if (["integer", "decimal"].includes(field.data_type)) return 140;
+        if (["date", "datetime"].includes(field.data_type)) return 180;
+        if (["char", "string", "text"].includes(field.data_type)) return 180;
+        return 160;
+      })(),
     })) as ColumnDef<EnrichedDocument>[]) ?? []),
   ];
 };
@@ -737,7 +753,7 @@ export function SharedDocumentsTable({
                 id={`${tableId}-input`}
                 ref={inputRef}
                 className={cn(
-                  "bg-background border-muted/30 focus:ring-primary/20 h-10 w-full rounded-full border pl-9 text-base shadow-sm transition-all focus:ring-2 sm:w-72",
+                  "bg-card ring-border focus:ring-primary/20 h-10 w-full rounded-full border-none pl-9 text-base ring-1 transition-all focus:ring-2 sm:w-72",
                   Boolean(globalFilter) && "pr-9",
                 )}
                 value={globalFilter ?? ""}
@@ -774,11 +790,13 @@ export function SharedDocumentsTable({
               availableDateFields={dateFields}
               dateField={dateField}
               onDateFieldChange={setDateField}
+              className="[&>button]:ring-border [&>button]:bg-card [&>button]:border-none [&>button]:ring-1"
             />
             <ViewerFilter
               selectedViewers={selectedViewers}
               onSelectedViewersChange={setSelectedViewers}
               availableViewers={uniqueViewers}
+              className="[&>button]:ring-border [&>button]:bg-card [&>button]:border-none [&>button]:ring-1"
             />
             {docClassDetails?.fields
               .filter((field) => !field.is_primary_key)
@@ -790,6 +808,7 @@ export function SharedDocumentsTable({
                   onChange={(value) =>
                     handleDynamicFilterChange(field.name, value)
                   }
+                  className="[&>button]:ring-border [&>button]:bg-card [&>button]:border-none [&>button]:ring-1"
                 />
               ))}
             {/* Toggle columns visibility */}
@@ -797,7 +816,7 @@ export function SharedDocumentsTable({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-muted/30 hover:border-primary/40 rounded-full"
+                  className="ring-border bg-card rounded-full border-none ring-1"
                   aria-label="Mostra/nascondi colonne"
                 >
                   <RiFilter3Line size={16} className="" />
@@ -908,65 +927,75 @@ export function SharedDocumentsTable({
       </div>
 
       {/* --- Table Section --- */}
-      <div className="bg-card border-muted/30 overflow-x-auto rounded-2xl border shadow-sm">
-        <Table className="min-w-full">
-          <TableHeader className="bg-card/95 border-muted/30 sticky top-0 z-10 border-b backdrop-blur">
+      <div className="ring-border isolate overflow-hidden overflow-x-auto rounded-2xl ring-1">
+        <Table className="bg-muted/20 min-w-full border-separate border-spacing-0">
+          <TableHeader className="sticky top-0 z-10 text-sm [&_tr]:border-b-0">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
                 className="border-b-0 hover:bg-transparent"
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    style={{ width: `${header.getSize()}px` }}
-                    className="text-muted-foreground bg-card/95 h-14 px-5 text-left align-middle text-sm font-semibold tracking-wide uppercase"
-                  >
-                    {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                      <div
-                        className="hover:text-foreground flex cursor-pointer items-center gap-2 transition-colors select-none"
-                        onClick={header.column.getToggleSortingHandler()}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            header.column.getToggleSortingHandler()?.(e);
-                          }
-                        }}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`Ordina per ${typeof header.column.columnDef.header === "string" ? header.column.columnDef.header : "colonna"}`}
-                      >
-                        {flexRender(
+                {headerGroup.headers.map((header, headerIdx) => {
+                  const isFirst = headerIdx === 0;
+                  const isLast = headerIdx === headerGroup.headers.length - 1;
+                  return (
+                    <TableHead
+                      key={header.id}
+                      style={{ width: `${header.getSize()}px` }}
+                      className={cn(
+                        "text-muted-foreground overflow-hidden px-5 text-left align-middle",
+                        isFirst && "rounded-tl-2xl rounded-bl-2xl",
+                        isLast && "rounded-tr-2xl rounded-br-2xl",
+                      )}
+                    >
+                      {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                        <div
+                          className="hover:text-foreground flex cursor-pointer items-center gap-2 transition-colors select-none"
+                          onClick={header.column.getToggleSortingHandler()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              header.column.getToggleSortingHandler()?.(e);
+                            }
+                          }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`Ordina per ${typeof header.column.columnDef.header === "string" ? header.column.columnDef.header : "colonna"}`}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                          {{
+                            asc: (
+                              <RiArrowUpSLine
+                                className="text-muted-foreground"
+                                size={16}
+                                aria-hidden="true"
+                              />
+                            ),
+                            desc: (
+                              <RiArrowDownSLine
+                                className="text-muted-foreground"
+                                size={16}
+                                aria-hidden="true"
+                              />
+                            ),
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </div>
+                      ) : (
+                        flexRender(
                           header.column.columnDef.header,
                           header.getContext(),
-                        )}
-                        {{
-                          asc: (
-                            <RiArrowUpSLine
-                              size={16}
-                              className="text-muted-foreground"
-                            />
-                          ),
-                          desc: (
-                            <RiArrowDownSLine
-                              size={16}
-                              className="text-muted-foreground"
-                            />
-                          ),
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </div>
-                    ) : (
-                      flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )
-                    )}
-                  </TableHead>
-                ))}
+                        )
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_td]:bg-card ring-border rounded-lg ring-1">
             {isLoading ? (
               <TableRow>
                 <TableCell
@@ -982,26 +1011,40 @@ export function SharedDocumentsTable({
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, rowIndex) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/40 border-muted/20 group h-16 cursor-pointer border-b transition-colors last:border-b-0"
+                  className="border-border group h-16 cursor-pointer border-b transition-colors last:border-b-0"
                   onClick={() => {
                     handleViewDetails(row.original);
                   }}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell, cellIndex) => {
+                    const isTopRow = rowIndex === 0;
+                    const isFirstCell = cellIndex === 0;
+                    const isLastCell =
+                      cellIndex === row.getVisibleCells().length - 1;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          "group-hover:bg-muted/10 group-hover:text-foreground max-w-xs truncate px-5 py-4 align-middle text-base transition-colors",
+                          isTopRow &&
+                            isFirstCell &&
+                            "overflow-hidden rounded-tl-2xl",
+                          isTopRow &&
+                            isLastCell &&
+                            "overflow-hidden rounded-tr-2xl",
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -1043,7 +1086,7 @@ export function SharedDocumentsTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                   aria-label="Pagina precedente"
@@ -1063,7 +1106,7 @@ export function SharedDocumentsTable({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-muted/30 rounded-lg"
+                  className="ring-border bg-card rounded-lg border-none ring-1"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                   aria-label="Pagina successiva"

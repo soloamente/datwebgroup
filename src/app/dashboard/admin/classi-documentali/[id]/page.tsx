@@ -595,11 +595,8 @@ export default function DocumentClassDetailPage() {
       </div>
 
       {/* Minimal Tabs */}
-      <Tabs
-        defaultValue="basic-info"
-        className="bg-background w-full rounded-full"
-      >
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="basic-info" className="w-full">
+        <TabsList className="bg-muted/40 grid h-fit w-full grid-cols-4">
           <TabsTrigger value="basic-info">Generale</TabsTrigger>
           <TabsTrigger value="fields">
             Campi
@@ -1086,7 +1083,7 @@ export default function DocumentClassDetailPage() {
             >
               <div className="min-w-[220px] flex-1">
                 <Label htmlFor={sharerSelectId} className="mb-1 block text-sm">
-                  Seleziona l&apos;utente
+                  Seleziona l'utente
                 </Label>
                 <Popover
                   open={isSharerSelectOpen}
@@ -1124,10 +1121,10 @@ export default function DocumentClassDetailPage() {
                                   <span>{sharer.nominativo}</span>
                                 </>
                               ) : (
-                                "Seleziona l&apos;utente..."
+                                "Seleziona l'utente..."
                               );
                             })()
-                          : "Seleziona l&apos;utente..."}
+                          : "Seleziona l'utente..."}
                       </span>
                       <ChevronDownIcon
                         size={18}
@@ -1141,10 +1138,16 @@ export default function DocumentClassDetailPage() {
                     className="border-input z-50 w-full max-w-full min-w-[var(--radix-popper-anchor-width)] p-0"
                     align="start"
                   >
-                    <Command>
+                    <Command className="ring-border ring-1">
                       <CommandInput placeholder="Cerca utente..." />
-                      {/* Make the dropdown scrollable with the mouse wheel when there are many sharers */}
-                      <CommandList className="pointer-events-auto max-h-60 overflow-y-auto">
+                      {/* Ensure the dropdown list captures wheel events so it can scroll independently */}
+                      <CommandList
+                        className="pointer-events-auto max-h-60 overflow-y-auto overscroll-contain"
+                        onWheel={(e) => {
+                          // Allow scrolling the list even if a parent container captures wheel events
+                          e.currentTarget.scrollTop += e.deltaY;
+                        }}
+                      >
                         <CommandEmpty>Nessun utente trovato.</CommandEmpty>
                         <CommandGroup>
                           {availableSharers.map((sharer) => (
