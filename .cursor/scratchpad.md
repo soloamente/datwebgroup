@@ -2459,6 +2459,7 @@ Gli admin necessitano di una chart con le statistiche mensili (documenti, batch,
   - Rimosso warning variabile inutilizzata sostituendo `error` con discard `_`.
   - Wrappato `handleVerifyOtp` in `useCallback` e aggiunta come dipendenza mancante a `useEffect`.
   - Sistemata unnecessary assertion usando `instanceof HTMLElement` e accesso con `??` al posto di `||`.
+- Su richiesta, disabilitato ESLint a livello di file in `src/components/login/token/token-otp-form.tsx` (inserito `/* eslint-disable */` dopo `"use client"`).
 
 ## Executor's Feedback or Assistance Requests
 
@@ -2466,6 +2467,7 @@ Gli admin necessitano di una chart con le statistiche mensili (documenti, batch,
 - Valutare se aggiungere cards riassuntive con i dati di `summary` (totali e medie) sotto al grafico.
 - Conferma che la disattivazione mirata delle regole ESLint va bene in questo file o preferisci una refactor (es. rimuovere l'assegnazione o sostituire gli apostrofi con HTML entities globalmente)?
 - Conferma che l'uso di `useCallback` su `handleVerifyOtp` è accettabile qui; mantiene referential stability e soddisfa `react-hooks/exhaustive-deps` senza disabilitare la regola.
+- Nota: Il disable a livello file è temporaneo; consigliata riattivazione dopo stabilizzazione per prevenire regressioni.
 
 ## Lessons
 

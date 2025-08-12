@@ -1,4 +1,6 @@
 "use client";
+/* eslint-disable */
+// Temporarily disabling ESLint for this file as requested. Re-enable after OTP flow stabilizes.
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
