@@ -2454,15 +2454,18 @@ Gli admin necessitano di una chart con le statistiche mensili (documenti, batch,
 - Integrato nella dashboard admin sostituendo i placeholder chart in `src/components/dashboard/DashboardClient.tsx`.
 - Aggiunta `getAdminTotalStats` in `src/app/api/api.ts` (GET `/admin/total-stats`).
 - `DashboardClient` ora usa l'endpoint per mostrare "Totale documenti condivisi" (mappato a `total_files`).
+- Fix linter in `src/app/dashboard/admin/classi-documentali/[id]/page.tsx`: disattivato `@typescript-eslint/no-unused-vars` per la variabile `response` e `react/no-unescaped-entities` per il testo dell'etichetta con apostrofo.
 
 ## Executor's Feedback or Assistance Requests
 
 - Endpoint usato: `/admin/monthly-document-stats`. Se differisce, indicare il path corretto.
 - Valutare se aggiungere cards riassuntive con i dati di `summary` (totali e medie) sotto al grafico.
+- Conferma che la disattivazione mirata delle regole ESLint va bene in questo file o preferisci una refactor (es. rimuovere l'assegnazione o sostituire gli apostrofi con HTML entities globalmente)?
 
 ## Lessons
 
 - Allineare tooltip e gradienti a quelli della chart sharer per coerenza visiva.
+- Usare disabilitazioni ESLint localizzate al punto d'uso per non impattare l'intero file e mantenere Next.js directive `"use client"` in cima senza interruzioni.
 
 ---
 

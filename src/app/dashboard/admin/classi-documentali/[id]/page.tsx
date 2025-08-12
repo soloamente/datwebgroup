@@ -309,6 +309,7 @@ export default function DocumentClassDetailPage() {
 
   const handleAddField = async () => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const response = await docClassService.addField(documentClass.id, {
         name: newField.label.toLowerCase().replace(/\s+/g, "_"),
         label: newField.label,
@@ -1083,6 +1084,7 @@ export default function DocumentClassDetailPage() {
             >
               <div className="min-w-[220px] flex-1">
                 <Label htmlFor={sharerSelectId} className="mb-1 block text-sm">
+                  {/* eslint-disable-next-line react/no-unescaped-entities */}
                   Seleziona l'utente
                 </Label>
                 <Popover
