@@ -508,14 +508,18 @@ export default function BatchDetailsPage() {
         <CardContent>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Condiso da</span>
+              <span className="text-muted-foreground text-sm">
+                Condiviso da
+              </span>
               <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
                 <FaUser className="text-muted-foreground/70 h-4 w-4" />
                 {batch.sharer.nominativo}
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Condiso il</span>
+              <span className="text-muted-foreground text-sm">
+                Condiviso il
+              </span>
               <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
                 <FaClock className="text-muted-foreground/70 h-4 w-4" />
                 {formatDate(batch.sent_at)}
