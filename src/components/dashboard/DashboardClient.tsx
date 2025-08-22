@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useId, useMemo } from "react";
+import { useState, useEffect, useId, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,7 +96,7 @@ export default function DashboardClient() {
   }, []);
   console.log("periodSeries", periodSeries);
   // Compute comparison labels tied to selected period
-  const getComparisonLabel = (preset: PresetKey): string => {
+  const getComparisonLabel = useCallback((preset: PresetKey): string => {
     switch (preset) {
       case "last7days":
         return "vs. 7 giorni precedenti";
@@ -114,7 +114,7 @@ export default function DashboardClient() {
       default:
         return "vs. periodo precedente";
     }
-  };
+  }, []);
 
   // When the period in the Statistics card changes, recompute badges for files and batches
   useEffect(() => {
