@@ -5,6 +5,7 @@ import { addMonths, format } from "date-fns";
 import { it } from "date-fns/locale";
 import { type DateRange as DayPickerDateRange } from "react-day-picker";
 import { RiCalendarLine } from "@remixicon/react";
+import { Check } from "lucide-react";
 import CloseIcon from "@/components/icons/close";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { FaCalendar } from "react-icons/fa6";
 
 export interface DateField {
   value: string;
@@ -30,6 +32,7 @@ interface DateRangeFilterProps {
   availableDateFields: DateField[];
   className?: string;
   align?: "start" | "center" | "end";
+  onPresetChange?: (preset: { key: string; view: "day" | "month" }) => void;
 }
 
 export const DateRangeFilter: FC<DateRangeFilterProps> = ({
@@ -40,6 +43,7 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
   availableDateFields,
   className,
   align = "end",
+  onPresetChange,
 }) => {
   const [dateFilterOpen, setDateFilterOpen] = useState(false);
   const [displayMonths, setDisplayMonths] = useState<[Date, Date]>([
@@ -74,16 +78,9 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
   const quickDatePresets = useMemo(
     () => [
       {
-        label: "Oggi",
-        value: "today",
-        getDates: (): [Date, Date] => {
-          const today = new Date();
-          return [today, today];
-        },
-      },
-      {
         label: "7 giorni",
         value: "last7days",
+        view: "day" as const,
         getDates: (): [Date, Date] => {
           const end = new Date();
           const start = new Date();
@@ -94,6 +91,7 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
       {
         label: "30 giorni",
         value: "last30days",
+        view: "day" as const,
         getDates: (): [Date, Date] => {
           const end = new Date();
           const start = new Date();
@@ -102,12 +100,45 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
         },
       },
       {
-        label: "Mese",
-        value: "thisMonth",
+        label: "3 mesi",
+        value: "last3months",
+        view: "month" as const,
         getDates: (): [Date, Date] => {
           const now = new Date();
-          const start = new Date(now.getFullYear(), now.getMonth(), 1);
-          const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          const end = new Date();
+          const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+          return [start, end];
+        },
+      },
+      {
+        label: "6 mesi",
+        value: "last6months",
+        view: "month" as const,
+        getDates: (): [Date, Date] => {
+          const now = new Date();
+          const end = new Date();
+          const start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+          return [start, end];
+        },
+      },
+      {
+        label: "1 anno",
+        value: "last12months",
+        view: "month" as const,
+        getDates: (): [Date, Date] => {
+          const now = new Date();
+          const end = new Date();
+          const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+          return [start, end];
+        },
+      },
+      {
+        label: "Totale",
+        value: "total",
+        view: "month" as const,
+        getDates: (): [Date, Date] => {
+          const end = new Date();
+          const start = new Date(1970, 0, 1);
           return [start, end];
         },
       },
@@ -117,16 +148,26 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
 
   const handleQuickPreset = useCallback(
     (preset: (typeof quickDatePresets)[0]) => {
+      // "Totale" non ha un range definito dall'utente, lasciamo decidere al chiamante
+      if (preset.value === "total") {
+        onDateRangeChange(undefined);
+        onPresetChange?.({ key: preset.value, view: preset.view });
+        setDateFilterOpen(false);
+        return;
+      }
       const [start, end] = preset.getDates();
       onDateRangeChange({ from: start, to: end });
+      onPresetChange?.({ key: preset.value, view: preset.view });
       setDateFilterOpen(false);
     },
-    [onDateRangeChange, quickDatePresets],
+    [onDateRangeChange, quickDatePresets, onPresetChange],
   );
 
   const getActivePreset = useCallback(() => {
-    if (!dateRange?.from || !dateRange?.to) return null;
-
+    if (!dateRange?.from || !dateRange?.to) {
+      // Se non c'è range, consideriamo "Totale" come attivo
+      return quickDatePresets.find((p) => p.value === "total") ?? null;
+    }
     return quickDatePresets.find((preset) => {
       const [presetStart, presetEnd] = preset.getDates();
       return (
@@ -137,6 +178,13 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
   }, [dateRange, quickDatePresets]);
 
   const activePreset = getActivePreset();
+
+  const triggerLabel = useMemo(() => {
+    if (activePreset) {
+      return activePreset.label;
+    }
+    return getDateFilterDisplay();
+  }, [activePreset, getDateFilterDisplay]);
 
   return (
     <div className={cn("group relative", className)}>
@@ -149,17 +197,17 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
               (dateRange?.from ?? dateRange?.to) &&
                 "border-primary/40 bg-primary/10 text-primary",
             )}
-            aria-label={`Filtro data: ${getDateFilterDisplay()}`}
+            aria-label={`Filtro data: ${triggerLabel}`}
           >
-            <RiCalendarLine
+            <FaCalendar
               className={cn(
-                "text-muted-foreground/60 size-4",
+                "text-muted-foreground/50 mb-0.5 size-4",
                 (dateRange?.from ?? dateRange?.to) && "text-primary",
               )}
               size={16}
               aria-hidden="true"
             />
-            <span className={cn("text-sm")}>{getDateFilterDisplay()}</span>
+            <span className={cn("text-sm")}>{triggerLabel}</span>
             {(dateRange?.from ?? dateRange?.to) && (
               <div
                 role="button"
@@ -315,8 +363,14 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
                           "ring-border h-auto rounded-md border-none px-3 py-2 text-sm ring-1",
                           activePreset?.value === preset.value && "bg-muted/20",
                         )}
+                        aria-pressed={activePreset?.value === preset.value}
                       >
-                        {preset.label}
+                        <span className="inline-flex items-center gap-1.5">
+                          {preset.label}
+                          {activePreset?.value === preset.value && (
+                            <Check className="h-3.5 w-3.5" />
+                          )}
+                        </span>
                       </Button>
                     ))}
                   </div>

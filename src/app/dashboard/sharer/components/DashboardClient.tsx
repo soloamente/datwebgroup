@@ -97,14 +97,6 @@ export default function DashboardClient({
         className="flex w-full min-w-0 flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4"
       >
         {/* Mobile Header */}
-        {isMobile && (
-          <div className="mb-4 flex items-center gap-3 md:hidden">
-            <MobileMenuButton
-              isOpen={sidebarOpen}
-              onToggle={handleSidebarToggle}
-            />
-          </div>
-        )}
 
         <div
           className={`flex flex-grow flex-col transition-opacity duration-200 ${isTransitioning ? "opacity-50" : "opacity-100"}`}

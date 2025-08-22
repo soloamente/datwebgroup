@@ -4,7 +4,12 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import { Label, Pie, PieChart } from "recharts";
-import { userService, type DocumentClassStats } from "@/app/api/api";
+import {
+  userService,
+  type DocumentClassStats,
+  getMyDocumentClasses,
+  type MyDocumentClass,
+} from "@/app/api/api";
 
 import {
   Card,
@@ -20,26 +25,30 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+  getDocumentClassColorById,
+  getDocumentClassColorByName,
+} from "@/lib/class-colors";
 
 // Generate consistent colors for document classes
-const getDocumentClassColor = (index: number) => {
-  const colors = [
-    "#3b82f6", // Blue
-    "#10b981", // Green
-    "#8b5cf6", // Purple
-    "#f59e0b", // Orange
-    "#ef4444", // Red
-    "#06b6d4", // Cyan
-    "#84cc16", // Lime
-    "#f97316", // Orange
-  ];
-  return colors[index % colors.length];
+// Prefer using class id when possible to align with RecentShares color mapping
+const getColor = (
+  classId: number | undefined,
+  className: string,
+  index: number,
+) => {
+  if (typeof classId === "number") return getDocumentClassColorById(classId);
+  // Fallback to name-based hashing to keep stability if id is unavailable
+  return (
+    getDocumentClassColorByName(className) ?? getDocumentClassColorById(index)
+  );
 };
 
 export function ChartPieDonutText() {
   const [statsData, setStatsData] = useState<DocumentClassStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [docClasses, setDocClasses] = useState<MyDocumentClass[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -65,17 +74,46 @@ export function ChartPieDonutText() {
     void fetchStats();
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    const loadDocClasses = async () => {
+      try {
+        const res = await getMyDocumentClasses();
+        if (isMounted && res?.data) {
+          setDocClasses(res.data);
+        }
+      } catch (e) {
+        console.warn(
+          "Impossibile caricare le classi documentali per la mappatura colori",
+          e,
+        );
+      }
+    };
+    void loadDocClasses();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Transform API data to chart format
   const chartData = React.useMemo(() => {
-    return statsData.map((stat, index) => ({
-      class: stat.class_name,
-      count: stat.document_count,
-      fill: getDocumentClassColor(index),
-    }));
-  }, [statsData]);
+    const nameToId = new Map<string, number>();
+    docClasses.forEach((c) => nameToId.set(c.name, c.id));
+    return statsData.map((stat, index) => {
+      const id = nameToId.get(stat.class_name);
+      const fill = getColor(id, stat.class_name, index);
+      return {
+        class: stat.class_name,
+        count: stat.document_count,
+        fill,
+      };
+    });
+  }, [statsData, docClasses]);
 
   // Generate chart config dynamically
   const chartConfig = React.useMemo(() => {
+    const nameToId = new Map<string, number>();
+    docClasses.forEach((c) => nameToId.set(c.name, c.id));
     const config: ChartConfig = {
       count: {
         label: "Count",
@@ -83,14 +121,15 @@ export function ChartPieDonutText() {
     };
 
     statsData.forEach((stat, index) => {
+      const id = nameToId.get(stat.class_name);
       config[stat.class_name] = {
         label: stat.class_name,
-        color: getDocumentClassColor(index),
+        color: getColor(id, stat.class_name, index),
       };
     });
 
     return config;
-  }, [statsData]);
+  }, [statsData, docClasses]);
 
   const totalCount = React.useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -228,10 +267,18 @@ export function ChartPieDonutText() {
               className="bg-muted/10 ring-border flex w-full max-w-[400px] items-center justify-between rounded-lg p-2 ring-1"
             >
               <div className="flex items-center gap-3">
-                <div
-                  className="flex h-8 w-8 items-center justify-center rounded-md"
-                  style={{ backgroundColor: getDocumentClassColor(index) }}
-                ></div>
+                {(() => {
+                  const nameToId = new Map<string, number>();
+                  docClasses.forEach((c) => nameToId.set(c.name, c.id));
+                  const id = nameToId.get(stat.class_name);
+                  const fill = getColor(id, stat.class_name, index);
+                  return (
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-md"
+                      style={{ backgroundColor: fill }}
+                    />
+                  );
+                })()}
                 <div>
                   <div className="text-sm font-medium">{stat.class_name}</div>
                   <div className="text-muted-foreground">

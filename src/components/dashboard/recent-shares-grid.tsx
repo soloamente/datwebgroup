@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { getDocumentClassColorById } from "@/lib/class-colors";
 
 export function RecentSharesGrid() {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
@@ -70,19 +71,8 @@ export function RecentSharesGrid() {
     "Tutte le classi";
 
   // Generate consistent colors for document classes
-  const getDocumentClassColor = (classId: number) => {
-    const colors = [
-      "hsl(210, 70%, 60%)", // Blue
-      "hsl(150, 70%, 60%)", // Green
-      "hsl(280, 70%, 60%)", // Purple
-      "hsl(30, 70%, 60%)", // Orange
-      "hsl(340, 70%, 60%)", // Pink
-      "hsl(60, 70%, 60%)", // Yellow
-      "hsl(180, 70%, 60%)", // Cyan
-      "hsl(120, 70%, 60%)", // Lime
-    ];
-    return colors[classId % colors.length];
-  };
+  const getDocumentClassColor = (classId: number) =>
+    getDocumentClassColorById(classId);
 
   return (
     <Card className="bg-card ring-border h-full flex-1 border-none ring-1">
@@ -98,13 +88,19 @@ export function RecentSharesGrid() {
           </div>
           <div className="flex flex-col items-end gap-4">
             <Select onValueChange={handleClassChange} defaultValue="all">
-              <SelectTrigger className="ring-border bg-card w-[200px] border-none ring-1 backdrop-blur-sm">
+              <SelectTrigger className="ring-border bg-card w-fit cursor-pointer border-none ring-1 backdrop-blur-sm">
                 <SelectValue placeholder="Filtra per classe" />
               </SelectTrigger>
               <SelectContent className="ring-border bg-card border-none ring-1">
-                <SelectItem value="all">Tutte le classi</SelectItem>
+                <SelectItem value="all" className="cursor-pointer">
+                  Tutte le classi
+                </SelectItem>
                 {documentClasses.map((dc) => (
-                  <SelectItem key={dc.id} value={String(dc.id)}>
+                  <SelectItem
+                    key={dc.id}
+                    value={String(dc.id)}
+                    className="cursor-pointer"
+                  >
                     {dc.name}
                   </SelectItem>
                 ))}
@@ -195,7 +191,18 @@ export function RecentSharesGrid() {
                     className="block"
                     aria-label={`Visualizza dettagli della condivisione ${share.documentClassName}`}
                   >
-                    <Card className="group bg-card ring-border hover:ring-primary/50 relative h-full cursor-pointer overflow-hidden rounded-xl ring-1 transition-all duration-200 ease-out hover:ring-2 hover:shadow-xl">
+                    <Card className="group hover:ring-primary/50 relative h-full cursor-pointer gap-0 overflow-hidden rounded-xl border-none p-1 ring-0 transition-all duration-200 ease-out hover:ring-2 hover:shadow-xl">
+                      {/* Color-tinted background by document class */}
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 z-0"
+                        style={{
+                          backgroundColor: getDocumentClassColor(
+                            share.documentClassId,
+                          ),
+                          opacity: 1,
+                        }}
+                      />
                       {/* Status indicator */}
                       <div className="absolute top-3 right-3 z-40">
                         <Tooltip>
@@ -222,11 +229,10 @@ export function RecentSharesGrid() {
                         </Tooltip>
                       </div>
 
-                      <CardHeader className="mb-4">
+                      <CardHeader className="relative z-10 m-0 flex items-center justify-center py-2 pt-1 pb-2">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-neutral-500" />
-                            <time
+                            {/* <time
                               className="text-muted-foreground text-sm"
                               dateTime={share.sentAt}
                             >
@@ -238,18 +244,15 @@ export function RecentSharesGrid() {
                                   year: "numeric",
                                 },
                               )}
-                            </time>
+                            </time> */}
                           </div>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className="ring-border bg-card w-fit border-none ring-1"
-                        >
+                        <span className="w-fit border-none font-medium text-white uppercase dark:text-black">
                           {share.documentClassName}
-                        </Badge>
+                        </span>
                       </CardHeader>
 
-                      <CardContent className="space-y-4 pb-4">
+                      <CardContent className="bg-card relative z-10 space-y-4 rounded-lg p-4">
                         {/* Recipients count */}
                         <div className="flex items-center gap-3">
                           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">

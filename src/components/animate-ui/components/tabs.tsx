@@ -135,7 +135,7 @@ function TabsList({
     <MotionHighlight
       controlledItems
       className={cn(
-        "bg-card ring-border rounded-full ring-1 shadow-sm",
+        "bg-card ring-border rounded-full border-none ring-1 shadow-sm",
         activeClassName,
       )}
       value={activeValue}
@@ -145,7 +145,7 @@ function TabsList({
         role="tablist"
         data-slot="tabs-list"
         className={cn(
-          "bg-muted text-muted-foreground ring-border inline-flex h-10 w-fit items-center justify-center rounded-full p-[4px] ring-1",
+          "bg-muted text-muted-foreground ring-border inline-flex h-10 w-fit items-center justify-center rounded-full border-none p-[4px] ring-1",
           className,
         )}
         {...props}

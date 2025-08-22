@@ -927,6 +927,75 @@ const getMyFileStats = async (): Promise<GetMyFileStatsResponse> => {
   return response.data;
 };
 
+// --- Interfaces and function for /my-daily-batch-file-stats ---
+export interface DailyBatchFileStat {
+  date: string;
+  label: string;
+  batch_count: number;
+  file_count: number;
+}
+
+export interface GetMyDailyBatchFileStatsResponse {
+  message: string;
+  data: {
+    daily_stats: DailyBatchFileStat[];
+    start_date: string;
+    end_date: string;
+  };
+}
+
+/**
+ * Retrieves daily batch/file statistics for the authenticated sharer.
+ * Optional date range via start_date and end_date (YYYY-MM-DD).
+ * Endpoint: GET /my-daily-batch-file-stats
+ */
+const getMyDailyBatchFileStats = async (params?: {
+  start_date?: string;
+  end_date?: string;
+}): Promise<GetMyDailyBatchFileStatsResponse> => {
+  const queryParams: Record<string, string> = {};
+  if (params?.start_date) queryParams.start_date = params.start_date;
+  if (params?.end_date) queryParams.end_date = params.end_date;
+
+  const response = await api.get<GetMyDailyBatchFileStatsResponse>(
+    "/my-daily-batch-file-stats",
+    { params: queryParams },
+  );
+  return response.data;
+};
+
+// --- Interfaces and function for /admin/daily-batch-file-stats ---
+export interface AdminDailyBatchFileStat {
+  date: string;
+  label: string;
+  batch_count: number;
+  file_count: number;
+}
+
+export interface GetAdminDailyBatchFileStatsResponse {
+  message: string;
+  data: {
+    daily_stats: AdminDailyBatchFileStat[];
+    start_date: string;
+    end_date: string;
+  };
+}
+
+const getAdminDailyBatchFileStats = async (params?: {
+  start_date?: string;
+  end_date?: string;
+}): Promise<GetAdminDailyBatchFileStatsResponse> => {
+  const queryParams: Record<string, string> = {};
+  if (params?.start_date) queryParams.start_date = params.start_date;
+  if (params?.end_date) queryParams.end_date = params.end_date;
+
+  const response = await api.get<GetAdminDailyBatchFileStatsResponse>(
+    "/admin/daily-batch-file-stats",
+    { params: queryParams },
+  );
+  return response.data;
+};
+
 /**
  * Retrieves document statistics by class for the authenticated sharer.
  * Endpoint: GET /my-docs-stats-by-class
@@ -1006,13 +1075,18 @@ export interface GetAdminTopSharerStatsResponse {
   data: AdminTopSharerStatsData;
 }
 
-const getAdminTopSharerStats =
-  async (): Promise<GetAdminTopSharerStatsResponse> => {
-    const response = await api.get<GetAdminTopSharerStatsResponse>(
-      "/admin/top-sharer-stats",
-    );
-    return response.data;
-  };
+const getAdminTopSharerStats = async (
+  months?: number,
+): Promise<GetAdminTopSharerStatsResponse> => {
+  const params: Record<string, string> = {};
+  if (months) params.months = months.toString();
+
+  const response = await api.get<GetAdminTopSharerStatsResponse>(
+    "/admin/top-sharer-stats",
+    { params },
+  );
+  return response.data;
+};
 
 // --- Admin Login Stats Pie ---
 export interface AdminLoginStatsPieData {
@@ -1038,6 +1112,39 @@ const getAdminLoginStatsPie =
     );
     return response.data;
   };
+
+// --- Admin Daily Login Stats ---
+export interface AdminDailyLoginStat {
+  date: string;
+  label: string;
+  total_logins: number;
+  qr_logins: number;
+  classic_logins: number;
+}
+
+export interface GetAdminDailyLoginStatsResponse {
+  message: string;
+  data: {
+    daily_stats: AdminDailyLoginStat[];
+    start_date: string;
+    end_date: string;
+  };
+}
+
+const getAdminDailyLoginStats = async (
+  startDate?: string,
+  endDate?: string,
+): Promise<GetAdminDailyLoginStatsResponse> => {
+  const params: Record<string, string> = {};
+  if (startDate) params.start_date = startDate;
+  if (endDate) params.end_date = endDate;
+
+  const response = await api.get<GetAdminDailyLoginStatsResponse>(
+    "/admin/daily-login-stats",
+    { params },
+  );
+  return response.data;
+};
 
 const createViewer = async (
   data: CreateViewerData,
@@ -1739,11 +1846,14 @@ export const userService = {
   updateDocumentClass,
   createDocumentClass,
   getMyFileStats,
+  getMyDailyBatchFileStats,
   getMyDocsStatsByClass,
   getAdminMonthlyStats,
   getAdminTotalStats,
   getAdminTopSharerStats,
   getAdminLoginStatsPie,
+  getAdminDailyLoginStats,
+  getAdminDailyBatchFileStats,
   changePassword: (data: ChangePasswordData) =>
     api.post("/change-password", data),
   shareDocuments,

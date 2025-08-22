@@ -59,7 +59,13 @@ The user reported that login sessions are not maintained on mobile devices, whil
 
 ## Current Status / Progress Tracking
 
-Latest Update: Implemented loading skeletons for sharer sections to improve perceived performance and visual consistency while data loads.
+- Investigating missing months on resize in monthly charts. Will switch X-axis ticks to preserve all entries and truncate labels to avoid overlap.
+
+- Implemented class-colored background tint for recent shares cards:
+
+  - Updated `src/components/dashboard/recent-shares-grid.tsx` to overlay a low-opacity tint using `getDocumentClassColorById(share.documentClassId)`.
+  - Kept content readable by layering the overlay beneath header/content and maintaining the inner `CardContent` panel styling.
+  - Lint check passed with no errors.
 
 - Created `src/app/dashboard/sharer/utenti/loading.tsx` to mirror header, stats, and table layout of Gestione clienti.
 - Created `src/app/dashboard/sharer/documenti/loading.tsx` to mirror the wizard (header, stepper, current step card, summary, and navigation buttons).
@@ -75,6 +81,10 @@ Latest Update: Implemented loading skeletons for sharer sections to improve perc
 Follow-up: Applied the same rounded top corners treatment to `src/components/dashboard/tables/sharer/shared-documents-table.tsx` so the shared documents tables (`condivisi/[slug]`) visually match. Added bottom rounded corners on the last body row cells (left/right) for full symmetry.
 
 Lint check on the edited file passed with no errors.
+
+—
+
+- Sharer dashboard: additional cards now compare the selected period vs the immediately preceding equal-length period. When `Totale` is active, they compare the last 12 months vs the previous 12 months. Labels updated (e.g., "vs. 3 mesi precedenti", "vs. anno precedente"). Implemented in `src/app/dashboard/sharer/page.tsx`. Lint OK.
 
 —
 
@@ -2446,6 +2456,7 @@ Gli admin necessitano di una chart con le statistiche mensili (documenti, batch,
 - [x] Component: `AdminMonthlyStatsChart`
 - [x] Integration: admin dashboard page
 - [x] Lint + manual test
+- [x] Add date filter to admin charts using `/admin/daily-batch-file-stats`
 
 ## Current Status / Progress Tracking
 
@@ -2460,6 +2471,8 @@ Gli admin necessitano di una chart con le statistiche mensili (documenti, batch,
   - Wrappato `handleVerifyOtp` in `useCallback` e aggiunta come dipendenza mancante a `useEffect`.
   - Sistemata unnecessary assertion usando `instanceof HTMLElement` e accesso con `??` al posto di `||`.
 - Su richiesta, disabilitato ESLint a livello di file in `src/components/login/token/token-otp-form.tsx` (inserito `/* eslint-disable */` dopo `"use client"`).
+- Aggiunta icona trofeo al titolo "Record massimo" in `src/app/dashboard/sharer/page.tsx` usando `react-icons` (`FaTrophy`) per evidenziare il primato. Nessun errore linter.
+- Admin: aggiunto filtro data e vista Giorni/Mesi a `AdminMonthlyStatsChart`, con fetch da `getAdminDailyBatchFileStats` e aggregazione mensile client-side. Tooltip e gradienti coerenti col resto della UI.
 
 ## Executor's Feedback or Assistance Requests
 
@@ -2468,6 +2481,7 @@ Gli admin necessitano di una chart con le statistiche mensili (documenti, batch,
 - Conferma che la disattivazione mirata delle regole ESLint va bene in questo file o preferisci una refactor (es. rimuovere l'assegnazione o sostituire gli apostrofi con HTML entities globalmente)?
 - Conferma che l'uso di `useCallback` su `handleVerifyOtp` è accettabile qui; mantiene referential stability e soddisfa `react-hooks/exhaustive-deps` senza disabilitare la regola.
 - Nota: Il disable a livello file è temporaneo; consigliata riattivazione dopo stabilizzazione per prevenire regressioni.
+- Verificare che l'endpoint `/admin/daily-batch-file-stats` accetti `start_date`/`end_date` (YYYY-MM-DD). Se i parametri venissero ignorati lato server, il filtro client-side è già presente.
 
 ## Lessons
 
@@ -2513,3 +2527,19 @@ The user requested that the shared documents table styling should be synchronize
    - Identify common elements between tables
    - Implement these elements consistently across all tables
    - Test the synchronization to ensure consistency
+
+## High-level Task Breakdown
+
+- [ ] Improve additional stats cards charts (sharer dashboard)
+
+## Project Status Board
+
+- [x] Improve additional stats cards charts on sharer dashboard
+
+## Current Status / Progress Tracking
+
+- Replaced hardcoded deltas with computed values; added tooltips; used theme colors for sparklines.
+
+## Executor's Feedback or Assistance Requests
+
+- Please review the sharer dashboard: verify the mini charts render and values look correct across tabs.

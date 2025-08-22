@@ -51,7 +51,7 @@ import { formatFullDate } from "@/lib/date-format";
 import { motion, AnimatePresence } from "motion/react";
 import { Stack } from "@/components/ui/stack";
 import { IoEye, IoTime } from "react-icons/io5";
-import { FaArrowRightLong } from "react-icons/fa6";
+import { FaArrowRightLong, FaUser } from "react-icons/fa6";
 import { BsFileEarmarkPdfFill } from "react-icons/bs";
 
 type SortOption =
@@ -483,19 +483,25 @@ export default function ViewerDashboard() {
             value={sortBy}
             onValueChange={(value: SortOption) => setSortBy(value)}
           >
-            <SelectTrigger className="ring-border w-fit border-none ring-1">
+            <SelectTrigger className="ring-border w-fit cursor-pointer border-none ring-1">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="date_newest">Data più recente</SelectItem>
-              <SelectItem value="date_oldest">Data più vecchia</SelectItem>
-              <SelectItem value="title_az">
+              <SelectItem value="date_newest" className="cursor-pointer">
+                Data più recente
+              </SelectItem>
+              <SelectItem value="date_oldest" className="cursor-pointer">
+                Data più vecchia
+              </SelectItem>
+              <SelectItem value="title_az" className="cursor-pointer">
                 Titolo A <FaArrowRightLong className="opacity-70" /> Z
               </SelectItem>
-              <SelectItem value="title_za">
+              <SelectItem value="title_za" className="cursor-pointer">
                 Titolo Z <FaArrowRightLong className="opacity-70" /> A
               </SelectItem>
-              <SelectItem value="files_count">Numero file</SelectItem>
+              <SelectItem value="files_count" className="cursor-pointer">
+                Numero file
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -523,12 +529,12 @@ export default function ViewerDashboard() {
                   ease: "easeOut",
                 }}
               >
-                <div className="text-card-foreground flex flex-col rounded-xl border bg-black/5 shadow-sm transition-shadow hover:shadow-md dark:bg-white/5">
-                  <header className="flex flex-col items-center justify-center gap-2 px-6 py-3 text-sm">
-                    <h2 className="font-medium">
+                <div className="text-card-foreground flex flex-col rounded-xl border bg-black/5 px-1 pb-1 shadow-sm transition-shadow hover:shadow-md dark:bg-white/5">
+                  <header className="flex flex-col items-center justify-center gap-2 px-6 py-2 text-sm">
+                    <h2 className="font-medium uppercase">
                       {batch.document_class && (
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm opacity-80">
+                          <span className="text-sm opacity-60">
                             {batch.document_class.singular_name}
                           </span>
                         </div>
@@ -536,20 +542,25 @@ export default function ViewerDashboard() {
                     </h2>
                     {/* <p className="">Condiviso da {batch.sharer.nominativo}</p> */}
                   </header>
-                  <div className="bg-background rounded-xl px-6 py-4">
-                    <div className="space-y-4">
-                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                        <IoTime className="h-5 w-5" />
+                  <div className="bg-background ring-border rounded-lg px-6 py-4 ring-1">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FaUser className="h-4 w-4" />
+                        Condiviso da<span>{batch.sharer.nominativo}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm">
+                        <IoTime className="h-4 w-4" />
                         <span>{formatDate(batch.sent_at)}</span>
                       </div>
 
-                      <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-sm">
                         <BsFileEarmarkPdfFill className="h-4 w-4" />
                         <span>{totalFiles} file allegati</span>
                       </div>
 
                       <Button
-                        className="w-full"
+                        className="mt-2 w-full rounded-sm"
                         onClick={() => {
                           // Navigate to batch details
                           router.push(`/dashboard/viewer/batch/${batch.id}`);
