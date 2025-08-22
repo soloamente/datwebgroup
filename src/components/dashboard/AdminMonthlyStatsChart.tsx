@@ -198,10 +198,7 @@ export default function AdminMonthlyStatsChart({
       <Card className="bg-muted/20 ring-border w-full gap-0 border-none p-1 ring-1">
         <CardHeader className="m-0 flex flex-row items-start justify-between px-2 pt-3 pb-4">
           <div className="flex items-center gap-2">
-            <Tabs
-              value={metric}
-              onValueChange={(v) => setMetric(v as MetricKey)}
-            >
+            <Tabs value={metric} onValueChange={(v) => setMetric(v)}>
               <TabsList className="ring-border bg-muted/30 grid w-full grid-cols-2 rounded-lg p-1 ring-1">
                 <TabsTrigger
                   value="file_count"
@@ -236,7 +233,7 @@ export default function AdminMonthlyStatsChart({
     return (
       <Card className="bg-card ring-border mb-6 w-full border-none ring-1">
         <CardHeader>
-          <CardTitle className="text-xl sm:text-2xl">"" </CardTitle>
+          <CardTitle className="text-xl sm:text-2xl">&quot;&quot;</CardTitle>
           <CardDescription className="text-xs text-red-500 sm:text-sm">
             {error}
           </CardDescription>
@@ -254,10 +251,7 @@ export default function AdminMonthlyStatsChart({
       <Card className="bg-muted/20 ring-border w-full gap-0 border-none p-1 ring-1">
         <CardHeader className="m-0 flex flex-row items-start justify-between px-2 pt-3 pb-4">
           <div className="flex items-center gap-2">
-            <Tabs
-              value={metric}
-              onValueChange={(v) => setMetric(v as MetricKey)}
-            >
+            <Tabs value={metric} onValueChange={(v) => setMetric(v)}>
               <TabsList className="ring-border bg-muted/40 grid w-full grid-cols-2 rounded-lg border-none p-1 ring-1">
                 <TabsTrigger
                   value="file_count"

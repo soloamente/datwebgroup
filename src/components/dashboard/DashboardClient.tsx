@@ -296,7 +296,7 @@ export default function DashboardClient() {
             const aDate = a.label.split(" - ")[0];
             const bDate = b.label.split(" - ")[0];
             return (
-              new Date(aDate || "").getTime() - new Date(bDate || "").getTime()
+              new Date(aDate ?? "").getTime() - new Date(bDate ?? "").getTime()
             );
           });
         }
@@ -340,7 +340,7 @@ export default function DashboardClient() {
       }
     };
     void computeBadges();
-  }, [selectedDateRange, activePresetKey]);
+  }, [selectedDateRange, activePresetKey, getComparisonLabel]);
 
   const filesDelta = useMemo(() => {
     if (periodSeries.length >= 2) {
@@ -527,7 +527,9 @@ export default function DashboardClient() {
                   setActivePresetKey(r ? "custom" : "total");
                 }}
                 dateField="sent_at"
-                onDateFieldChange={() => {}}
+                onDateFieldChange={() => {
+                  // No action needed for date field change
+                }}
                 availableDateFields={[
                   { value: "sent_at", label: "Data invio" },
                 ]}

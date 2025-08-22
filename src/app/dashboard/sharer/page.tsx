@@ -791,7 +791,7 @@ export default function DashboardPage() {
                         ...d,
                         desktop: arr
                           .slice(0, i + 1)
-                          .reduce((s, x) => s + (x.desktop as number), 0),
+                          .reduce((s, x) => s + x.desktop, 0),
                       }))}
                       margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
                     >
