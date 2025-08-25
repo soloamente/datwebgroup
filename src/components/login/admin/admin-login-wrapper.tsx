@@ -85,7 +85,11 @@ export default function AdminLoginWrapper() {
     toast.error(errorMsg);
   };
 
-  const handleUsernameChecked = (checkedUsername: string, role: string) => {
+  const handleUsernameChecked = (
+    checkedUsername: string,
+    role: string,
+    nominativo?: string,
+  ) => {
     setUsername(checkedUsername);
     setUserRole(role);
     setStep("passwordInput");

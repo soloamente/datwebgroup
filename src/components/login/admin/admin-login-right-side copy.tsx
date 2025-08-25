@@ -34,6 +34,7 @@ type LoginStep = "usernameInput" | "passwordInput" | "otpInput" | "login";
 interface CheckUsernameResponse {
   exists: boolean;
   role: string | null;
+  nominativo?: string;
   message?: string;
 }
 
@@ -70,7 +71,11 @@ interface AdminLoginRightSideProps {
   onQrScan: (data: string) => void;
   onQrError: (error: string) => void;
   onLoginModeChange: (mode: "credentials" | "qr") => void;
-  onUsernameChecked: (username: string, role: string) => void;
+  onUsernameChecked: (
+    username: string,
+    role: string,
+    nominativo?: string,
+  ) => void;
   onForgotPassword: () => Promise<void>;
   authStore: AuthStoreActions;
 }
@@ -101,6 +106,7 @@ export default function AdminLoginRightSide({
 }: AdminLoginRightSideProps) {
   const [currentUsername, setCurrentUsername] = useState(username || "");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [userNominativo, setUserNominativo] = useState<string>("");
   const [showChangePasswordDialog, setShowChangePasswordDialog] =
     useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
@@ -124,7 +130,12 @@ export default function AdminLoginRightSide({
       const result = await userService.checkUsername(currentUsername.trim());
 
       if (result.exists && result.role) {
-        onUsernameChecked(currentUsername.trim(), result.role);
+        setUserNominativo(result.nominativo || "");
+        onUsernameChecked(
+          currentUsername.trim(),
+          result.role,
+          result.nominativo,
+        );
       } else {
         const message =
           result.message ?? "Utente non trovato o username non valido.";
@@ -289,7 +300,7 @@ export default function AdminLoginRightSide({
           <>
             <div className="mb-8 md:mb-10">
               <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
-                Benvenuto {username}
+                Benvenuto {userNominativo || username}
               </h1>
               <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 Inserisci la tua password per continuare.
@@ -343,7 +354,7 @@ export default function AdminLoginRightSide({
           <>
             <div className="mb-8 md:mb-10">
               <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
-                Benvenuto {username}
+                Benvenuto {userNominativo || username}
               </h1>
               <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 {`Inserisci qui sotto il codice OTP inviato alla tua email.`}

@@ -253,6 +253,7 @@ export interface ExtractedInfo {
 export interface CheckUsernameResponse {
   exists: boolean;
   role: string | null;
+  nominativo?: string;
   message?: string;
 }
 
