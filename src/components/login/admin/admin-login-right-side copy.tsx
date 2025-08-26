@@ -104,7 +104,7 @@ export default function AdminLoginRightSide({
   onForgotPassword,
   authStore,
 }: AdminLoginRightSideProps) {
-  const [currentUsername, setCurrentUsername] = useState(username || "");
+  const [currentUsername, setCurrentUsername] = useState(username ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [userNominativo, setUserNominativo] = useState<string>("");
   const [showChangePasswordDialog, setShowChangePasswordDialog] =
@@ -130,7 +130,7 @@ export default function AdminLoginRightSide({
       const result = await userService.checkUsername(currentUsername.trim());
 
       if (result.exists && result.role) {
-        setUserNominativo(result.nominativo || "");
+        setUserNominativo(result.nominativo ?? "");
         onUsernameChecked(
           currentUsername.trim(),
           result.role,
@@ -300,7 +300,7 @@ export default function AdminLoginRightSide({
           <>
             <div className="mb-8 md:mb-10">
               <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
-                Benvenuto {userNominativo || username}
+                Benvenuto {userNominativo ?? username}
               </h1>
               <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 Inserisci la tua password per continuare.
@@ -354,7 +354,7 @@ export default function AdminLoginRightSide({
           <>
             <div className="mb-8 md:mb-10">
               <h1 className="text-header-login mb-2 w-full text-center text-3xl font-medium transition-all duration-700 md:text-3xl">
-                Benvenuto {userNominativo || username}
+                Benvenuto {userNominativo ?? username}
               </h1>
               <p className="text-description-login text-center transition-all duration-700 sm:text-sm md:text-sm lg:text-sm">
                 {`Inserisci qui sotto il codice OTP inviato alla tua email.`}
