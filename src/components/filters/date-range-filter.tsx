@@ -181,6 +181,10 @@ export const DateRangeFilter: FC<DateRangeFilterProps> = ({
 
   const triggerLabel = useMemo(() => {
     if (activePreset) {
+      // Se il preset attivo è "total", mostra "Filtra per data" nel bottone principale
+      if (activePreset.value === "total") {
+        return "Filtra per data";
+      }
       return activePreset.label;
     }
     return getDateFilterDisplay();

@@ -89,8 +89,8 @@ export default function ChangePasswordForm({
           const userData = {
             ...userResponse.user,
             active: userResponse.user.active ? 1 : 0, // Convert boolean to number
-            codice_fiscale: userResponse.user.codice_fiscale || null,
-            partita_iva: userResponse.user.partita_iva || null,
+            codice_fiscale: userResponse.user.codice_fiscale ?? null,
+            partita_iva: userResponse.user.partita_iva ?? null,
             sharer_id: null, // This field is not in UserResponse, set to null
           };
 

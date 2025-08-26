@@ -4,6 +4,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import { Label, Pie, PieChart } from "recharts";
+import { useTheme } from "next-themes";
 import {
   userService,
   type DocumentClassStats,
@@ -49,6 +50,7 @@ export function ChartPieDonutText() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [docClasses, setDocClasses] = useState<MyDocumentClass[]>([]);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -222,6 +224,9 @@ export function ChartPieDonutText() {
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    const textColor = theme === "dark" ? "#ffffff" : "#000000";
+                    const mutedColor = theme === "dark" ? "#9ca3af" : "#6b7280";
+
                     return (
                       <text
                         x={viewBox.cx}
@@ -233,6 +238,7 @@ export function ChartPieDonutText() {
                           x={viewBox.cx}
                           y={viewBox.cy}
                           className="text-2xl font-bold"
+                          fill={textColor}
                         >
                           {totalCount.toLocaleString()}
                         </tspan>
@@ -240,7 +246,8 @@ export function ChartPieDonutText() {
                           x={viewBox.cx}
                           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/prefer-nullish-coalescing
                           y={(viewBox.cy || 0) + 20}
-                          className="text-muted-foreground text-xs"
+                          className="text-xs"
+                          fill={mutedColor}
                         >
                           Documenti totali
                         </tspan>
