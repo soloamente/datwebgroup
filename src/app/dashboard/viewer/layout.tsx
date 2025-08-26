@@ -72,7 +72,7 @@ export default function ViewerLayout({ children }: ViewerLayoutProps) {
     // Add dynamic segments
     if (segments.includes("batch")) {
       breadcrumbs.push({
-        label: "Dettagli Batch",
+        label: "Dettagli Condivisione",
         href: pathname,
         isCurrent: true,
       });

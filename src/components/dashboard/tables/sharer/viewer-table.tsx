@@ -369,7 +369,7 @@ export default function ViewerTable({
               id={`${id}-input`}
               ref={inputRef}
               className={cn(
-                "bg-card focus:ring-primary/20 ring-border h-10 w-full rounded-full border-none pl-9 text-base ring-1 transition-all focus:ring-2 sm:w-64",
+                "bg-card focus:ring-primary/20 ring-border h-10 w-full rounded-full border-none pl-9 text-base ring-1 transition-all focus:ring-2 sm:w-70",
                 Boolean(globalFilter) && "pr-9",
               )}
               value={globalFilter}

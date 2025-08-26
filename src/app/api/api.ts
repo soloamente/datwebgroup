@@ -1385,6 +1385,21 @@ export const attachViewerToBatch = async (
   return response.data;
 };
 
+export const removeViewerFromBatch = async (
+  batchId: number,
+  viewerId: number,
+): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>(
+    `/share-batches/${batchId}/remove-viewer`,
+    {
+      data: {
+        viewer_id: viewerId,
+      },
+    },
+  );
+  return response.data;
+};
+
 export const getSharedBatchById = async (
   batchId: number,
 ): Promise<SharedBatchDetails> => {
@@ -1469,6 +1484,53 @@ export const downloadSharedFile = async (
       errorMessage = "File non trovato o non più disponibile.";
     } else if (response.status === 403) {
       errorMessage = "Non hai i permessi per scaricare questo file.";
+    } else if (errorJson.message || errorJson.error) {
+      errorMessage =
+        errorJson.message ?? errorJson.error ?? "Errore sconosciuto.";
+    }
+
+    const error = new AxiosError(
+      errorMessage,
+      String(response.status), // code
+    );
+    error.response = {
+      ...response,
+      data: errorJson,
+      config: response.config,
+      headers: response.headers,
+    };
+    throw error;
+  }
+};
+
+/**
+ * Gets the sharer logo image.
+ * Returns the image file directly (PNG, JPG, etc.).
+ * @returns Promise<string> - URL of the image blob
+ * @throws {AxiosError} - Throws on API errors (e.g., 403 for unauthorized access).
+ */
+export const getSharerLogo = async (): Promise<string> => {
+  const response = await api.get<Blob>("/sharer-logo", {
+    responseType: "blob",
+    validateStatus: (status) => status < 500,
+  });
+
+  if (response.status === 200) {
+    const blob = new Blob([response.data], { type: response.data.type });
+    return URL.createObjectURL(blob);
+  } else {
+    const errorText = await response.data.text();
+    const errorJson = (() => {
+      try {
+        return JSON.parse(errorText) as { message?: string; error?: string };
+      } catch {
+        return {};
+      }
+    })();
+
+    let errorMessage = "Errore durante il recupero del logo.";
+    if (response.status === 403) {
+      errorMessage = "Accesso non autorizzato";
     } else if (errorJson.message || errorJson.error) {
       errorMessage =
         errorJson.message ?? errorJson.error ?? "Errore sconosciuto.";
@@ -1868,18 +1930,27 @@ export const userService = {
   // Add file viewing and download functions
   getFileViewUrl,
   downloadFile,
+  // Add sharer logo function
+  getSharerLogo,
 };
 
 export const batchService = {
   getSharedBatchesByDocumentClass,
   getAvailableViewersForBatch,
   attachViewerToBatch,
+  removeViewerFromBatch,
   getSharedBatchById,
   removeDocumentFromBatch,
   downloadSharedFile,
   addFilesToDocument,
   shareDocuments,
   updateDocumentMetadata,
+  deleteBatch: async (batchId: number): Promise<{ message: string }> => {
+    const response = await api.delete<{ message: string }>(
+      `/share-batches/${batchId}`,
+    );
+    return response.data;
+  },
 };
 
 export const docClassService = {

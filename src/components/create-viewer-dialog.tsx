@@ -374,6 +374,8 @@ export function CreateViewerDialog({
                 <Image
                   src={preview}
                   alt={`preview ${index + 1}`}
+                  width={300}
+                  height={128}
                   className="h-32 w-full rounded-lg object-cover"
                 />
                 <button

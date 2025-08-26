@@ -2,10 +2,24 @@
 
 import { type AttachedFile } from "@/components/dashboard/tables/sharer/shared-documents-table";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { RiDownload2Line, RiDeleteBinLine } from "@remixicon/react";
+import {
+  BsFileEarmarkFill,
+  BsFileEarmarkPdfFill,
+  BsFileEarmarkWordFill,
+  BsFileEarmarkExcelFill,
+  BsFileEarmarkPptFill,
+  BsFileEarmarkImageFill,
+  BsFileEarmarkTextFill,
+  BsFileEarmarkCodeFill,
+  BsFileEarmarkZipFill,
+  BsFileEarmarkMusicFill,
+  BsFileEarmarkPlayFill,
+  BsFileEarmarkSpreadsheetFill,
+} from "react-icons/bs";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { downloadSharedFile, removeDocumentFromBatch } from "@/app/api/api";
@@ -13,7 +27,11 @@ import {
   formatBytes,
   getFileExtension,
   getFileNameWithoutExtension,
+  getFileTypeName,
+  getFileTypeIcon,
 } from "@/lib/format";
+import { TbSquareRoundedArrowDownFilled } from "react-icons/tb";
+import { FaTrash } from "react-icons/fa6";
 
 interface FileAttachmentCardsProps {
   files: AttachedFile[];
@@ -26,6 +44,25 @@ export function FileAttachmentCards({
   batchId,
   onUpdate,
 }: FileAttachmentCardsProps) {
+  // Function to get the appropriate icon component
+  const getIconComponent = (mimeType: string) => {
+    const iconName = getFileTypeIcon(mimeType);
+    const iconMap: Record<string, React.ComponentType<any>> = {
+      BsFileEarmarkFill,
+      BsFileEarmarkPdfFill,
+      BsFileEarmarkWordFill,
+      BsFileEarmarkExcelFill,
+      BsFileEarmarkPptFill,
+      BsFileEarmarkImageFill,
+      BsFileEarmarkTextFill,
+      BsFileEarmarkCodeFill,
+      BsFileEarmarkZipFill,
+      BsFileEarmarkMusicFill,
+      BsFileEarmarkPlayFill,
+      BsFileEarmarkSpreadsheetFill,
+    };
+    return iconMap[iconName] || BsFileEarmarkFill;
+  };
   const [downloadingFileId, setDownloadingFileId] = useState<number | null>(
     null,
   );
@@ -73,7 +110,7 @@ export function FileAttachmentCards({
 
   return (
     <Fragment>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
         {files.map((file) => {
           const fileName = getFileNameWithoutExtension(file.original_filename);
           const fileExtension = getFileExtension(file.original_filename);
@@ -81,60 +118,71 @@ export function FileAttachmentCards({
           return (
             <Card
               key={file.id}
-              className="group hover:border-primary/20 relative flex flex-col overflow-hidden transition-all duration-300 ease-in-out hover:shadow-md"
+              className="group group-hover:border-primary/20 bg-muted/20 ring-border relative flex min-h-[200px] min-w-15 flex-col gap-3 overflow-hidden border-none p-1 ring-1 transition-all duration-300 ease-in-out hover:shadow-md"
             >
-              <CardContent className="flex flex-1 flex-col p-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center justify-center gap-2 pt-3 pb-0 text-sm sm:text-base">
+                  {(() => {
+                    const IconComponent = getIconComponent(file.mime_type);
+                    return (
+                      <IconComponent className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+                    );
+                  })()}
+                  <span className="truncate text-center font-medium">
+                    {fileName}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="ring-border bg-card flex flex-1 flex-col rounded-lg p-3 ring-1 sm:p-4">
                 <div className="flex-grow">
-                  {/* Header */}
-                  <div className="mb-3 flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold break-words">
-                        {fileName}
-                      </h3>
-                      <p className="text-muted-foreground text-sm">
-                        {fileName}
-                        {fileExtension}
-                      </p>
-                    </div>
-                    <Badge variant="secondary" className="ml-2">
-                      {formatBytes(file.size)}
-                    </Badge>
-                  </div>
-
                   {/* File Details */}
-                  <div className="mb-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tipo:</span>
-                      <span className="font-medium break-words">
-                        {file.mime_type}
-                      </span>
+                  <div className="mb-3 space-y-2 sm:mb-4">
+                    <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:text-sm">
+                      <span className="text-muted-foreground">Tipo file</span>
+                      <Badge
+                        variant="secondary"
+                        className="w-fit text-xs font-medium sm:text-sm"
+                      >
+                        {getFileTypeName(file.mime_type)}
+                      </Badge>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">ID:</span>
-                      <span className="font-mono text-xs">{file.id}</span>
+                    <div className="flex flex-col gap-1 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:text-sm">
+                      <span className="text-muted-foreground">
+                        Dimensione file
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="w-fit text-xs sm:text-sm"
+                      >
+                        {formatBytes(file.size)}
+                      </Badge>
                     </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                   <Button
-                    size="sm"
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 text-xs sm:text-sm"
                     onClick={() =>
                       handleDownload(file.id, file.original_filename)
                     }
                     disabled={downloadingFileId === file.id}
                   >
-                    <RiDownload2Line className="mr-2 h-4 w-4" />
-                    {downloadingFileId === file.id
-                      ? "Scaricando..."
-                      : "Scarica"}
+                    <TbSquareRoundedArrowDownFilled className="h-4 w-4" />
+                    <span className="hidden sm:inline">
+                      {downloadingFileId === file.id
+                        ? "Scaricando..."
+                        : "Scarica"}
+                    </span>
+                    <span className="sm:hidden">
+                      {downloadingFileId === file.id ? "..." : "Scarica"}
+                    </span>
                   </Button>
                   <Button
-                    size="sm"
                     variant="destructive"
+                    className="text-xs sm:text-sm"
                     onClick={() =>
                       setFileToRemove({
                         fileId: file.id,
@@ -143,7 +191,7 @@ export function FileAttachmentCards({
                     }
                     disabled={isDeleting}
                   >
-                    <RiDeleteBinLine className="h-4 w-4" />
+                    <FaTrash className="h-3 w-3 sm:h-4 sm:w-4" /> Rimuovi
                   </Button>
                 </div>
               </CardContent>

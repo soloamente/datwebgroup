@@ -2212,6 +2212,173 @@ The implementation is complete and ready for testing. The login_token page now:
 
 **Next Steps**: Please test the login_token page with a valid token to verify the UI matches the main login page and the OTP verification works correctly.
 
+# Image Upload Error Fix
+
+## Background and Motivation
+
+The user reported an error when creating a user in sharer with "carica documento fronte e retro": "Error: Image with src "blob:http://localhost:3000/aa603230-50bf-4a2e-b5e1-f7f44400f239" is missing required "width" property."
+
+## Key Challenges and Analysis
+
+1. **Next.js Image Component Requirements**: The Next.js Image component requires `width` and `height` properties when using blob URLs
+2. **Blob URL Handling**: The create-viewer-dialog.tsx was using blob URLs from `URL.createObjectURL()` without proper dimensions
+3. **Component Location**: The issue was in the image preview section of the document upload functionality
+
+## High-level Task Breakdown
+
+1. [x] Identify the problematic Image component
+
+   - [x] Found Image component in create-viewer-dialog.tsx using blob URLs
+   - [x] Confirmed missing width and height properties
+   - Success criteria: Identified the exact location of the issue
+
+2. [x] Fix the Image component by adding required properties
+
+   - [x] Added width={300} and height={128} to the Image component
+   - [x] Maintained existing className for styling
+   - Success criteria: Image component no longer throws width/height errors
+
+3. [x] Verify no other similar issues exist
+   - [x] Checked other files using blob URLs with Image components
+   - [x] Confirmed other Image components use proper dimensions or fill prop
+   - Success criteria: No other similar issues found
+
+## Project Status Board
+
+- [x] Identify problematic Image component
+- [x] Fix Image component by adding width and height properties
+- [x] Verify no other similar issues exist
+- [x] **Task completed**
+
+## Executor's Feedback or Assistance Requests
+
+✅ **COMPLETED**: Successfully fixed the Image component error in the create-viewer-dialog.tsx file.
+
+**Implementation Details:**
+
+1. **Root Cause**: The Next.js Image component in `src/components/create-viewer-dialog.tsx` was using blob URLs (created with `URL.createObjectURL()`) without the required `width` and `height` properties.
+
+2. **Fix Applied**: Added `width={300}` and `height={128}` properties to the Image component that displays document previews.
+
+3. **Verification**: Checked other files in the codebase that use blob URLs with Image components and confirmed they either:
+   - Use the `fill` prop (which doesn't require width/height)
+   - Have proper width/height properties
+   - Use background images instead of Image components
+
+**Result**: The error "Image with src "blob:..." is missing required "width" property" should no longer occur when uploading documents in the user creation process.
+
+## Lessons
+
+1. **Next.js Image Component Requirements**:
+
+   - Always provide `width` and `height` properties when using blob URLs
+   - Use the `fill` prop as an alternative when you want the image to fill its container
+   - Background images are a good alternative for blob URL previews
+
+2. **Blob URL Handling**:
+   - When using `URL.createObjectURL()` with Next.js Image, always specify dimensions
+   - Consider using background images for simple previews to avoid Image component constraints
+
+---
+
+# Batch Delete Confirmation Enhancement
+
+## Background and Motivation
+
+The user requested to enhance the batch deletion confirmation dialog to require the user to type the correct batch name before they can confirm the deletion. This provides an additional safety measure to prevent accidental deletions of important batches.
+
+## Key Challenges and Analysis
+
+1. **Security Enhancement**: Requiring users to type the exact batch name adds an extra verification step
+2. **User Experience**: The confirmation should be clear and user-friendly while being secure
+3. **Input Validation**: Real-time validation to check if the typed name matches exactly
+4. **Visual Feedback**: Clear indication of whether the input is correct or incorrect
+5. **Accessibility**: Ensure the confirmation dialog is accessible to all users
+
+## High-level Task Breakdown
+
+1. [x] Create new BatchDeleteConfirmationDialog component
+
+   - [x] Implement input field for batch name confirmation
+   - [x] Add real-time validation against the actual batch name
+   - [x] Provide clear visual feedback for correct/incorrect input
+   - [x] Disable confirm button until name matches exactly
+   - Success criteria: Component requires exact batch name input before allowing deletion
+
+2. [x] Update batch detail page to use new confirmation dialog
+
+   - [x] Import and use BatchDeleteConfirmationDialog instead of DeleteConfirmationDialog
+   - [x] Pass batch name to the new component
+   - [x] Maintain all existing functionality
+   - Success criteria: Page uses new confirmation dialog with batch name requirement
+
+3. [x] Test implementation
+   - [x] Verify TypeScript compilation without errors
+   - [x] Test confirmation flow with correct and incorrect batch names
+   - Success criteria: Confirmation dialog works correctly and prevents accidental deletions
+
+## Project Status Board
+
+- [x] Create BatchDeleteConfirmationDialog component
+- [x] Update batch detail page to use new component
+- [x] Test TypeScript compilation
+- [x] **Task completed**
+
+## Current Status / Progress Tracking
+
+✅ **COMPLETED**: Successfully implemented enhanced batch deletion confirmation with name verification.
+
+**Implementation Details:**
+
+1. **New Component**: Created `BatchDeleteConfirmationDialog` in `src/components/batch-delete-confirmation.tsx`
+
+   - Input field for typing the batch name
+   - Real-time validation against the actual batch name
+   - Visual feedback with error messages for incorrect input
+   - Confirm button disabled until name matches exactly
+   - Clear warning icon and destructive styling
+
+2. **Page Integration**: Updated `src/app/dashboard/sharer/documenti/condivisi/[slug]/[batchId]/page.tsx`
+
+   - Replaced `DeleteConfirmationDialog` with `BatchDeleteConfirmationDialog`
+   - Passed batch title as the required confirmation text
+   - Maintained all existing functionality and error handling
+
+3. **User Experience Features**:
+   - Clear instructions in Italian
+   - Error message when name doesn't match
+   - Enter key support for confirmation
+   - Form reset when dialog closes
+   - Proper accessibility with labels and ARIA attributes
+
+**Result**: Users must now type the exact batch name to confirm deletion, providing an additional safety measure against accidental deletions.
+
+## Executor's Feedback or Assistance Requests
+
+The implementation is complete and ready for testing. The new confirmation dialog:
+
+- Requires users to type the exact batch name before allowing deletion
+- Provides clear visual feedback and error messages
+- Maintains all existing functionality
+- Is fully accessible and user-friendly
+
+**Next Steps**: Please test the batch deletion flow to verify the new confirmation dialog works as expected and prevents accidental deletions.
+
+## Lessons
+
+1. When implementing security confirmations:
+
+   - Use exact string matching for critical operations
+   - Provide clear visual feedback for validation
+   - Disable confirmation until all requirements are met
+   - Include proper error messages and instructions
+
+2. For user experience:
+   - Make the confirmation process clear and intuitive
+   - Use appropriate styling (destructive colors for dangerous actions)
+   - Support keyboard navigation (Enter key)
+   - Reset form state when dialog closes
+
 # QR Scanner Camera Feed Fix
 
 ## Background and Motivation

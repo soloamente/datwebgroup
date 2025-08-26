@@ -106,7 +106,7 @@ export function AddViewerToBatchDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="">
         <DialogHeader>
           <DialogTitle>Aggiungi Destinatario</DialogTitle>
           <p className="text-muted-foreground text-sm">
@@ -216,9 +216,9 @@ export function AddViewerToBatchDialog({
             disabled={!selectedViewer || isAttaching}
           >
             {isAttaching ? (
-              <RiLoader4Line className="mr-2 h-4 w-4 animate-spin" />
+              <RiLoader4Line className="h-4 w-4 animate-spin" />
             ) : (
-              <RiUserAddLine className="mr-2 h-4 w-4" />
+              <RiUserAddLine className="h-4 w-4" />
             )}
             Aggiungi Destinatario
           </Button>

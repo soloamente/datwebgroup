@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useSharerLogo } from "@/hooks/use-sharer-logo";
 
 interface UserData {
   name: string;
@@ -29,6 +30,12 @@ export function SidebarHeader({
   isCompact = false,
   onCompactToggle,
 }: SidebarHeaderProps) {
+  // Use the sharer logo hook to fetch the user's logo
+  const { logoUrl, isLoading, error } = useSharerLogo();
+  
+  // Determine the avatar source: use sharer logo if available, otherwise fall back to userData.avatar
+  const avatarSrc = logoUrl ?? userData.avatar;
+
   return (
     <header id="sidebarHeader" className="mb-6 md:mb-8">
       {isCompact ? (
@@ -42,7 +49,7 @@ export function SidebarHeader({
           >
             <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1">
               <AvatarImage
-                src={userData.avatar}
+                src={avatarSrc}
                 alt={`Avatar di ${userData.name}`}
               />
               <AvatarFallback name={userData.name} size={40} variant="beam" />
@@ -72,7 +79,7 @@ export function SidebarHeader({
             >
               <Avatar className="ring-border/50 h-full w-full rounded-lg ring-1">
                 <AvatarImage
-                  src={userData.avatar}
+                  src={avatarSrc}
                   alt={`Avatar di ${userData.name}`}
                 />
                 <AvatarFallback name={userData.name} size={40} variant="beam" />

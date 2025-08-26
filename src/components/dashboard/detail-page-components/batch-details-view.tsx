@@ -22,6 +22,7 @@ import {
   type ViewerInfo,
   userService,
 } from "@/app/api/api";
+import { DeleteConfirmationDialog } from "@/components/delete-confirmation";
 import type {
   DocumentWithMetadata,
   EnrichedDocument,
@@ -53,6 +54,8 @@ import { generateAvatarColor, isDateString, isURL } from "@/lib/utils";
 
 import { AddFilesToDocumentDialog } from "./add-files-to-document-dialog";
 import { FileAttachmentCards } from "./file-attachment-cards";
+import { MdPersonRemove } from "react-icons/md";
+import { FaUserMinus } from "react-icons/fa6";
 
 // ============================================================================
 // PROPS
@@ -66,6 +69,8 @@ interface BatchDetailsViewProps {
 
 interface ViewerCardProps {
   viewer: ViewerInfo;
+  batchId: number;
+  onUpdate: () => void;
 }
 
 interface MetadataValueProps {
@@ -133,6 +138,27 @@ const parseBoolean = (value: unknown): boolean | null => {
   }
 
   return null;
+};
+
+const translateStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    pending: "In attesa",
+    sent: "Inviato",
+    delivered: "Consegnato",
+    read: "Letto",
+    expired: "Scaduto",
+    cancelled: "Annullato",
+    failed: "Fallito",
+    processing: "In elaborazione",
+    completed: "Completato",
+    active: "Attivo",
+    inactive: "Inattivo",
+    draft: "Bozza",
+    published: "Pubblicato",
+    archived: "Archiviato",
+  };
+
+  return statusMap[status.toLowerCase()] || status;
 };
 
 const MetadataValue = ({ value, dataType }: MetadataValueProps) => {
@@ -553,9 +579,10 @@ const DocumentsSection = ({
 // SIDEBAR COMPONENTS (RIGHT COLUMN)
 // ============================================================================
 
-const ViewerCard = ({ viewer }: ViewerCardProps) => {
+const ViewerCard = ({ viewer, batchId, onUpdate }: ViewerCardProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const avatarColor = generateAvatarColor(viewer.email);
   const initials = viewer.nominativo
     .split(" ")
@@ -599,26 +626,52 @@ const ViewerCard = ({ viewer }: ViewerCardProps) => {
     }
   };
 
+  const handleRemoveViewer = async (): Promise<boolean> => {
+    try {
+      const result = await batchService.removeViewerFromBatch(
+        batchId,
+        viewer.id,
+      );
+      toast.success(result.message);
+      onUpdate();
+      return true;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Si è verificato un errore imprevisto durante la rimozione del destinatario.";
+      toast.error(errorMessage);
+      return false;
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3">
-      <Avatar>
-        <AvatarFallback
-          style={{ backgroundColor: avatarColor, color: "white" }}
-        >
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1">
-        <p className="font-semibold">{viewer.nominativo}</p>
-        <p className="text-muted-foreground truncate text-sm">{viewer.email}</p>
-        {viewer.codice_fiscale && (
-          <p className="text-muted-foreground mt-1 font-mono text-xs">
-            {viewer.codice_fiscale}
+    <div className="flex flex-col justify-between gap-3 truncate p-3 sm:flex-row sm:items-center sm:p-0 md:gap-4 lg:gap-6">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Avatar className="h-10 w-10 flex-shrink-0 sm:h-12 sm:w-12">
+          <AvatarFallback
+            style={{ backgroundColor: avatarColor, color: "white" }}
+            className="text-sm sm:text-base"
+          >
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold sm:text-base">
+            {viewer.nominativo}
           </p>
-        )}
+          <p className="text-muted-foreground truncate text-xs sm:text-sm">
+            {viewer.email}
+          </p>
+          {viewer.codice_fiscale && (
+            <p className="text-muted-foreground mt-1 truncate font-mono text-xs">
+              {viewer.codice_fiscale}
+            </p>
+          )}
+        </div>
       </div>
       <TooltipProvider>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2 md:gap-2 lg:gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -627,11 +680,15 @@ const ViewerCard = ({ viewer }: ViewerCardProps) => {
                 onClick={handleDownloadCredentials}
                 disabled={isDownloading}
                 aria-label="Scarica credenziali"
+                className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
               >
                 {isDownloading ? (
-                  <span className="h-5 w-5 animate-spin rounded-full border-b-2 border-current" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-current sm:h-5 sm:w-5 md:h-6 md:w-6" />
                 ) : (
-                  <RiDownloadLine size={20} />
+                  <RiDownloadLine
+                    size={16}
+                    className="sm:h-5 sm:w-5 md:h-6 md:w-6"
+                  />
                 )}
               </Button>
             </TooltipTrigger>
@@ -647,11 +704,12 @@ const ViewerCard = ({ viewer }: ViewerCardProps) => {
                 onClick={handleSendCredentialsEmail}
                 disabled={isSendingEmail}
                 aria-label="Recupero credenziali"
+                className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
               >
                 {isSendingEmail ? (
-                  <span className="h-5 w-5 animate-spin rounded-full border-b-2 border-current" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-current sm:h-5 sm:w-5 md:h-6 md:w-6" />
                 ) : (
-                  <KeyRound size={20} />
+                  <KeyRound size={16} className="sm:h-5 sm:w-5 md:h-6 md:w-6" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -659,26 +717,72 @@ const ViewerCard = ({ viewer }: ViewerCardProps) => {
               <p>Recupero credenziali</p>
             </TooltipContent>
           </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsRemoveDialogOpen(true)}
+                aria-label="Rimuovi destinatario"
+                className="text-destructive hover:text-destructive h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+              >
+                <FaUserMinus
+                  size={16}
+                  className="sm:h-5 sm:w-5 md:h-6 md:w-6"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Rimuovi destinatario</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </TooltipProvider>
+
+      <DeleteConfirmationDialog
+        isOpen={isRemoveDialogOpen}
+        onClose={() => setIsRemoveDialogOpen(false)}
+        onSuccess={() => setIsRemoveDialogOpen(false)}
+        fieldId={0}
+        optionId={0}
+        onConfirm={handleRemoveViewer}
+        customMessage={`Sei sicuro di voler rimuovere ${viewer.nominativo} da questo condivisione? Questa azione non può essere annullata.`}
+      />
     </div>
   );
 };
 
-export const ViewersSection = ({ viewers }: { viewers: ViewerInfo[] }) => (
+export const ViewersSection = ({
+  viewers,
+  batchId,
+  onUpdate,
+}: {
+  viewers: ViewerInfo[];
+  batchId: number;
+  onUpdate: () => void;
+}) => (
   <Card>
-    <CardHeader>
+    <CardHeader className="pb-3">
       <div className="flex items-center gap-3">
-        <RiUserLine size={20} className="text-muted-foreground" />
+        <RiUserLine size={18} className="text-muted-foreground sm:h-5 sm:w-5" />
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold">Destinatari</h3>
-          <Badge variant="outline">{viewers.length}</Badge>
+          <h3 className="text-base font-semibold sm:text-lg">Destinatari</h3>
+          <Badge variant="outline" className="text-xs sm:text-sm">
+            {viewers.length}
+          </Badge>
         </div>
       </div>
     </CardHeader>
-    <CardContent className="space-y-4">
+    <CardContent className="space-y-3 sm:space-y-4">
       {viewers.length > 0 ? (
-        viewers.map((viewer) => <ViewerCard key={viewer.id} viewer={viewer} />)
+        viewers.map((viewer) => (
+          <ViewerCard
+            key={viewer.id}
+            viewer={viewer}
+            batchId={batchId}
+            onUpdate={onUpdate}
+          />
+        ))
       ) : (
         <p className="text-muted-foreground text-center text-sm">
           Nessun destinatario aggiunto.
@@ -702,15 +806,36 @@ export const BatchInfoCard = ({
     <CardContent className="space-y-3 text-sm">
       <div className="flex justify-between">
         <span className="text-muted-foreground">Stato</span>
-        <Badge variant="outline">{batch.status}</Badge>
+        <Badge
+          variant="outline"
+          className="bg-muted/20 ring-border border-none px-2 py-1 ring-1"
+        >
+          {translateStatus(batch.status)}
+        </Badge>
       </div>
       <div className="flex justify-between">
         <span className="text-muted-foreground">Classe Documentale</span>
-        <span className="font-medium">{docClassDetails.name}</span>
+        <Badge
+          variant="outline"
+          className="bg-muted/20 ring-border border-none px-2 py-1 ring-1"
+        >
+          {docClassDetails.name}
+        </Badge>
       </div>
       <div className="flex justify-between">
         <span className="text-muted-foreground">Inviato il</span>
-        <span className="font-medium">{formatDynamicDate(batch.sent_at)}</span>
+        <Badge
+          variant="outline"
+          className="bg-muted/20 ring-border border-none px-2 py-1 ring-1"
+        >
+          {new Date(batch.sent_at).toLocaleDateString("it-IT", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Badge>
       </div>
     </CardContent>
   </Card>

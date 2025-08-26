@@ -447,7 +447,7 @@ export default function ViewerDashboard() {
                                 size="sm"
                                 onClick={() => handleDownloadFile(file)}
                               >
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="h-4 w-4" />
                                 Scarica
                               </Button>
                             </div>
