@@ -30,9 +30,17 @@ The user reported that login sessions are not maintained on mobile devices, whil
    - Success criteria: Both our auth cookie and Laravel session cookies are maintained
 
 3. [x] Fix infinite loading issue
+
    - [x] Remove MobileSessionProvider from layout
    - [x] Fix useMobileSession hook initialization
    - Success criteria: Site loads normally without infinite loading
+
+4. [x] Fix password change redirect issue for sharers
+   - [x] Update change password form to refresh user state after successful password change
+   - [x] Use getUser API to get fresh user data with updated must_change_password status
+   - [x] Handle type conversion between API response and auth store User interface
+   - [x] Add proper redirect logic based on user role after password change
+   - Success criteria: Sharers are redirected to their dashboard after password change instead of staying on the change password page
 
 ## Project Status Board
 
@@ -52,12 +60,29 @@ The user reported that login sessions are not maintained on mobile devices, whil
 - [x] Loading skeleton: `dashboard/sharer/utenti` (Gestione clienti)
 - [x] Loading skeleton: `dashboard/sharer/documenti` (Nuova condivisione)
 - [x] Loading skeleton: `dashboard/sharer/documenti/condivisi/[slug]` (Documenti condivisi per classe)
+- [x] Fix password change redirect issue for sharers
 - [ ] Test login flow on mobile devices
 - [ ] Verify session persistence across page refreshes
 - [ ] Test logout functionality
 - [ ] Verify table top rounded corners render correctly in admin sharer table
 
 ## Current Status / Progress Tracking
+
+**Latest Update**: Fixed password change redirect issue for sharers. The problem was that after a successful password change, the user state in the auth store was not being updated to reflect that `must_change_password` is now `false`. The backend automatically sets this to `false`, but the frontend wasn't refreshing the user state.
+
+**Changes made**:
+
+- Updated `src/components/change-password/change-password-form.tsx` to:
+  - Call `userService.getUser()` after successful password change to get fresh user data
+  - Convert API response types to match auth store User interface (boolean to number for `active` field)
+  - Update auth store with fresh user data using `authStore.setAuth()`
+  - Add proper redirect logic based on user role (admin, sharer, viewer, clienti)
+  - Add fallback logic if getUser API fails
+- Updated `src/components/change-password/change-password-right-side.tsx` to handle the onSuccess callback
+
+**Result**: Sharers (and all users) are now properly redirected to their respective dashboards after successfully changing their password, instead of staying stuck on the change password page.
+
+—
 
 - Investigating missing months on resize in monthly charts. Will switch X-axis ticks to preserve all entries and truncate labels to avoid overlap.
 
@@ -2710,3 +2735,51 @@ The user requested that the shared documents table styling should be synchronize
 ## Executor's Feedback or Assistance Requests
 
 - Please review the sharer dashboard: verify the mini charts render and values look correct across tabs.
+
+# Sidebar Layout Issue Fix
+
+## Background and Motivation
+
+The user reported that on the dashboard/admin/classi-documentali/id page, the sidebar doesn't open correctly and remains bugged on the left side. Additionally, the page content is shifted to the right and goes outside the viewport. This appears to be a width and stretching issue specific to this page.
+
+## Key Challenges and Analysis
+
+1. The sidebar appears to be stuck in a bugged state on the left side
+2. The page content is being pushed to the right and extending beyond the viewport
+3. This issue only occurs on the specific page dashboard/admin/classi-documentali/id
+4. The problem seems to be related to width calculations and layout stretching
+
+## High-level Task Breakdown
+
+1. [ ] Investigate the specific page layout and identify the root cause
+
+   - [ ] Check if there are any CSS conflicts specific to this page
+   - [ ] Verify the sidebar state management on this page
+   - [ ] Check for any width overflow issues in the page content
+   - Success criteria: Root cause of the layout issue is identified
+
+2. [ ] Fix the sidebar opening/closing functionality
+
+   - [ ] Ensure sidebar state is properly managed
+   - [ ] Fix any CSS conflicts preventing proper sidebar behavior
+   - Success criteria: Sidebar opens and closes correctly on this page
+
+3. [ ] Fix the content width and positioning issues
+   - [ ] Ensure content doesn't overflow the viewport
+   - [ ] Fix any width calculation issues
+   - [ ] Ensure proper spacing between sidebar and content
+   - Success criteria: Page content is properly positioned and doesn't overflow
+
+## Project Status Board
+
+- [ ] Investigate the specific page layout and identify the root cause
+- [ ] Fix the sidebar opening/closing functionality
+- [ ] Fix the content width and positioning issues
+
+## Current Status / Progress Tracking
+
+**Latest Update**: User reported sidebar and content layout issues on the dashboard/admin/classi-documentali/id page. Need to investigate and fix the specific layout problems.
+
+## Executor's Feedback or Assistance Requests
+
+Ready to investigate and fix the sidebar and content layout issues on the specific page.

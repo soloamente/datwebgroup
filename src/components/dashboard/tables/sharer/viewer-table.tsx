@@ -649,14 +649,14 @@ export default function ViewerTable({
                   <div className="flex flex-col items-center justify-center gap-4">
                     <Image
                       src="/AddUser.png"
-                      alt="Nessun viewer trovato"
+                      alt="Nessun cliente trovato"
                       width={320}
                       height={320}
                       className="opacity-90"
                     />
                     <div className="flex flex-col gap-1">
                       <p className="text-muted-foreground text-lg font-medium">
-                        Nessun viewer trovato
+                        Nessun cliente trovato
                       </p>
                       <p className="text-muted-foreground text-sm">
                         Inizia aggiungendo il tuo primo viewer.

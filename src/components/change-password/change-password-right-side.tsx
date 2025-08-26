@@ -28,6 +28,12 @@ export default function ChangePasswordRightSide() {
     }
   };
 
+  const handlePasswordChangeSuccess = () => {
+    // The redirect is now handled in the ChangePasswordForm component
+    // This callback can be used for any additional cleanup if needed
+    console.log("Password changed successfully");
+  };
+
   const { theme } = useTheme();
 
   const colorStops =
@@ -70,7 +76,7 @@ export default function ChangePasswordRightSide() {
           </p>
         </div>
 
-        <ChangePasswordForm />
+        <ChangePasswordForm onSuccess={handlePasswordChangeSuccess} />
 
         <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">

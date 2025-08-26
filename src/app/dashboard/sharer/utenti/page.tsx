@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { CreateViewerDialog } from "@/components/create-viewer-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
+import { FaUserPlus } from "react-icons/fa6";
 
 export default function ListaViewerPage() {
   const [viewers, setViewers] = useState<Viewer[]>([]);
@@ -168,21 +169,21 @@ export default function ListaViewerPage() {
         <main className="flex flex-grow flex-col items-center justify-center gap-4 p-4 text-center">
           <Image
             src={theme === "dark" ? "/AddUser.png" : "/AddUser_LightMode.png"}
-            alt="Nessun viewer"
+            alt="Nessun cliente"
             width={500}
             height={500}
             className="mx-auto h-72 w-auto [mask-image:linear-gradient(to_right,transparent,black_20%,black_80%,transparent),linear-gradient(to_top,transparent,black_20%,black_80%,transparent)]"
           />
-          <h3 className="mt-6 text-xl font-semibold">Nessun viewer trovato</h3>
+          <h3 className="mt-6 text-xl font-semibold">Nessun cliente trovato</h3>
           <p className="text-muted-foreground mt-2 text-sm">
-            Crea il tuo primo viewer per iniziare.
+            Crea il tuo primo cliente per iniziare.
           </p>
           <Button
             className="bg-primary text-white"
             onClick={handleOpenCreateDialog}
           >
-            <Plus size={20} className="mr-2" />
-            Crea utente
+            <FaUserPlus size={20} />
+            Crea cliente
           </Button>
         </main>
       ) : (

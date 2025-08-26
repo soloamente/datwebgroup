@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import PasswordInput from "@/components/login/password-input";
 import { useRouter } from "next/navigation";
+import useAuthStore from "@/app/api/auth";
 
 interface ChangePasswordFormProps {
   onSuccess?: () => void;
@@ -20,6 +21,8 @@ export default function ChangePasswordForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const authStore = useAuthStore();
+
   const passwordRules = [
     "Contenere almeno un numero.",
     "Contenere almeno una lettera maiuscola.",
@@ -77,7 +80,53 @@ export default function ChangePasswordForm({
       });
 
       toast.success("Password cambiata con successo.");
+
+      // Refresh user state from backend to get updated must_change_password status
+      try {
+        const userResponse = await userService.getUser();
+        if (userResponse.user) {
+          // Convert the user data to match the auth store User interface
+          const userData = {
+            ...userResponse.user,
+            active: userResponse.user.active ? 1 : 0, // Convert boolean to number
+            codice_fiscale: userResponse.user.codice_fiscale || null,
+            partita_iva: userResponse.user.partita_iva || null,
+            sharer_id: null, // This field is not in UserResponse, set to null
+          };
+
+          // Update the auth store with the fresh user data from backend
+          authStore.setAuth(userData);
+          console.log("User state refreshed after password change:", userData);
+        }
+      } catch (refreshError) {
+        console.error("Error refreshing user state:", refreshError);
+        // If refresh fails, manually update the must_change_password flag
+        const currentUser = authStore.user;
+        if (currentUser?.id) {
+          const updatedUser = {
+            ...currentUser,
+            must_change_password: 0, // Set to false since password was changed successfully
+          };
+          authStore.setAuth(updatedUser);
+        }
+      }
+
+      // Call onSuccess callback if provided
       onSuccess?.();
+
+      // Redirect to appropriate dashboard based on user role
+      setTimeout(() => {
+        const userRole = authStore.user?.role;
+        if (authStore.isAdmin()) {
+          router.push("/dashboard/admin");
+        } else if (userRole === "sharer") {
+          router.push("/dashboard/sharer");
+        } else if (userRole === "viewer") {
+          router.push("/dashboard/viewer");
+        } else {
+          router.push("/dashboard/clienti");
+        }
+      }, 1000); // Small delay to ensure state is updated
     } catch (err) {
       let errorMessage =
         "Si è verificato un errore durante il cambio password.";
@@ -94,10 +143,6 @@ export default function ChangePasswordForm({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const redirectToDashboard = () => {
-    router.push("/dashboard/admin");
   };
 
   return (
@@ -133,7 +178,6 @@ export default function ChangePasswordForm({
       {error && <p className="text-center text-xs text-red-600">{error}</p>}
       <Button
         type="submit"
-        onClick={redirectToDashboard}
         disabled={
           isLoading ||
           password !== passwordConfirmation ||

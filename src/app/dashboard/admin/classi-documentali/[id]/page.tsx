@@ -586,7 +586,7 @@ export default function DocumentClassDetailPage() {
   };
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full min-w-0">
       {/* Simplified Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold">{documentClass.nome}</h1>
@@ -596,8 +596,8 @@ export default function DocumentClassDetailPage() {
       </div>
 
       {/* Minimal Tabs */}
-      <Tabs defaultValue="basic-info" className="w-full">
-        <TabsList className="bg-muted/40 grid h-fit w-full grid-cols-4">
+      <Tabs defaultValue="basic-info" className="w-full min-w-0">
+        <TabsList className="!bg-muted/20 grid h-fit w-full grid-cols-4">
           <TabsTrigger value="basic-info">Generale</TabsTrigger>
           <TabsTrigger value="fields">
             Campi
@@ -614,7 +614,7 @@ export default function DocumentClassDetailPage() {
           <TabsTrigger value="audit">Avanzate</TabsTrigger>
         </TabsList>
 
-        <TabsContents className="bg-background mx-1 -mt-2 mb-1 h-full rounded-sm">
+        <TabsContents className="bg-background mx-1 -mt-2 mb-1 h-full min-w-0 rounded-sm">
           {/* Basic Info Tab */}
           <TabsContent value="basic-info" className="space-y-6 p-6">
             {/* New layout with cover image inside */}
@@ -650,7 +650,10 @@ export default function DocumentClassDetailPage() {
               </div>
 
               {/* Right Side: Form */}
-              <form className="w-full flex-grow" onSubmit={handleSaveBasicInfo}>
+              <form
+                className="w-full min-w-0 flex-grow"
+                onSubmit={handleSaveBasicInfo}
+              >
                 <div className="mb-4 flex items-center justify-between border-b pb-3">
                   <div>
                     <h3 className="text-xl leading-tight font-semibold">

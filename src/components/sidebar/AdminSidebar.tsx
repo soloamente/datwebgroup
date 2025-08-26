@@ -130,7 +130,7 @@ export function AdminDashboardClient({
       {/* Main Content */}
       <section
         id="content"
-        className="flex w-full flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4"
+        className="flex w-full min-w-0 flex-1 flex-col gap-3 p-3 md:gap-4 md:p-4"
       >
         {/* Mobile Header */}
         {isMobile && (
