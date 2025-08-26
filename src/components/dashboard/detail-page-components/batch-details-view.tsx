@@ -158,7 +158,7 @@ const translateStatus = (status: string): string => {
     archived: "Archiviato",
   };
 
-  return statusMap[status.toLowerCase()] || status;
+  return statusMap[status.toLowerCase()] ?? status;
 };
 
 const MetadataValue = ({ value, dataType }: MetadataValueProps) => {

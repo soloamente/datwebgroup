@@ -148,7 +148,7 @@ export function BatchDeleteConfirmationDialog({
           </Button>
           <Button
             variant="destructive"
-            onClick={handleConfirmDelete}
+            onClick={() => void handleConfirmDelete()}
             disabled={!canConfirm}
             className="flex-1 sm:flex-none"
           >

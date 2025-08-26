@@ -189,7 +189,7 @@ export default function BatchDetailPage() {
 
   const handleDelete = () => {
     // Navigate back to the shared documents list after successful deletion
-    router.push(`/dashboard/sharer/documenti/condivisi/${params.slug}`);
+    router.push(`/dashboard/sharer/documenti/condivisi/${String(params.slug)}`);
   };
 
   if (isLoading) {

@@ -99,7 +99,7 @@ export const getFileTypeName = (mimeType: string): string => {
     "application/x-pdf": "PDF",
   };
 
-  return mimeTypeMap[mimeType] || mimeType;
+  return mimeTypeMap[mimeType] ?? mimeType;
 };
 
 // Helper function to get appropriate Bootstrap icon for file types
@@ -163,5 +163,5 @@ export const getFileTypeIcon = (mimeType: string): string => {
     "application/x-pdf": "BsFileEarmarkPdfFill",
   };
 
-  return iconMap[mimeType] || "BsFileEarmarkFill";
+  return iconMap[mimeType] ?? "BsFileEarmarkFill";
 };

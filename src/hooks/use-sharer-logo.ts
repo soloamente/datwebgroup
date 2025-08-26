@@ -36,7 +36,7 @@ export function useSharerLogo() {
       }
     };
 
-    fetchLogo();
+    void fetchLogo();
 
     return () => {
       isMounted = false;
