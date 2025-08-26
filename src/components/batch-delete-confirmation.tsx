@@ -124,7 +124,7 @@ export function BatchDeleteConfirmationDialog({
               }`}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && canConfirm) {
-                  handleConfirmDelete();
+                  void handleConfirmDelete();
                 }
               }}
             />

@@ -47,7 +47,10 @@ export function FileAttachmentCards({
   // Function to get the appropriate icon component
   const getIconComponent = (mimeType: string) => {
     const iconName = getFileTypeIcon(mimeType);
-    const iconMap: Record<string, React.ComponentType<any>> = {
+    const iconMap: Record<
+      string,
+      React.ComponentType<{ className?: string }>
+    > = {
       BsFileEarmarkFill,
       BsFileEarmarkPdfFill,
       BsFileEarmarkWordFill,
@@ -61,7 +64,7 @@ export function FileAttachmentCards({
       BsFileEarmarkPlayFill,
       BsFileEarmarkSpreadsheetFill,
     };
-    return iconMap[iconName] || BsFileEarmarkFill;
+    return iconMap[iconName] ?? BsFileEarmarkFill;
   };
   const [downloadingFileId, setDownloadingFileId] = useState<number | null>(
     null,
