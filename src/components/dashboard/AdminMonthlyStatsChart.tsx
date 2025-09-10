@@ -61,6 +61,7 @@ export default function AdminMonthlyStatsChart({
 }: AdminMonthlyStatsChartProps) {
   const [metric, setMetric] = useState<MetricKey>("file_count");
   const [isLoading, setIsLoading] = useState(true);
+  const [isChartLoading, setIsChartLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<ChartRow[]>([]);
   const [dateRange, setDateRange] = useState<DayPickerDateRange | undefined>(
@@ -81,7 +82,12 @@ export default function AdminMonthlyStatsChart({
     let isMounted = true;
     const fetchStats = async () => {
       try {
-        setIsLoading(true);
+        // Use chart loading for tab switches, full loading for initial load
+        if (chartData.length === 0) {
+          setIsLoading(true);
+        } else {
+          setIsChartLoading(true);
+        }
         setError(null);
         const start = Date.now();
 
@@ -159,7 +165,10 @@ export default function AdminMonthlyStatsChart({
         console.error("Failed to load admin monthly stats", e);
         if (isMounted) setError("Impossibile caricare le statistiche.");
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsChartLoading(false);
+        }
       }
     };
     void fetchStats();
@@ -193,56 +202,8 @@ export default function AdminMonthlyStatsChart({
     [metric],
   );
 
-  if (isLoading) {
-    return (
-      <Card className="bg-muted/20 ring-border w-full gap-0 border-none p-1 ring-1">
-        <CardHeader className="m-0 flex flex-row items-start justify-between px-2 pt-3 pb-4">
-          <div className="flex items-center gap-2">
-            <Tabs value={metric} onValueChange={(v) => setMetric(v)}>
-              <TabsList className="ring-border bg-muted/30 grid w-full grid-cols-2 rounded-lg p-1 ring-1">
-                <TabsTrigger
-                  value="file_count"
-                  className="text-muted-foreground text-xs sm:text-sm"
-                >
-                  File
-                </TabsTrigger>
-                <TabsTrigger
-                  value="batch_count"
-                  className="text-muted-foreground text-xs sm:text-sm"
-                >
-                  Batch
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </CardHeader>
-        <CardContent className="bg-card ring-border rounded-xl px-3 ring-1 sm:rounded-2xl sm:px-4">
-          <div className="mt-4">
-            <div className="flex h-[200px] w-full items-center justify-center sm:h-[250px]">
-              <div className="text-muted-foreground text-xs sm:text-sm">
-                Caricamento grafico...
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="bg-card ring-border mb-6 w-full border-none ring-1">
-        <CardHeader>
-          <CardTitle className="text-xl sm:text-2xl">&quot;&quot;</CardTitle>
-          <CardDescription className="text-xs text-red-500 sm:text-sm">
-            {error}
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  return (
+  // Render the card structure consistently for both loading and loaded states
+  const renderCard = (content: React.ReactNode) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -263,93 +224,109 @@ export default function AdminMonthlyStatsChart({
                   value="batch_count"
                   className="text-muted-foreground data-[state=active]ring-border data-[state=active]ring-1 text-xs data-[state=active]:border-none sm:text-sm"
                 >
-                  Batch
+                  Condivisioni
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
         </CardHeader>
         <CardContent className="bg-card ring-border rounded-xl px-3 ring-1 sm:rounded-2xl sm:px-4">
-          <div className="mt-4">
-            <ChartContainer
-              config={chartConfig}
-              className="[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground h-[200px] w-full sm:h-[250px] [&_.recharts-cartesian-axis-tick_text]:font-medium [&_.recharts-cartesian-axis-tick_text]:opacity-100"
-            >
-              <BarChart
-                accessibilityLayer
-                data={chartData}
-                margin={{ top: 20, left: 12, right: 12 }}
-              >
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="xLabel"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  interval={0}
-                  minTickGap={0}
-                  tickFormatter={formatMonthLabel}
-                  fontSize={12}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  fontSize={12}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={({ active, payload }) => {
-                    if (active && payload?.length) {
-                      const p = payload[0];
-                      const item = p?.payload as ChartRow | undefined;
-                      return (
-                        <div className="bg-popover text-popover-foreground z-50 overflow-hidden rounded-lg border px-2 py-1 text-xs shadow-md sm:px-3 sm:py-1.5 sm:text-sm">
-                          <p className="font-semibold">{item?.label ?? ""}</p>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span
-                              className="h-2 w-2 rounded-full"
-                              style={{ backgroundColor: p?.color }}
-                            />
-                            <p>
-                              {METRIC_LABEL[metric]}:{" "}
-                              <span className="font-bold">
-                                {typeof p?.value === "number"
-                                  ? p.value
-                                  : Number(p?.value ?? 0)}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <defs>
-                  <linearGradient id="fillAdmin" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="30%"
-                      stopColor="oklch(0.51 0.1733 256.59)"
-                      stopOpacity={1}
-                    />
-                    <stop
-                      offset="100%"
-                      stopColor="oklch(0.51 0.1733 256.59)"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <Bar
-                  dataKey="value"
-                  fill="url(#fillAdmin)"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ChartContainer>
-          </div>
+          <div className="mt-4">{content}</div>
         </CardContent>
       </Card>
     </motion.div>
+  );
+
+  if (isLoading) {
+    return renderCard(
+      <div className="flex h-[200px] w-full items-center justify-center sm:h-[250px]">
+        <div className="text-muted-foreground text-xs sm:text-sm">
+          Caricamento grafico...
+        </div>
+      </div>,
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-card ring-border mb-6 w-full border-none ring-1">
+        <CardHeader>
+          <CardTitle className="text-xl sm:text-2xl">&quot;&quot;</CardTitle>
+          <CardDescription className="text-xs text-red-500 sm:text-sm">
+            {error}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  return renderCard(
+    <ChartContainer
+      config={chartConfig}
+      className="[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground h-[200px] w-full sm:h-[250px] [&_.recharts-cartesian-axis-tick_text]:font-medium [&_.recharts-cartesian-axis-tick_text]:opacity-100"
+    >
+      <BarChart
+        accessibilityLayer
+        data={chartData}
+        margin={{ top: 20, left: 12, right: 12 }}
+      >
+        <CartesianGrid vertical={false} />
+        <XAxis
+          dataKey="xLabel"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          interval={0}
+          minTickGap={0}
+          tickFormatter={formatMonthLabel}
+          fontSize={12}
+        />
+        <YAxis tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+        <ChartTooltip
+          cursor={false}
+          content={({ active, payload }) => {
+            if (active && payload?.length) {
+              const p = payload[0];
+              const item = p?.payload as ChartRow | undefined;
+              return (
+                <div className="bg-popover text-popover-foreground z-50 overflow-hidden rounded-lg border px-2 py-1 text-xs shadow-md sm:px-3 sm:py-1.5 sm:text-sm">
+                  <p className="font-semibold">{item?.label ?? ""}</p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: p?.color }}
+                    />
+                    <p>
+                      {METRIC_LABEL[metric]}:{" "}
+                      <span className="font-bold">
+                        {typeof p?.value === "number"
+                          ? p.value
+                          : Number(p?.value ?? 0)}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          }}
+        />
+        <defs>
+          <linearGradient id="fillAdmin" x1="0" y1="0" x2="0" y2="1">
+            <stop
+              offset="30%"
+              stopColor="oklch(0.51 0.1733 256.59)"
+              stopOpacity={1}
+            />
+            <stop
+              offset="100%"
+              stopColor="oklch(0.51 0.1733 256.59)"
+              stopOpacity={0}
+            />
+          </linearGradient>
+        </defs>
+        <Bar dataKey="value" fill="url(#fillAdmin)" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ChartContainer>,
   );
 }

@@ -1350,6 +1350,46 @@ const extractInfoFromDocument = async (
   return response.data;
 };
 
+// New interface for multiple documents extraction response
+export interface ExtractedUser {
+  nominativo: string;
+  codice_fiscale: string;
+}
+
+export interface ExtractionError {
+  nominativo: string | null;
+  codice_fiscale: string | null;
+  errore: string;
+}
+
+export interface ExtractInfoFromDocumentsResponse {
+  utenti: ExtractedUser[];
+  errori: ExtractionError[];
+}
+
+// New function to extract info from multiple documents (up to 30 files)
+const extractInfoFromDocuments = async (
+  documents: File[],
+): Promise<ExtractInfoFromDocumentsResponse> => {
+  const formData = new FormData();
+
+  // Add all documents to the form data with the key "documenti[]"
+  documents.forEach((document) => {
+    formData.append("documenti[]", document);
+  });
+
+  const response = await api.post<ExtractInfoFromDocumentsResponse>(
+    "/viewers/extract-info-from-documents",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return response.data;
+};
+
 /**
  * Recupera le classi documentali per lo sharer autenticato.
  * Endpoint: GET /my-document-classes
@@ -1902,6 +1942,7 @@ export const userService = {
   downloadViewerCredentials,
   sendViewerCredentialsByEmail,
   extractInfoFromDocument,
+  extractInfoFromDocuments,
   getUser,
   getMyDocumentClasses,
   recoverUsername,

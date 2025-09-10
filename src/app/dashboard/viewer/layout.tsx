@@ -199,7 +199,7 @@ export default function ViewerLayout({ children }: ViewerLayoutProps) {
                             Viewer
                           </Badge>
                         </div>
-                        <p className="text-muted-foreground/40 text-xs leading-none">
+                        <p className="text-xs leading-none text-neutral-400">
                           {authStore.user?.email}
                         </p>
                       </div>

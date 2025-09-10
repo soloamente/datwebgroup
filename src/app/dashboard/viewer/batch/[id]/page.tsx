@@ -65,6 +65,7 @@ import {
   FaUser,
   FaKey,
 } from "react-icons/fa6";
+import Image from "next/image";
 
 type FileSortOption =
   | "name_az"
@@ -365,220 +366,245 @@ export default function BatchDetailsPage() {
   const sortedFiles = getSortedFiles(filteredFiles);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBackToViewer}
-            className="ring-border bg-card flex items-center space-x-2 border-none ring-1"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Torna indietro</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Files Section - Outside Card */}
-      <div className="space-y-8">
+    <div className="relative">
+      <div className="relative z-10 space-y-6 pb-96">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold">File Allegati</h2>
-          </div>
           <div className="flex items-center space-x-4">
-            {/* Sort Controls */}
-
-            <Select
-              value={fileSortBy}
-              onValueChange={(value: FileSortOption) => setFileSortBy(value)}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBackToViewer}
+              className="ring-border bg-card flex items-center space-x-2 border-none ring-1"
             >
-              <SelectTrigger className="ring-border bg-card border-none ring-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name_az">
-                  Nome A <FaArrowRightLong className="opacity-70" /> Z
-                </SelectItem>
-                <SelectItem value="name_za">
-                  Nome Z <FaArrowRightLong className="opacity-70" /> A
-                </SelectItem>
-                <SelectItem value="size_largest">
-                  Dimensione <FaArrowDownWideShort className="opacity-70" />
-                </SelectItem>
-                <SelectItem value="size_smallest">
-                  Dimensione <FaArrowUpWideShort className="opacity-70" />
-                </SelectItem>
-                <SelectItem value="type_az">
-                  Tipo A <FaArrowRightLong className="opacity-70" /> Z
-                </SelectItem>
-                <SelectItem value="type_za">
-                  Tipo Z <FaArrowRightLong className="opacity-70" /> A
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Search */}
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
-              <Input
-                placeholder="Cerca file..."
-                className="ring-border bg-card rounded-lg border-none pl-10 ring-1"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+              <ArrowLeft className="h-4 w-4" />
+              <span>Torna indietro</span>
+            </Button>
           </div>
         </div>
 
-        {sortedFiles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <FileText className="text-muted-foreground mb-4 h-12 w-12" />
-            <h3 className="mb-2 text-lg font-medium">
-              {searchTerm ? "Nessun file trovato" : "Nessun file disponibile"}
-            </h3>
-            <p className="text-muted-foreground text-center">
-              {searchTerm
-                ? "Prova a modificare i termini di ricerca"
-                : "Non ci sono file allegati a questa condivisione"}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {sortedFiles.map((file) => (
-              <div
-                key={file.id}
-                className="ring-border bg-card flex flex-col rounded-lg p-4 ring-1 transition-colors"
+        {/* Files Section - Outside Card */}
+        <div className="space-y-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-2xl font-semibold">File Allegati</h2>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:space-x-4">
+              {/* Sort Controls */}
+
+              <Select
+                value={fileSortBy}
+                onValueChange={(value: FileSortOption) => setFileSortBy(value)}
               >
-                <div className="mb-8 flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    {getFileIcon(file.original_filename, file.mime_type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <p className="truncate text-sm font-medium">
-                        {getFileNameWithoutExtension(file.original_filename)}
-                      </p>
-                      <Badge
-                        variant={"outline"}
-                        className="text-muted-foreground font-ingram ring-border ml-auto border-none text-xs ring-1"
-                      >
-                        {getFileExtension(file.original_filename)}
-                      </Badge>
+                <SelectTrigger className="ring-border bg-card border-none ring-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name_az">
+                    Nome A <FaArrowRightLong className="opacity-70" /> Z
+                  </SelectItem>
+                  <SelectItem value="name_za">
+                    Nome Z <FaArrowRightLong className="opacity-70" /> A
+                  </SelectItem>
+                  <SelectItem value="size_largest">
+                    Dimensione <FaArrowDownWideShort className="opacity-70" />
+                  </SelectItem>
+                  <SelectItem value="size_smallest">
+                    Dimensione <FaArrowUpWideShort className="opacity-70" />
+                  </SelectItem>
+                  <SelectItem value="type_az">
+                    Tipo A <FaArrowRightLong className="opacity-70" /> Z
+                  </SelectItem>
+                  <SelectItem value="type_za">
+                    Tipo Z <FaArrowRightLong className="opacity-70" /> A
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Search */}
+              <div className="relative">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+                <Input
+                  placeholder="Cerca file..."
+                  className="ring-border bg-card rounded-lg border-none pl-10 ring-1"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {sortedFiles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <FileText className="text-muted-foreground mb-4 h-12 w-12" />
+              <h3 className="mb-2 text-lg font-medium">
+                {searchTerm ? "Nessun file trovato" : "Nessun file disponibile"}
+              </h3>
+              <p className="text-muted-foreground text-center">
+                {searchTerm
+                  ? "Prova a modificare i termini di ricerca"
+                  : "Non ci sono file allegati a questa condivisione"}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {sortedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="ring-border bg-card flex flex-col rounded-lg p-4 ring-1 transition-colors"
+                >
+                  <div className="mb-8 flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      {getFileIcon(file.original_filename, file.mime_type)}
                     </div>
-                    <p className="text-muted-foreground text-xs">
-                      {formatFileSize(file.size)}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="min-w-0 flex-1 truncate text-sm font-medium">
+                          {getFileNameWithoutExtension(file.original_filename)}
+                        </p>
+                        <Badge
+                          variant={"outline"}
+                          className="text-muted-foreground font-ingram ring-border flex-shrink-0 border-none text-xs ring-1"
+                        >
+                          {getFileExtension(file.original_filename)}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        {formatFileSize(file.size)}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleViewFile(file)}
-                    className="ring-border flex-1 border-none ring-[1.5px]"
-                  >
-                    <IoEye className="text-muted-foreground h-5 w-5" />
-                    Visualizza
-                  </Button>
-                  <Button
-                    onClick={() => handleDownloadFile(file)}
-                    className="bg-primary flex-1 gap-1 font-medium text-white"
-                  >
-                    <TbSquareRoundedArrowDownFilled className="h-5 w-5" />
-                    Scarica
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Batch Info Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col items-start">
-            <div className="flex-1">
-              <CardTitle className="text-2xl">Informazioni</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">
-                Condiviso da
-              </span>
-              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
-                <FaUser className="text-muted-foreground/70 h-4 w-4" />
-                {batch.sharer.nominativo}
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">
-                Condiviso il
-              </span>
-              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
-                <FaClock className="text-muted-foreground/70 h-4 w-4" />
-                {formatDate(batch.sent_at)}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">
-                Classe documentale
-              </span>
-              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
-                <BsFillFolderFill className="text-muted-foreground/70 h-4 w-4" />
-                <span>{batch.document_class.name}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-sm">
-                File allegati
-              </span>
-              <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
-                <BsFileEarmarkMedicalFill className="text-muted-foreground/70 h-4 w-4" />
-                <span>{allFiles.length} file allegati</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Field Values Section */}
-      {batch.documents?.[0]?.values && batch.documents[0].values.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Valori dei campi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              {batch.documents[0].values.map((value) => (
-                <div key={value.id} className="flex flex-col items-start gap-2">
-                  <span className="text-muted-foreground text-sm">
-                    {value.field.label}
-                  </span>
-                  <div className="flex w-full gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
-                    <FaKey className="text-muted-foreground/70 h-4 w-4" />
-                    {getFieldValueDisplay(
-                      value.value_text ??
-                        value.value_int ??
-                        value.value_dec ??
-                        value.value_bool ??
-                        formatFullDate(value.value_date ?? "") ??
-                        formatFullDate(value.value_datetime ?? ""),
-                    )}
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleViewFile(file)}
+                      className="ring-border flex-1 border-none ring-[1.5px]"
+                    >
+                      <IoEye className="text-muted-foreground h-5 w-5" />
+                      Visualizza
+                    </Button>
+                    <Button
+                      onClick={() => handleDownloadFile(file)}
+                      className="bg-primary flex-1 gap-1 font-medium text-white"
+                    >
+                      <TbSquareRoundedArrowDownFilled className="h-5 w-5" />
+                      Scarica
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Batch Info Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col items-start">
+              <div className="flex-1">
+                <CardTitle className="text-2xl">Informazioni</CardTitle>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <span className="text-muted-foreground text-sm">
+                  Condiviso da
+                </span>
+                <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                  <FaUser className="text-muted-foreground/70 h-4 w-4" />
+                  {batch.sharer.nominativo}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-muted-foreground text-sm">
+                  Condiviso il
+                </span>
+                <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                  <FaClock className="text-muted-foreground/70 h-4 w-4" />
+                  {formatDate(batch.sent_at)}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-muted-foreground text-sm">
+                  Classe documentale
+                </span>
+                <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                  <BsFillFolderFill className="text-muted-foreground/70 h-4 w-4" />
+                  <span>{batch.document_class.name}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-muted-foreground text-sm">
+                  File allegati
+                </span>
+                <div className="flex w-full items-center gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                  <BsFileEarmarkMedicalFill className="text-muted-foreground/70 h-4 w-4" />
+                  <span>{allFiles.length} file allegati</span>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
-      )}
+
+        {/* Field Values Section */}
+        {batch.documents?.[0]?.values &&
+          batch.documents[0].values.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Valori dei campi</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  {batch.documents[0].values.map((value) => (
+                    <div
+                      key={value.id}
+                      className="flex flex-col items-start gap-2"
+                    >
+                      <span className="text-muted-foreground text-sm">
+                        {value.field.label}
+                      </span>
+                      <div className="flex w-full gap-2 rounded-lg border bg-black/5 p-3 text-sm dark:bg-white/5">
+                        <FaKey className="text-muted-foreground/70 h-4 w-4" />
+                        {getFieldValueDisplay(
+                          value.value_text ??
+                            value.value_int ??
+                            value.value_dec ??
+                            value.value_bool ??
+                            formatFullDate(value.value_date ?? "") ??
+                            formatFullDate(value.value_datetime ?? ""),
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+      </div>
+
+      {/* Footer with Logo - Same size as main dashboard */}
+      <div className="pointer-events-none fixed right-0 bottom-0 left-0 z-0">
+        <div className="relative h-[1000px] w-full overflow-hidden">
+          <div className="absolute right-0 -bottom-80 left-0 h-[800px] w-full">
+            <Image
+              src="/logo_positivo.png"
+              alt="Logo"
+              fill
+              className="object-contain opacity-10 grayscale filter"
+            />
+            {/* Enhanced gradient overlay */}
+            <div className="from-background via-background/90 absolute inset-0 bg-gradient-to-t to-transparent" />
+            {/* Additional colorful gradient overlay */}
+            <div className="from-primary/5 via-primary/2 absolute inset-0 bg-gradient-to-t to-transparent" />
+            <div className="from-secondary/5 to-secondary/2 absolute inset-0 bg-gradient-to-tr via-transparent" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

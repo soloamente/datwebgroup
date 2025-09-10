@@ -383,7 +383,11 @@ export default function AdminLoginRightSide({
       transition={{ duration: 1, ease: "easeInOut" }}
       className="flex h-full w-full flex-col justify-center rounded-2xl px-6 py-8 md:w-3/5 md:px-16 lg:px-24"
     >
-      <div className="absolute inset-0 z-0 h-full w-full">
+      <div
+        className={`absolute z-0 h-full w-full ${
+          theme === "light" ? "inset-0 rotate-180" : "inset-0"
+        }`}
+      >
         <Aurora
           colorStops={colorStops}
           blend={0.5}

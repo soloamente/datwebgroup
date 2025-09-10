@@ -128,7 +128,8 @@ export default function TopSharerStatsCard() {
                   <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                     <Badge className="bg-primary/10 text-primary ring-primary/40 border-none px-1 py-0.5 text-xs ring-1 sm:px-2 sm:py-1">
                       <span className="hidden sm:inline">
-                        {s.total_files.toLocaleString("it-IT")} file
+                        {s.total_files.toLocaleString("it-IT")}{" "}
+                        {s.total_files > 1 ? "file" : "file"}
                       </span>
                       <span className="sm:hidden">
                         {s.total_files.toLocaleString("it-IT")}
@@ -136,7 +137,10 @@ export default function TopSharerStatsCard() {
                     </Badge>
                     <Badge className="bg-muted/20 text-muted-foreground ring-border border-none px-1 py-0.5 text-xs ring-1 sm:px-2 sm:py-1">
                       <span className="hidden sm:inline">
-                        {s.total_batches.toLocaleString("it-IT")} batch
+                        {s.total_batches.toLocaleString("it-IT")}
+                        {s.total_batches > 1
+                          ? " condivisioni"
+                          : " condivisione"}
                       </span>
                       <span className="sm:hidden">
                         {s.total_batches.toLocaleString("it-IT")}
