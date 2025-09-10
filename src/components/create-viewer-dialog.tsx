@@ -226,7 +226,7 @@ export function CreateViewerDialog({
         setViewMode("select");
       }
     } catch (err: unknown) {
-      let errorMessage = "Errore durante l'estrazione dei dati.";
+      let errorMessage = "Errore durante l&apos;estrazione dei dati.";
       if (err instanceof AxiosError && err.response?.data) {
         const errorData = err.response.data as {
           message?: string;
@@ -546,7 +546,7 @@ export function CreateViewerDialog({
         <div className="text-center">
           <h3 className="text-lg font-semibold">Utenti Trovati</h3>
           <p className="text-muted-foreground text-sm">
-            Seleziona l'utente corretto per continuare
+            Seleziona l&apos;utente corretto per continuare
           </p>
         </div>
 
@@ -625,7 +625,7 @@ export function CreateViewerDialog({
         {extractionErrors.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-medium text-orange-600">
-              Errori durante l'estrazione:
+              Errori durante l&apos;estrazione:
             </h4>
             <div className="space-y-1">
               {extractionErrors.map((error, index) => (
@@ -800,7 +800,7 @@ export function CreateViewerDialog({
                     {viewMode === "upload"
                       ? "Carica documenti per estrarre i dati (max 30 file)"
                       : viewMode === "select"
-                        ? "Seleziona l'utente corretto"
+                        ? "Seleziona l&apos;utente corretto"
                         : "Controlla i dati e compila i campi mancanti"}
                   </DialogDescription>
                 </div>
