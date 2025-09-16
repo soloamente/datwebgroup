@@ -29,6 +29,8 @@ import {
   X,
   ArrowLeft,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import useAuthStore from "@/app/api/auth"; // Import the auth store
 import { AxiosError } from "axios";
@@ -63,15 +65,24 @@ export function CreateViewerDialog({
   const [extractionErrors, setExtractionErrors] = useState<ExtractionError[]>(
     [],
   );
+  const [userFieldErrors, setUserFieldErrors] = useState<
+    Record<number, Record<string, string>>
+  >({});
   const [selectedUser, setSelectedUser] = useState<ExtractedUser | null>(null);
   const [showUserDetails, setShowUserDetails] = useState<ExtractedUser | null>(
     null,
   );
 
-  // Debug: Log when showUserDetails changes
-  React.useEffect(() => {
-    console.log("showUserDetails changed:", showUserDetails);
-  }, [showUserDetails]);
+  // Pagination states for user selection
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(1); // One user per page in form mode
+  const [createdUsers, setCreatedUsers] = useState<Set<number>>(new Set()); // Track created user indices
+
+  // Pagination calculations
+  const totalPages = extractedUsers.length; // Each user gets their own page
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const currentUsers = extractedUsers.slice(startIndex, endIndex);
   const [formData, setFormData] = useState({
     nominativo: "",
     email: "",
@@ -184,6 +195,60 @@ export function CreateViewerDialog({
     setViewMode("form");
   };
 
+  const handleNavigateToUser = (userIndex: number) => {
+    const user = extractedUsers[userIndex];
+    if (user) {
+      setSelectedUser(user);
+      setFormData((prev) => ({
+        ...prev,
+        nominativo: user.nominativo,
+        codice_fiscale: user.codice_fiscale,
+      }));
+      validateField("nominativo", user.nominativo);
+      validateField("codice_fiscale", user.codice_fiscale);
+
+      // Set field errors for this user
+      const currentUserFieldErrors = userFieldErrors[userIndex] || {};
+      setErrors((prev) => ({
+        ...prev,
+        nominativo: currentUserFieldErrors.nominativo || null,
+        codice_fiscale: currentUserFieldErrors.codice_fiscale || null,
+        partita_iva: currentUserFieldErrors.partita_iva || null,
+      }));
+    }
+  };
+
+  const handlePreviousUser = () => {
+    if (currentPage > 1) {
+      const newPage = currentPage - 1;
+      setCurrentPage(newPage);
+      const userIndex = newPage - 1; // Since usersPerPage = 1, userIndex = page - 1
+      handleNavigateToUser(userIndex);
+    }
+  };
+
+  const handleNextUser = () => {
+    if (currentPage < totalPages) {
+      const newPage = currentPage + 1;
+      setCurrentPage(newPage);
+      const userIndex = newPage - 1; // Since usersPerPage = 1, userIndex = page - 1
+      handleNavigateToUser(userIndex);
+    }
+  };
+
+  const handleSkipToNextUncreated = () => {
+    // Find next uncreated user
+    const nextUncreatedIndex = extractedUsers.findIndex(
+      (_, index) => index > currentPage - 1 && !createdUsers.has(index),
+    );
+
+    if (nextUncreatedIndex !== -1) {
+      const newPage = nextUncreatedIndex + 1;
+      setCurrentPage(newPage);
+      handleNavigateToUser(nextUncreatedIndex);
+    }
+  };
+
   const handleExtractData = async () => {
     if (files.length === 0) {
       toast.error("Per favore carica almeno un documento.");
@@ -193,37 +258,80 @@ export function CreateViewerDialog({
     try {
       const data = await userService.extractInfoFromDocuments(files);
 
-      setExtractedUsers(data.utenti);
-      setExtractionErrors(data.errori);
+      // Combine successful extractions with partial extractions (from errors)
+      const allUsers: ExtractedUser[] = [...data.utenti];
+      const fieldErrors: Record<number, Record<string, string>> = {};
 
-      if (data.utenti.length === 0) {
+      // Process errors to create partial users
+      data.errori.forEach((error, index) => {
+        if (error.nominativo) {
+          // Create a partial user from the error
+          const partialUser: ExtractedUser = {
+            nominativo: error.nominativo,
+            codice_fiscale: error.codice_fiscale || "",
+          };
+          allUsers.push(partialUser);
+
+          // Store field errors for this user
+          const userIndex = allUsers.length - 1;
+          fieldErrors[userIndex] = {};
+
+          if (!error.codice_fiscale) {
+            fieldErrors[userIndex].codice_fiscale = error.errore;
+          }
+        }
+      });
+
+      setExtractedUsers(allUsers);
+      setExtractionErrors(data.errori);
+      setUserFieldErrors(fieldErrors);
+
+      if (allUsers.length === 0) {
         toast.error(
           "Nessun utente trovato nei documenti. Controlla gli errori per maggiori dettagli.",
         );
         return;
       }
 
-      if (data.utenti.length === 1) {
-        // Single user found, auto-select and proceed to form
-        const user = data.utenti[0];
-        if (user) {
-          setSelectedUser(user);
+      // Reset pagination state
+      setCurrentPage(1);
+
+      // Always go to form mode with pagination
+      if (allUsers.length > 0) {
+        const firstUser = allUsers[0];
+        if (firstUser) {
+          setSelectedUser(firstUser);
           setFormData((prev) => ({
             ...prev,
-            nominativo: user.nominativo,
-            codice_fiscale: user.codice_fiscale,
+            nominativo: firstUser.nominativo,
+            codice_fiscale: firstUser.codice_fiscale,
           }));
-          validateField("nominativo", user.nominativo);
-          validateField("codice_fiscale", user.codice_fiscale);
-          toast.success("Dati estratti con successo!");
+          validateField("nominativo", firstUser.nominativo);
+          validateField("codice_fiscale", firstUser.codice_fiscale);
+          toast.success(
+            `${allUsers.length} utenti estratti (alcuni con campi mancanti)!`,
+          );
           setViewMode("form");
         }
-      } else {
-        // Multiple users found, show selection screen
-        toast.success(
-          `${data.utenti.length} utenti trovati. Seleziona quello corretto.`,
-        );
-        setViewMode("select");
+      }
+
+      // Show error notifications if there are extraction errors
+      if (data.errori.length > 0) {
+        // Show individual error notifications directly
+        data.errori.forEach((error, index) => {
+          setTimeout(() => {
+            const errorMessage = error.nominativo
+              ? `${error.nominativo}: ${error.errore}`
+              : error.errore;
+
+            toast.error(errorMessage, {
+              description: error.codice_fiscale
+                ? `CF: ${error.codice_fiscale}`
+                : undefined,
+              duration: 5000,
+            });
+          }, index * 500); // Stagger notifications to avoid overwhelming the user
+        });
       }
     } catch (err: unknown) {
       let errorMessage = "Errore durante l&apos;estrazione dei dati.";
@@ -333,8 +441,51 @@ export function CreateViewerDialog({
 
     try {
       const response = await userService.createViewer(data);
-      toast.success(response.message);
-      onViewerCreated();
+      toast.success("Cliente creato con successo!");
+
+      // Mark current user as created
+      const currentUserIndex = currentPage - 1;
+      setCreatedUsers((prev) => new Set([...prev, currentUserIndex]));
+
+      // The createViewer function already downloads the credentials as a PDF
+      // No need for additional download call
+
+      // Check if there are more users to process
+      const hasMoreUsers = currentUserIndex < extractedUsers.length - 1;
+
+      if (hasMoreUsers) {
+        // Move to next user
+        const nextPage = currentPage + 1;
+        setCurrentPage(nextPage);
+        const nextUserIndex = nextPage - 1;
+        const nextUser = extractedUsers[nextUserIndex];
+
+        if (nextUser) {
+          setSelectedUser(nextUser);
+          setFormData((prev) => ({
+            ...prev,
+            nominativo: nextUser.nominativo,
+            codice_fiscale: nextUser.codice_fiscale,
+            email: "", // Reset email for next user
+            partita_iva: "", // Reset partita_iva for next user
+          }));
+          validateField("nominativo", nextUser.nominativo);
+          validateField("codice_fiscale", nextUser.codice_fiscale);
+          setErrors({
+            nominativo: null,
+            email: null,
+            codice_fiscale: null,
+            partita_iva: null,
+            form: null,
+          });
+          toast.success(
+            `Passando al prossimo utente (${nextPage}/${extractedUsers.length})`,
+          );
+        }
+      } else {
+        // All users processed
+        toast.success("Tutti gli utenti sono stati creati con successo!");
+      }
     } catch (err: unknown) {
       let errorMessage =
         "Si è verificato un errore durante la creazione del viewer.";
@@ -386,10 +537,14 @@ export function CreateViewerDialog({
       });
       setExtractedUsers([]);
       setExtractionErrors([]);
+      setUserFieldErrors({});
       setSelectedUser(null);
       setShowUserDetails(null);
       setIsExtracting(false);
       setViewMode("upload");
+      // Reset pagination state
+      setCurrentPage(1);
+      setCreatedUsers(new Set());
     }
   }, [isOpen]);
 
@@ -544,83 +699,104 @@ export function CreateViewerDialog({
     <div className="space-y-4 pt-4">
       <div className="space-y-4">
         <div className="text-center">
-          <h3 className="text-lg font-semibold">Utenti Trovati</h3>
+          <h3 className="text-lg font-semibold">
+            Utenti Trovati ({extractedUsers.length})
+          </h3>
           <p className="text-muted-foreground text-sm">
             Seleziona l&apos;utente corretto per continuare
           </p>
         </div>
 
         <div className="space-y-3">
-          {/* Test button to open modal */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              console.log("Test button clicked");
-              setShowUserDetails({
-                nominativo: "Test User",
-                codice_fiscale: "TEST1234567890123",
-              });
-            }}
-          >
-            Test Modal
-          </Button>
-
-          {extractedUsers.length === 0 ? (
+          {currentUsers.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-muted-foreground">
                 Nessun utente trovato nei documenti.
               </p>
             </div>
           ) : (
-            extractedUsers.map((user, index) => (
-              <div
-                key={index}
-                className="hover:bg-muted/50 cursor-pointer rounded-lg border p-4 transition-colors"
-                onClick={() => handleUserSelection(user)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="font-medium">{user.nominativo}</p>
-                    <p className="text-muted-foreground text-sm">
-                      CF: {user.codice_fiscale}
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      Dati estratti da {files.length} documento
-                      {files.length !== 1 ? "i" : ""}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("Opening user details for:", user);
-                        setShowUserDetails(user);
-                      }}
-                    >
-                      <Eye className="mr-1 h-3 w-3" />
-                      Dettagli
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleUserSelection(user);
-                      }}
-                    >
-                      <UserPlus className="mr-1 h-3 w-3" />
-                      Seleziona
-                    </Button>
+            currentUsers.map((user, index) => {
+              const globalIndex = startIndex + index;
+              return (
+                <div
+                  key={globalIndex}
+                  className="hover:bg-muted/50 cursor-pointer rounded-lg border p-4 transition-colors"
+                  onClick={() => handleUserSelection(user)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium">{user.nominativo}</p>
+                      <p className="text-muted-foreground text-sm">
+                        CF: {user.codice_fiscale}
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Dati estratti da {files.length} documento
+                        {files.length !== 1 ? "i" : ""} • Utente{" "}
+                        {globalIndex + 1} di {extractedUsers.length}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowUserDetails(user);
+                        }}
+                      >
+                        <Eye className="mr-1 h-3 w-3" />
+                        Dettagli
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUserSelection(user);
+                        }}
+                      >
+                        <UserPlus className="mr-1 h-3 w-3" />
+                        Seleziona
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <span className="text-muted-foreground text-sm">
+              Pagina {currentPage} di {totalPages}
+            </span>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         {extractionErrors.length > 0 && (
           <div className="space-y-2">
@@ -664,123 +840,199 @@ export function CreateViewerDialog({
     </div>
   );
 
-  const renderFormStep = () => (
-    <form onSubmit={handleCreateViewerSubmit} className="space-y-4 pt-4">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="nominativo">
-            Nominativo <span className="text-red-600">*</span>
-          </Label>
-          <Input
-            id="nominativo"
-            name="nominativo"
-            className="ring-border rounded-xl border-none ring-1"
-            placeholder="Nominativo"
-            value={formData.nominativo}
-            onChange={handleInputChange}
-            required
-            disabled={isLoading || isExtracting}
-          />
-          {errors.nominativo && (
-            <p className="text-sm text-red-600">{errors.nominativo}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">
-            Email <span className="text-red-600">*</span>
-          </Label>
-          <div className="relative flex items-center">
+  const renderFormStep = () => {
+    const currentUserIndex = currentPage - 1; // Since usersPerPage = 1, userIndex = page - 1
+    const currentUser = extractedUsers[currentUserIndex];
+    const isCurrentUserCreated = createdUsers.has(currentUserIndex);
+    const currentUserFieldErrors = userFieldErrors[currentUserIndex] || {};
+
+    return (
+      <form onSubmit={handleCreateViewerSubmit} className="space-y-4 pt-4">
+        {/* User Navigation Header */}
+        {extractedUsers.length > 1 && (
+          <div className="bg-muted/50 flex items-center justify-between rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">
+                Utente {currentUserIndex + 1} di {extractedUsers.length}
+              </span>
+              {currentUser && (
+                <span className="text-muted-foreground text-xs">
+                  • {currentUser.nominativo}
+                </span>
+              )}
+              {isCurrentUserCreated && (
+                <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                  ✓ Creato
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousUser}
+                disabled={currentPage === 1 || isLoading}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-muted-foreground text-sm">
+                {currentPage} di {totalPages}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleNextUser}
+                disabled={currentPage === totalPages || isLoading}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="nominativo">
+              Nominativo <span className="text-red-600">*</span>
+            </Label>
             <Input
-              id="email"
-              name="email"
-              type="email"
-              className="peer ring-border rounded-xl border-none ps-9 ring-1"
-              placeholder="Email"
-              value={formData.email}
+              id="nominativo"
+              name="nominativo"
+              className="ring-border rounded-xl border-none ring-1"
+              placeholder="Nominativo"
+              value={formData.nominativo}
               onChange={handleInputChange}
               required
               disabled={isLoading || isExtracting}
             />
-            <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
-              <AtSignIcon size={16} aria-hidden="true" />
+            {errors.nominativo && (
+              <p className="text-sm text-red-600">{errors.nominativo}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">
+              Email <span className="text-red-600">*</span>
+            </Label>
+            <div className="relative flex items-center">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                className="peer ring-border rounded-xl border-none ps-9 ring-1"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                disabled={isLoading || isExtracting}
+                autoFocus
+              />
+              <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
+                <AtSignIcon size={16} aria-hidden="true" />
+              </div>
+            </div>
+            {errors.email && (
+              <p className="text-sm text-red-600">{errors.email}</p>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="codice_fiscale">
+                Codice Fiscale{" "}
+                <span className="text-muted-foreground text-xs">
+                  (opzionale)
+                </span>
+              </Label>
+              <Input
+                id="codice_fiscale"
+                name="codice_fiscale"
+                placeholder="Codice Fiscale"
+                value={formData.codice_fiscale}
+                onChange={handleInputChange}
+                disabled={isLoading || isExtracting}
+                className="ring-border rounded-xl border-none ring-1"
+              />
+              {(errors.codice_fiscale ||
+                currentUserFieldErrors.codice_fiscale) && (
+                <p className="text-sm text-red-600">
+                  {currentUserFieldErrors.codice_fiscale ||
+                    errors.codice_fiscale}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="partita_iva">
+                Partita IVA{" "}
+                <span className="text-muted-foreground text-xs">
+                  (opzionale)
+                </span>
+              </Label>
+              <Input
+                id="partita_iva"
+                name="partita_iva"
+                className="ring-border rounded-xl border-none ring-1"
+                placeholder="Partita IVA"
+                value={formData.partita_iva}
+                onChange={handleInputChange}
+                disabled={isLoading || isExtracting}
+              />
+              {errors.partita_iva && (
+                <p className="text-sm text-red-600">{errors.partita_iva}</p>
+              )}
             </div>
           </div>
-          {errors.email && (
-            <p className="text-sm text-red-600">{errors.email}</p>
+          <p className="text-muted-foreground text-center text-xs">
+            È obbligatorio fornire almeno uno tra Codice Fiscale e Partita IVA.
+          </p>
+          {errors.form && (
+            <p className="text-center text-sm text-red-600">{errors.form}</p>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="codice_fiscale">
-              Codice Fiscale{" "}
-              <span className="text-muted-foreground text-xs">(opzionale)</span>
-            </Label>
-            <Input
-              id="codice_fiscale"
-              name="codice_fiscale"
-              placeholder="Codice Fiscale"
-              value={formData.codice_fiscale}
-              onChange={handleInputChange}
-              disabled={isLoading || isExtracting}
-              className="ring-border rounded-xl border-none ring-1"
-            />
-            {errors.codice_fiscale && (
-              <p className="text-sm text-red-600">{errors.codice_fiscale}</p>
+        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setViewMode("upload")}
+              className="rounded-xl"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Torna Indietro
+            </Button>
+            {isCurrentUserCreated && extractedUsers.length > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSkipToNextUncreated}
+                className="rounded-xl"
+              >
+                Salta al prossimo
+              </Button>
             )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="partita_iva">
-              Partita IVA{" "}
-              <span className="text-muted-foreground text-xs">(opzionale)</span>
-            </Label>
-            <Input
-              id="partita_iva"
-              name="partita_iva"
-              className="ring-border rounded-xl border-none ring-1"
-              placeholder="Partita IVA"
-              value={formData.partita_iva}
-              onChange={handleInputChange}
-              disabled={isLoading || isExtracting}
-            />
-            {errors.partita_iva && (
-              <p className="text-sm text-red-600">{errors.partita_iva}</p>
+          <Button
+            type="submit"
+            disabled={
+              isLoading || !isFormValid || isExtracting || isCurrentUserCreated
+            }
+            className="w-full rounded-xl sm:w-auto"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creando cliente...
+              </>
+            ) : isCurrentUserCreated ? (
+              <>✓ Cliente già creato</>
+            ) : (
+              `Crea cliente ${extractedUsers.length > 1 ? `(${currentPage}/${extractedUsers.length})` : ""}`
             )}
-          </div>
-        </div>
-        <p className="text-muted-foreground text-center text-xs">
-          È obbligatorio fornire almeno uno tra Codice Fiscale e Partita IVA.
-        </p>
-        {errors.form && (
-          <p className="text-center text-sm text-red-600">{errors.form}</p>
-        )}
-      </div>
-      <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setViewMode("upload")}
-          className="rounded-xl"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Torna Indietro
-        </Button>
-        <Button
-          type="submit"
-          disabled={isLoading || !isFormValid || isExtracting}
-          className="w-full rounded-xl sm:w-auto"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creando cliente...
-            </>
-          ) : (
-            "Crea cliente"
-          )}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
+          </Button>
+        </DialogFooter>
+      </form>
+    );
+  };
 
   return (
     <>
@@ -801,7 +1053,7 @@ export function CreateViewerDialog({
                       ? "Carica documenti per estrarre i dati (max 30 file)"
                       : viewMode === "select"
                         ? "Seleziona l&apos;utente corretto"
-                        : "Controlla i dati e compila i campi mancanti"}
+                        : "Compila i dati per creare il cliente"}
                   </DialogDescription>
                 </div>
               </DialogHeader>
@@ -827,10 +1079,7 @@ export function CreateViewerDialog({
       {/* User Details Modal */}
       <Dialog
         open={!!showUserDetails}
-        onOpenChange={() => {
-          console.log("Modal onOpenChange called");
-          setShowUserDetails(null);
-        }}
+        onOpenChange={() => setShowUserDetails(null)}
       >
         <DialogContent className="rounded-4xl px-8 shadow-lg sm:max-w-[500px]">
           <DialogHeader className="flex flex-col items-center space-y-1.5 pt-6">
@@ -853,7 +1102,7 @@ export function CreateViewerDialog({
                     Nominativo
                   </Label>
                   <div className="rounded-lg border p-3">
-                    <p className="font-medium">{showUserDetails?.nominativo}</p>
+                    <p className="font-medium">{showUserDetails.nominativo}</p>
                   </div>
                 </div>
 
@@ -863,7 +1112,7 @@ export function CreateViewerDialog({
                   </Label>
                   <div className="rounded-lg border p-3">
                     <p className="font-mono text-sm">
-                      {showUserDetails?.codice_fiscale}
+                      {showUserDetails.codice_fiscale}
                     </p>
                   </div>
                 </div>

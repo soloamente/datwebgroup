@@ -55,7 +55,14 @@ import { generateAvatarColor, isDateString, isURL } from "@/lib/utils";
 import { AddFilesToDocumentDialog } from "./add-files-to-document-dialog";
 import { FileAttachmentCards } from "./file-attachment-cards";
 import { MdPersonRemove } from "react-icons/md";
-import { FaUserMinus } from "react-icons/fa6";
+import {
+  FaFileArrowUp,
+  FaFolderPlus,
+  FaPencil,
+  FaPlus,
+  FaUserMinus,
+} from "react-icons/fa6";
+import { FaFileUpload, FaPencilAlt } from "react-icons/fa";
 
 // ============================================================================
 // PROPS
@@ -89,6 +96,10 @@ interface MetadataFormProps {
   batchId: number;
   onUpdate: () => void;
   onCancel: () => void;
+  formData: Record<string, string | number | boolean | null>;
+  setFormData: (data: Record<string, string | number | boolean | null>) => void;
+  handleSave: () => Promise<void>;
+  isSaving: boolean;
 }
 
 interface DocumentContentViewProps {
@@ -259,48 +270,20 @@ const MetadataForm = ({
   batchId,
   onUpdate,
   onCancel,
+  formData,
+  setFormData,
+  handleSave,
+  isSaving,
 }: MetadataFormProps) => {
-  const [formData, setFormData] = useState<
-    Record<string, string | number | boolean | null>
-  >(doc.metadata as Record<string, string | number | boolean | null>);
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleFieldChange = (
     key: string,
     value: string | number | boolean | null,
   ) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const response = await batchService.updateDocumentMetadata(
-        batchId,
-        doc.id,
-        formData,
-      );
-      toast.success(response.message || "Metadati aggiornati con successo.");
-      onUpdate();
-    } catch (e: unknown) {
-      const errorMessage =
-        e instanceof Error
-          ? e.message
-          : "Errore durante l'aggiornamento dei metadati.";
-      toast.error(errorMessage);
-    } finally {
-      setIsSaving(false);
-    }
+    setFormData({ ...formData, [key]: value });
   };
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        void handleSave();
-      }}
-      className="space-y-4"
-    >
+    <div className="space-y-4">
       <div className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg p-4 sm:grid-cols-2">
         {docClassDetails.fields.map((field) => {
           const value = formData[field.name];
@@ -406,21 +389,7 @@ const MetadataForm = ({
           );
         })}
       </div>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          <X className="h-4 w-4" />
-          Annulla
-        </Button>
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-current" />
-          ) : (
-            <Save className="h-4 w-4" />
-          )}
-          Salva Modifiche
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 };
 
@@ -432,38 +401,99 @@ const DocumentContentView = ({
 }: DocumentContentViewProps) => {
   const [isAddFilesDialogOpen, setIsAddFilesDialogOpen] = useState(false);
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [formData, setFormData] = useState<
+    Record<string, string | number | boolean | null>
+  >(doc.metadata as Record<string, string | number | boolean | null>);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleUpdate = () => {
     setIsEditingMetadata(false);
     onUpdate();
   };
 
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const response = await batchService.updateDocumentMetadata(
+        batchId,
+        doc.id,
+        formData,
+      );
+      toast.success(response.message || "Metadati aggiornati con successo.");
+      handleUpdate();
+    } catch (e: unknown) {
+      const errorMessage =
+        e instanceof Error
+          ? e.message
+          : "Errore durante l'aggiornamento dei metadati.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData(
+      doc.metadata as Record<string, string | number | boolean | null>,
+    );
+    setIsEditingMetadata(false);
+  };
+
   return (
     <div className="space-y-6">
-      <Card className="ring-border gap-2 border-none ring-1">
-        <CardHeader className="flex flex-row items-center justify-between">
+      <Card className="bg-muted/20 ring-border gap-2 border-none p-1 ring-1">
+        <CardHeader className="flex flex-row items-center justify-between pt-3 pr-2 pb-2 pl-4">
           <CardTitle className="flex items-center gap-2">
             <Database size={20} />
             Metadati
           </CardTitle>
-          {!isEditingMetadata && (
+          {!isEditingMetadata ? (
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setIsEditingMetadata(true)}
+              className="ring-border max-w-fit flex-1 border-none text-xs ring-1 sm:text-sm"
             >
-              <RiPencilLine className="h-4 w-4" /> Modifica Metadati
+              <FaPencilAlt className="h-4 w-4" /> Modifica Metadati
             </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="ring-border border-none text-xs ring-1 sm:text-sm"
+              >
+                <X className="h-4 w-4" />
+                Annulla
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="ring-border border-none text-xs ring-1 sm:text-sm"
+              >
+                {isSaving ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-current" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Salva
+              </Button>
+            </div>
           )}
         </CardHeader>
-        <CardContent className="px-4">
+        <CardContent className="bg-card ring-border rounded-lg px-2 pt-4 pb-2 ring-1">
           {isEditingMetadata ? (
             <MetadataForm
               doc={doc}
               docClassDetails={docClassDetails}
               batchId={batchId}
               onUpdate={handleUpdate}
-              onCancel={() => setIsEditingMetadata(false)}
+              onCancel={handleCancel}
+              formData={formData}
+              setFormData={setFormData}
+              handleSave={handleSave}
+              isSaving={isSaving}
             />
           ) : (
             <MetadataDisplay doc={doc} docClassDetails={docClassDetails} />
@@ -471,22 +501,22 @@ const DocumentContentView = ({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+      <Card className="bg-muted/20 ring-border gap-2 border-none p-1 ring-1">
+        <CardHeader className="flex flex-row items-center justify-between p-0 pt-3 pr-2 pb-2 pl-4">
           <CardTitle className="flex items-center gap-2">
             <Paperclip size={20} />
             File Allegati
           </CardTitle>
           <Button
             variant={"outline"}
-            size="sm"
             onClick={() => setIsAddFilesDialogOpen(true)}
+            className="ring-border max-w-fit flex-1 border-none text-xs ring-1 sm:text-sm"
           >
-            <RiAddLine className="h-4 w-4" />
+            <FaFileArrowUp className="h-4 w-4" />
             Aggiungi File
           </Button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="bg-card ring-border rounded-lg px-2 pt-4 pb-2 ring-1">
           {doc.files && doc.files.length > 0 ? (
             <FileAttachmentCards
               files={doc.files}

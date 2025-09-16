@@ -487,7 +487,7 @@ const getColumns = (
       header: "Destinatari",
       cell: ({ row }) => {
         const viewers = row.original.viewers;
-        if (!viewers || viewers.length === 0) return "N/A";
+        if (!viewers || viewers.length === 0) return "Nessuno";
         const visibleAvatars = viewers.slice(0, 5);
         const hiddenCount = viewers.length - visibleAvatars.length;
 

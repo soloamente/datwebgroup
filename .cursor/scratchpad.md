@@ -1,3 +1,60 @@
+# Delete Client Functionality Implementation
+
+## Background and Motivation
+
+The user requested to add a delete option for clients in the client list. The delete option should be in red color and require email confirmation before proceeding with the deletion. The implementation should use the DELETE method with the API endpoint `viewers/{id}`.
+
+## Key Challenges and Analysis
+
+1. Need to add delete functionality to the viewer table RowActions
+2. Implement email confirmation dialog for safety
+3. Add DELETE API endpoint to userService
+4. Style the delete option in red color as requested
+5. Ensure proper error handling and user feedback
+
+## High-level Task Breakdown
+
+1. [x] Add deleteViewer function to API service
+
+   - [x] Implement DELETE request to `/viewers/{id}` endpoint
+   - [x] Add function to userService export
+   - Success criteria: API function is available and properly typed
+
+2. [x] Update viewer table RowActions component
+
+   - [x] Add delete option to dropdown menu with red styling
+   - [x] Implement email confirmation dialog
+   - [x] Add proper error handling and success feedback
+   - [x] Disable delete button until email confirmation matches
+   - Success criteria: Delete option appears in red, requires email confirmation, and works properly
+
+3. [x] Test delete functionality
+   - [x] Verify delete option appears in dropdown
+   - [x] Test email confirmation validation
+   - [x] Test API integration
+   - Success criteria: Complete delete workflow works as expected
+
+## Project Status Board
+
+- [x] Add deleteViewer API function
+- [x] Update viewer table with delete option
+- [x] Implement email confirmation dialog
+- [x] Test delete functionality
+
+## Executor's Feedback or Assistance Requests
+
+The delete client functionality has been successfully implemented with the following features:
+
+- Red-colored delete option in the dropdown menu
+- Email confirmation dialog that requires exact email match
+- Proper API integration using DELETE method
+- Error handling and success feedback
+- Disabled state management during API calls
+
+The implementation follows the user's requirements and maintains consistency with the existing codebase patterns.
+
+---
+
 # Mobile Session Persistence Fix
 
 ## Background and Motivation
@@ -48,6 +105,36 @@ The user reported that login sessions are not maintained on mobile devices, whil
 - [x] Add Laravel session cookie handling
 - [x] Fix infinite loading issue
 - [x] Add global 404 redirect handler
+- [x] Document extraction API functionality analysis
+- [x] Verify that the document extraction functionality is already fully implemented
+- [x] Remove modal dialogs from user selection
+- [x] Implement pagination for extracted users
+- [x] Add email input field for each user in pagination
+- [x] Update user selection flow to work with pagination
+- [x] Restore original modal functionality
+- [x] Add pagination to navigate between extracted users
+- [x] Keep modal for user details viewing
+- [x] Modify extraction flow to show form directly with pagination
+- [x] Create form pagination for each extracted user
+- [x] Update form data to show current user data
+- [x] Add navigation controls between users in form mode
+- [x] Fix pagination calculation to show correct page numbers
+- [x] Add autofocus to email input field
+- [x] Modify create client flow to download credentials and continue to next user
+- [x] Add credentials download after client creation
+- [x] Auto-navigate to next user after successful creation
+- [x] Track created users to prevent duplicates
+- [x] Add visual indicators for created users
+- [x] Prevent duplicate user creation
+- [x] Add Sonner notifications for extraction errors
+- [x] Show detailed error information in notifications
+- [x] Fix error notifications to show API errors directly
+- [x] Prevent dialog from closing automatically
+- [x] Extract partial user data even with null fields
+- [x] Show error messages for missing fields while keeping inputs empty
+- [x] Handle null fields in form display
+- [x] Remove progress indicator and keep only the created badge
+- [x] Update user ranking component with pagination (5 users per page)
 - [x] Fix sidebar shrinking in dashboard layouts (admin + sharer)
 - [x] Smooth avatar animation in sidebar header when opening/closing
 - [x] Update date formatting to full Italian style on viewer pages

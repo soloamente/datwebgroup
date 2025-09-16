@@ -342,26 +342,24 @@ export default function DashboardClient() {
     void computeBadges();
   }, [selectedDateRange, activePresetKey, getComparisonLabel]);
 
-  const filesDelta = useMemo(() => {
-    if (periodSeries.length >= 2) {
-      const prev = periodSeries[periodSeries.length - 2];
-      const curr = periodSeries[periodSeries.length - 1];
-      return (curr?.files ?? 0) - (prev?.files ?? 0);
-    }
-    return 0;
-  }, [periodSeries]);
+  // Use the same trend calculation as badges (period vs period comparison)
+  // This ensures chart colors match badge colors consistently
+  // Previously, charts used last-two-points comparison which could differ from badge logic
+  const filesTrendUp = useMemo(() => {
+    // Extract the trend from the badge text to match badge logic exactly
+    const badgeText = badgeFiles.text;
+    if (badgeText.includes("+")) return true; // Positive trend = green chart
+    if (badgeText.includes("-")) return false; // Negative trend = red chart
+    return true; // Default to positive if no clear trend (neutral case)
+  }, [badgeFiles.text]);
 
-  const batchesDelta = useMemo(() => {
-    if (periodSeries.length >= 2) {
-      const prev = periodSeries[periodSeries.length - 2];
-      const curr = periodSeries[periodSeries.length - 1];
-      return (curr?.batches ?? 0) - (prev?.batches ?? 0);
-    }
-    return 0;
-  }, [periodSeries]);
-
-  const filesTrendUp = filesDelta >= 0;
-  const batchesTrendUp = batchesDelta >= 0;
+  const batchesTrendUp = useMemo(() => {
+    // Extract the trend from the badge text to match badge logic exactly
+    const badgeText = badgeBatches.text;
+    if (badgeText.includes("+")) return true; // Positive trend = green chart
+    if (badgeText.includes("-")) return false; // Negative trend = red chart
+    return true; // Default to positive if no clear trend (neutral case)
+  }, [badgeBatches.text]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {

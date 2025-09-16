@@ -167,7 +167,7 @@ export function FileAttachmentCards({
                 <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                   <Button
                     variant="outline"
-                    className="flex-1 text-xs sm:text-sm"
+                    className="ring-border flex-1 border-none text-xs ring-1 sm:text-sm"
                     onClick={() =>
                       handleDownload(file.id, file.original_filename)
                     }

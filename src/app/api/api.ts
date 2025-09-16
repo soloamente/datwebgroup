@@ -426,6 +426,11 @@ const updateViewer = async (
   return response.data;
 };
 
+const deleteViewer = async (id: number): Promise<{ message: string }> => {
+  const response = await api.delete<{ message: string }>(`/viewers/${id}`);
+  return response.data;
+};
+
 const sendUsernameToSharerById = async (
   data: SendUsernameByIdData,
 ): Promise<{ message: string }> => {
@@ -1050,23 +1055,23 @@ export interface AdminTopSharer {
   nominativo: string;
   username: string;
   email: string;
-  total_documents: number;
   total_batches: number;
   total_files: number;
-  active_days: number;
+  total_logins: number;
   percentage_of_total: number;
-  average_files_per_document: number;
 }
 
 export interface AdminTopSharerStatsSummary {
-  total_documents_period: number;
-  top_5_total_documents: number;
-  top_5_percentage: number;
-  period: { start: string; end: string };
+  total_batches_period: number;
+  period_type: string;
+  period: {
+    start: string | null;
+    end: string;
+  };
 }
 
 export interface AdminTopSharerStatsData {
-  top_sharers: AdminTopSharer[];
+  sharers: AdminTopSharer[];
   summary: AdminTopSharerStatsSummary;
 }
 
@@ -1929,6 +1934,7 @@ export const userService = {
   createSharer,
   getViewers,
   updateViewer,
+  deleteViewer,
   toggleViewerStatus,
   sendUsernameToSharerById,
   checkUsername,

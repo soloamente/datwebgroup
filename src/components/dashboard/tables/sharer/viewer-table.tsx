@@ -731,17 +731,39 @@ function RowActions({
   const [showResetPasswordConfirmDialog, setShowResetPasswordConfirmDialog] =
     useState(false);
   const [showSendUsernameDialog, setShowSendUsernameDialog] = useState(false);
+  const [deleteEmailConfirmation, setDeleteEmailConfirmation] = useState("");
 
   const handleDelete = () => {
-    startUpdateTransition(() => {
-      const updatedData = data.filter((dataItem) => dataItem.id !== viewer.id);
-      onStatusChange();
-      setShowDeleteDialog(false);
+    if (isUpdatePending) return;
+    if (deleteEmailConfirmation !== viewer.email) {
+      toast.error("L'email inserita non corrisponde all'email del cliente.");
+      return;
+    }
+
+    startUpdateTransition(async () => {
+      try {
+        const response = await userService.deleteViewer(viewer.id);
+        toast.success(response.message);
+        onStatusChange();
+        setShowDeleteDialog(false);
+        setDeleteEmailConfirmation("");
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Impossibile eliminare il cliente.",
+        );
+      }
     });
   };
 
   const handleEdit = () => {
     setShowEditDialog(true);
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+    setDeleteEmailConfirmation("");
   };
 
   const handleCloseEditDialog = () => {
@@ -842,28 +864,61 @@ function RowActions({
               Scarica credenziali
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              onClick={handleDeleteClick}
+              disabled={isUpdatePending}
+              className="text-destructive focus:text-destructive"
+            >
+              Elimina Cliente
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+            <AlertDialogTitle>Elimina Cliente</AlertDialogTitle>
             <AlertDialogDescription>
               Questa azione non può essere annullata. Eliminerà permanentemente
-              questo utente.
+              il cliente <strong>{viewer.nominativo}</strong>.
+              <br />
+              <br />
+              Per confermare, inserisci l'email del cliente:{" "}
+              <strong>{viewer.email}</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-4">
+            <Label
+              htmlFor="delete-email-confirmation"
+              className="text-sm font-medium"
+            >
+              Email di conferma
+            </Label>
+            <Input
+              id="delete-email-confirmation"
+              type="email"
+              value={deleteEmailConfirmation}
+              onChange={(e) => setDeleteEmailConfirmation(e.target.value)}
+              placeholder="Inserisci l'email del cliente"
+              className="mt-2"
+              disabled={isUpdatePending}
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isUpdatePending}>
               Annulla
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={isUpdatePending}
+              disabled={
+                isUpdatePending || deleteEmailConfirmation !== viewer.email
+              }
               className="bg-destructive hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-white shadow-xs"
             >
-              Elimina
+              Elimina Cliente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

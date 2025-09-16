@@ -255,7 +255,7 @@ export default function LoginStatsPieCard() {
             />
           </div>
         </CardHeader>
-        <CardContent className="bg-card ring-border rounded-xl p-3 ring-1 sm:rounded-2xl sm:p-4">
+        <CardContent className="bg-card ring-border h-full rounded-xl p-3 ring-1 sm:rounded-2xl sm:p-4">
           {isLoading && (
             <div className="flex h-[180px] items-center justify-center sm:h-[220px]">
               <Skeleton className="h-32 w-32 rounded-full sm:h-40 sm:w-40" />
