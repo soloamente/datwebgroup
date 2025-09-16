@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { userService, type AdminTopSharer } from "@/app/api/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,10 +47,11 @@ export default function TopSharerStatsCard() {
         const res = await userService.getAdminTopSharerStats(selectedMonths);
         console.log("API Response:", res); // Debug log
         if (mounted && res?.success && res.data) {
-          // Handle both old and new API response structures
-          // @ts-ignore
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          const sharers = res.data.sharers || res.data.top_sharers || [];
+          // Handle both old and new API response structures with safe typing
+          const data = res.data as
+            | { sharers?: AdminTopSharer[]; top_sharers?: AdminTopSharer[] }
+            | undefined;
+          const sharers = data?.sharers ?? data?.top_sharers ?? [];
           console.log("Sharers data:", sharers); // Debug log
           setTopSharers(sharers);
         }

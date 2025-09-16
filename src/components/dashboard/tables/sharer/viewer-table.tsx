@@ -886,7 +886,7 @@ function RowActions({
               il cliente <strong>{viewer.nominativo}</strong>.
               <br />
               <br />
-              Per confermare, inserisci l'email del cliente:{" "}
+              Per confermare, inserisci l&apos;email del cliente:{" "}
               <strong>{viewer.email}</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
